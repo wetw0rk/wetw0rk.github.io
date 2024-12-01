@@ -6,14 +6,21 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 29 Nov 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 01 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x00 - Introducción a Windows Kernel Explotación</title>
+      <link>https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
+      <pubDate>Sun, 01 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
+      <description>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, &amp;ldquo;no se nace aprendido&amp;rdquo;. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).&#xA;Para empezar, baja estos programas:&#xA;Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.</description>
+    </item>
     <item>
       <title>0x00 - Introduction to Windows Kernel Exploitation</title>
       <link>https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
       <pubDate>Fri, 29 Nov 2024 00:00:00 +0000</pubDate>
       <guid>https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
-      <description>This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation. As with anything in life, you must start somewhere and although we will be focusing on Windows 7 (x86) and Windows 10 (x64) for this post; we will ultimately be working our way up to Windows 11 (x64).&#xA;Virtualization Software: This can be anything from VirtualBox to VMWare.</description>
+      <description>This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation. As with anything in life, you must start somewhere and although we will be focusing on Windows 7 (x86) and Windows 10 (x64) for this post; we will ultimately be working our way up to Windows 11 (x64).&#xA;To get started, for this post you will need:</description>
     </item>
     <item>
       <title>La Rueda de Ezequiel (Análisis de la Puerta del Infierno)</title>
