@@ -6,8 +6,15 @@
     <description>Recent content on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 07 Dec 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 08 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x01 - Matándo Windows Kernel Mitigaciones</title>
+      <link>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
+      <pubDate>Sun, 08 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
+      <description>Esto fue posible por trabajo duro y determinación. No te sientas frustrado si estas cosas no las entiendes inmediatamente, y recordarte la fuente de la verdad siempre será el código. Y, para nosotros, el código es assembly crudo. Es importante que entiendas estas técnicas porque cuando Microsoft saca nuevas mitigaciones tu fundación te permitirá desarrollar evasiones. Entonces, si algo no está claro, tóma tu tiempo y revísalo con WinDbg.&#xA;En el último artículo deberías haber obtenido un entendimiento sólido de los fundamentos de Windows Kernel Explotación.</description>
+    </item>
     <item>
       <title>0x01 - Killing Windows Kernel Mitigations</title>
       <link>https://wetw0rk.github.io/posts/0x01-killing-windows-kernel-mitigations/</link>

