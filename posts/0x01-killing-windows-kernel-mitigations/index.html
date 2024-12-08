@@ -70,7 +70,8 @@
 <p>In the <a href="https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/">last post</a> you should have obtained a solid understanding of the basics of Windows Kernel Exploitation. We will now be jumping off the deep end and exploiting Windows 10 (x64) and Windows 11 (x64). Within this post you will be getting an introduction to some of the latest exploit mitigations offered by Microsoft and how &ldquo;easily&rdquo; they can be bypassed. That said only SOME will be covered, more exist but we will only cover them when relevant within this series.</p>
 <p>In addition, this post will include the release of my PoC ROP chain - <em>Violet Phosphorus</em>, a universal VBS/SMEP bypass technique. To my knowledge I have not seen this technique deployed, that said I&rsquo;m claiming it as my own.</p>
 <p>To prove its effectiveness, I went ahead deployed <em>Violet Phosphorus</em> against Windows 11 24H2 just for this post. If I understand correctly this is the latest version of Windows 11 which was released October 1st, 2024.</p>
-<h1 id="table-of-contents">Table of Contents</h1>
+<pre tabindex="0"><code>DISCLAIMER: TO BE CLEAR THIS DOES NOT BYPASS HVCI
+</code></pre><h1 id="table-of-contents">Table of Contents</h1>
 <ul>
 <li><a href="#entering-the-modern-landscape">Entering the Modern Landscape</a>
 <ul>
