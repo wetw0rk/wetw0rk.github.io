@@ -61,14 +61,14 @@
         </div>
         <div>
           <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          18 min read
+          17 min read
         </div>
       </div>
     </header>
     <div class="post-content">
       <p>This post was made possible through hard work and determination. Do not feel frustrated if this stuff does not click immediately and remember, the source of truth will always be the source code. For us, our source code is raw assembly. That said it’s important you understand these techniques in detail because when Microsoft releases new mitigations your foundation is what will allow you to develop bypasses. So, if something is not clear take your time and step through it in the debugger.</p>
 <p>In the <a href="https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/">last post</a> you should have obtained a solid understanding of the basics of Windows Kernel Exploitation. We will now be jumping off the deep end and exploiting Windows 10 (x64) and Windows 11 (x64). Within this post you will be getting an introduction to some of the latest exploit mitigations offered by Microsoft and how &ldquo;easily&rdquo; they can be bypassed. That said only SOME will be covered, more exist but we will only cover them when relevant within this series.</p>
-<p>In addition, this post will include the release of my PoC ROP chain - <em>Violet Phosphorus</em>, a universal VBS/SMEP bypass technique. To my knowledge I have not seen this technique deployed, that said I&rsquo;m claiming it as my own.</p>
+<p>In addition, this post will include the release of my PoC ROP chain - <em>Violet Phosphorus</em>, a universal VBS/SMEP bypass technique.</p>
 <p>To prove its effectiveness, I went ahead deployed <em>Violet Phosphorus</em> against Windows 11 24H2 just for this post. If I understand correctly this is the latest version of Windows 11 which was released October 1st, 2024.</p>
 <pre tabindex="0"><code>DISCLAIMER: TO BE CLEAR THIS DOES NOT BYPASS HVCI
 </code></pre><h1 id="table-of-contents">Table of Contents</h1>
@@ -409,7 +409,7 @@ fffff800`4d67f77e 4823c8                  and     rcx,rax
 fffff800`4d67f781 48b80000000080f0ffff    mov rax,0FFFFF08000000000h
 fffff800`4d67f78b 4803c1                  add     rax,rcx
 fffff800`4d67f78e c3                      ret
-</code></pre><p>From I&rsquo;ve seen in the &ldquo;wild&rdquo;, people normally use this function to get the base address of all PTE&rsquo;s. Let&rsquo;s take a step back and ask ourselves what does this function actually do when called? We don&rsquo;t even need Ghidra for this to be honest. Let&rsquo;s write the C equivalent to this:</p>
+</code></pre><p>From what I&rsquo;ve seen in the &ldquo;wild&rdquo;, people normally use this function to get the base address of all PTE&rsquo;s. Let&rsquo;s take a step back and ask ourselves what does this function actually do when called? We don&rsquo;t even need Ghidra for this to be honest. Let&rsquo;s write the C equivalent to this:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">/* wetw0rk */</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
