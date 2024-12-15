@@ -3,12 +3,15 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://wetw0rk.github.io/</loc>
-    <lastmod>2024-12-08T00:00:00+00:00</lastmod>
+    <lastmod>2024-12-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</loc>
-    <lastmod>2024-12-08T00:00:00+00:00</lastmod>
+    <loc>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</loc>
+    <lastmod>2024-12-14T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://wetw0rk.github.io/posts/</loc>
+    <lastmod>2024-12-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</loc>
     <lastmod>2024-12-08T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://wetw0rk.github.io/posts/0x01-killing-windows-kernel-mitigations/</loc>

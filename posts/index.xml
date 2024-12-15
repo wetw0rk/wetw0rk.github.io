@@ -6,8 +6,15 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 08 Dec 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 14 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x02 - Introduction to Windows Kernel Use After Frees (UaFs)</title>
+      <link>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</link>
+      <pubDate>Sat, 14 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
+      <description>If you&amp;rsquo;ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we&amp;rsquo;ll be returning back to Windows 7 (x86).</description>
+    </item>
     <item>
       <title>0x01 - Matándo Windows Kernel Mitigaciones</title>
       <link>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
