@@ -3,12 +3,18 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://wetw0rk.github.io/</loc>
-    <lastmod>2024-12-15T00:00:00+00:00</lastmod>
+    <lastmod>2024-12-21T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</loc>
-    <lastmod>2024-12-15T00:00:00+00:00</lastmod>
+    <loc>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</loc>
+    <lastmod>2024-12-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://wetw0rk.github.io/posts/0x03-approaching-the-modern-windows-kernel-heap/</loc>
+    <lastmod>2024-12-21T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://wetw0rk.github.io/posts/</loc>
+    <lastmod>2024-12-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</loc>
     <lastmod>2024-12-15T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</loc>

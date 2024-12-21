@@ -6,8 +6,22 @@
     <description>Recent content on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 15 Dec 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 21 Dec 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x03 - Acercándose al Heap Moderno del Windows Kernel</title>
+      <link>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
+      <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
+      <description>Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).&#xA;Es importante tener en cuenta que, aunque confirmamos que Violet Phosphorus funciona contra Windows 11 24H2, durante el resto de la serie usaré Windows 11 (x64) - 10.0.22000 N/A Build 22000, simplemente porque esta es la versión con la que probé las vulnerabilidades durante el desarrollo inicial.</description>
+    </item>
+    <item>
+      <title>0x03 - Approaching the Modern Windows Kernel Heap</title>
+      <link>https://wetw0rk.github.io/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
+      <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
+      <description>Having exploited the UaF in Windows 7 (x86) we have obtained a solid idea of how this vulnerability works, it&amp;rsquo;s time to attempt exploitation on Windows 11 (x64).&#xA;It&amp;rsquo;s important to note, although we confirmed that Violet Phosphorus works against Windows 11 24H2, for the remainder of the series I will be using Windows 11 (x64) - 10.0.22000 N/A Build 22000, simply due this being the Windows version the rest of the exploits were tested on.</description>
+    </item>
     <item>
       <title>0x02 - Introducción a Windows Kernel Use After Frees (UaFs)</title>
       <link>https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
