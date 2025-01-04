@@ -6,8 +6,15 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 21 Dec 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 04 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities</title>
+      <link>https://wetw0rk.github.io/posts/0x04-writing-what-where-in-the-kernel/</link>
+      <pubDate>Sat, 04 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x04-writing-what-where-in-the-kernel/</guid>
+      <description>First off, if you&amp;rsquo;re following the series from the start, great job getting past the Use After Free in the Windows Kernel! We&amp;rsquo;ll now be exploiting a Write What Where vulnerability on Windows 7 (x86) then proceed to adapt what we learn to Windows 11 (x64).&#xA;Arguably this is one of the most powerful types of vulnerabilities - which personally, I prefer to call an Arbitrary Write since that&amp;rsquo;s what my buddies called it before I had ever heard of &amp;ldquo;Write What Where&amp;rdquo;.</description>
+    </item>
     <item>
       <title>0x03 - Acercándose al Heap Moderno del Windows Kernel</title>
       <link>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>

