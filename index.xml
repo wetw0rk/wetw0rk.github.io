@@ -2,101 +2,101 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title></title>
-    <link>http://localhost:1313/</link>
+    <link>https://wetw0rk.github.io/</link>
     <description>Recent content on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Thu, 09 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>0x05 - Introduction to Windows Kernel Type Confusion Vulnerabilities</title>
-      <link>http://localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
+      <link>https://wetw0rk.github.io/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
       <pubDate>Thu, 09 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
       <description>In the last tutorial we exploited a &amp;ldquo;Write-What-Where&amp;rdquo; vulnerability within Windows 7 (x86) and Windows 11 (x64).&#xA;As with previous tutorials we will begin exploiting a new flaw against the Windows 7 (x86) kernel to get a solid foundation on how the vulnerability occurs. More specifically we will be learning about Type Confusions!&#xA;Table of Contents What is a Type Confusion (High Level) Using the Source TypeConfusionIoctlHandler TriggerTypeConfusion TypeConfusionObjectInitializer Dynamic Testing Exploitation What is a Type Confusion (High Level) Not familiar with what a Type Confusion is?</description>
     </item>
     <item>
       <title>0x04 - Introducción a Windows Kernel &#34;Write What Where&#34; Vulnerabilidades</title>
-      <link>http://localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
+      <link>https://wetw0rk.github.io/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
       <pubDate>Sun, 05 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
       <description>Si has seguido los tutoriales desde el principio, sientete orgulloso de superar el &amp;ldquo;Use After Free&amp;rdquo; en el Windows Kernel! Ahora vamos a aprovechar un &amp;ldquo;Write What Where&amp;rdquo; vulnerabilidad en Windows 7 (x86) y luego proceder a adaptar lo que aprendemos a Windows 11 (x64). La traducción de esta vulnerabilidad en español sería &amp;ldquo;Escribir, Qué, Dónde&amp;rdquo;.&#xA;Podría decirse que este es uno de los tipos de vulnerabilidades más poderosos - que personalmente prefiero llamar &amp;ldquo;escritura arbitraria&amp;rdquo;, ya que así es como lo llamaban mis amigos antes de que yo hubiera oído de &amp;ldquo;Write What Where&amp;rdquo;.</description>
     </item>
     <item>
       <title>0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities</title>
-      <link>http://localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</link>
+      <link>https://wetw0rk.github.io/posts/0x04-writing-what-where-in-the-kernel/</link>
       <pubDate>Sat, 04 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x04-writing-what-where-in-the-kernel/</guid>
       <description>First off, if you&amp;rsquo;re following the series from the start, great job getting past the Use After Free in the Windows Kernel! We&amp;rsquo;ll now be exploiting a Write What Where vulnerability on Windows 7 (x86) then proceed to adapt what we learn to Windows 11 (x64).&#xA;Arguably this is one of the most powerful types of vulnerabilities - which personally, I prefer to call an Arbitrary Write since that&amp;rsquo;s what my buddies called it before I had ever heard of &amp;ldquo;Write What Where&amp;rdquo;.</description>
     </item>
     <item>
       <title>0x03 - Acercándose al Heap Moderno del Windows Kernel</title>
-      <link>http://localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
+      <link>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
       <description>Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).&#xA;Es importante tener en cuenta que, aunque confirmamos que Violet Phosphorus funciona contra Windows 11 24H2, durante el resto de la serie usaré Windows 11 (x64) - 10.0.22000 N/A Build 22000, simplemente porque esta es la versión con la que probé las vulnerabilidades durante el desarrollo inicial.</description>
     </item>
     <item>
       <title>0x03 - Approaching the Modern Windows Kernel Heap</title>
-      <link>http://localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
+      <link>https://wetw0rk.github.io/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
       <description>Having exploited the UaF in Windows 7 (x86) we have obtained a solid idea of how this vulnerability works, it&amp;rsquo;s time to attempt exploitation on Windows 11 (x64).&#xA;It&amp;rsquo;s important to note, although we confirmed that Violet Phosphorus works against Windows 11 24H2, for the remainder of the series I will be using Windows 11 (x64) - 10.0.22000 N/A Build 22000, simply due this being the Windows version the rest of the exploits were tested on.</description>
     </item>
     <item>
       <title>0x02 - Introducción a Windows Kernel Use After Frees (UaFs)</title>
-      <link>http://localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
+      <link>https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
       <pubDate>Sun, 15 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
       <description>Si has estado siguiendo la serie de Windows Kernel Exploitation consecutivamente, deberías haber exploited un Stack Overflow básico contra Windows 7 (x86) y Windows 10 (x64). Aunque este es un salto grande, hay muchas más vulnerabilidades que pueden resultar en la ejecución de código. La mejor manera de familiarizarse con ellos es estudiarlos en un sistema con mitigaciones mínimas. Por este motivo volveremos a Windows 7 (x86).&#xA;Además, no utilizaremos Ghidra, esta vez usaremos el código de HEVD.</description>
     </item>
     <item>
       <title>0x02 - Introduction to Windows Kernel Use After Frees (UaFs)</title>
-      <link>http://localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</link>
+      <link>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</link>
       <pubDate>Sat, 14 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
       <description>If you&amp;rsquo;ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we&amp;rsquo;ll be returning back to Windows 7 (x86).</description>
     </item>
     <item>
       <title>0x01 - Matándo Windows Kernel Mitigaciones</title>
-      <link>http://localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
+      <link>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
       <pubDate>Sun, 08 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
       <description>Esto fue posible por trabajo duro y determinación. No te sientas frustrado si estas cosas no las entiendes inmediatamente, y recordarte la fuente de la verdad siempre será el código. Y, para nosotros, el código es assembly crudo. Es importante que entiendas estas técnicas porque cuando Microsoft saca nuevas mitigaciones tu fundación te permitirá desarrollar evasiones. Entonces, si algo no está claro, tóma tu tiempo y revísalo con WinDbg.&#xA;En el último artículo deberías haber obtenido un entendimiento sólido de los fundamentos de Windows Kernel Explotación.</description>
     </item>
     <item>
       <title>0x01 - Killing Windows Kernel Mitigations</title>
-      <link>http://localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</link>
+      <link>https://wetw0rk.github.io/posts/0x01-killing-windows-kernel-mitigations/</link>
       <pubDate>Sat, 07 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x01-killing-windows-kernel-mitigations/</guid>
       <description>This post was made possible through hard work and determination. Do not feel frustrated if this stuff does not click immediately and remember, the source of truth will always be the source code. For us, our source code is raw assembly. That said it’s important you understand these techniques in detail because when Microsoft releases new mitigations your foundation is what will allow you to develop bypasses. So, if something is not clear take your time and step through it in the debugger.</description>
     </item>
     <item>
       <title>0x00 - Introducción a Windows Kernel Explotación</title>
-      <link>http://localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
+      <link>https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
       <pubDate>Sun, 01 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
       <description>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, &amp;ldquo;no se nace aprendido&amp;rdquo;. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).&#xA;Para empezar, baja estos programas:&#xA;Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.</description>
     </item>
     <item>
       <title>0x00 - Introduction to Windows Kernel Exploitation</title>
-      <link>http://localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
+      <link>https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
       <pubDate>Fri, 29 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
+      <guid>https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
       <description>This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation. As with anything in life, you must start somewhere and although we will be focusing on Windows 7 (x86) and Windows 10 (x64) for this post; we will ultimately be working our way up to Windows 11 (x64).&#xA;To get started, for this post you will need:</description>
     </item>
     <item>
       <title>La Rueda de Ezequiel (Análisis de la Puerta del Infierno)</title>
-      <link>http://localhost:1313/posts/tronos/</link>
+      <link>https://wetw0rk.github.io/posts/tronos/</link>
       <pubDate>Sun, 24 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/tronos/</guid>
+      <guid>https://wetw0rk.github.io/posts/tronos/</guid>
       <description>Lo que sucede es mi análisis de la Puerta del Infierno, un código maligno. Este código maligno contiene técnicas que le da la capacidad de ejecutar llamadas de sistema (syscalls) en el sistema de operación Windows, con el objetivo de evadir detección de EDR (Defensas de las Empresas).&#xA;Una vez completé mi análisis, creé mi propia implementación en C++ que usa llamadas de sistema (syscalls) que pertenecer adrento de ntdll.dll. Además, un método diferente de lo conocido públicamente para crear hashes.</description>
     </item>
     <item>
       <title>Ezekiels Wheel (Hells Gate Analysis)</title>
-      <link>http://localhost:1313/posts/ezekielswheel/ezekielswheel/</link>
+      <link>https://wetw0rk.github.io/posts/ezekielswheel/ezekielswheel/</link>
       <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/ezekielswheel/ezekielswheel/</guid>
+      <guid>https://wetw0rk.github.io/posts/ezekielswheel/ezekielswheel/</guid>
       <description>The following writeup is a my analysis of the Hells Gate malware. This malware strain contains a technique that performs syscalls on the Windows operating system in order to evade EDR detection.&#xA;Upon completion of my analysis, I developed my own implementation in C++ that uses existing syscall instructions within ntdll.dll and a custom hashing technique to evade the modern methods of detection for these types of techniques.&#xA;There are further optimizations that can be added to the technique, however for the sake of time, two PoC&amp;rsquo;s were developed.</description>
     </item>
   </channel>
