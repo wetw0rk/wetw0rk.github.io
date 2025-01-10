@@ -6,8 +6,15 @@
     <description>Recent content on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 09 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 10 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades</title>
+      <link>https://wetw0rk.github.io/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>
+      <pubDate>Fri, 10 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</guid>
+      <description>En el último tutorial aprovechamos un &amp;ldquo;Write-What-Where&amp;rdquo; o un “Escribir Qué Dónde” dentro de Windows 7 (x86) y Windows 11 (x64).&#xA;Igual que en los últimos tutoriales, introduciremos una nueva falla en Windows 7 (x86) kernel para obtener una base sólida sobre cómo ocurre la vulnerabilidad. Para ser más específicos, aprenderemos cómo aprovechar un Type Confusion!&#xA;Table of Contents Qué es un Type Confusion (Alto Nivel) Usando el Código TypeConfusionIoctlHandler TriggerTypeConfusion TypeConfusionObjectInitializer Pruebas Dinámicas Explotación Qué es un Type Confusion (Alto Nivel) No estás familiarizado con lo que es un Type Confusion?</description>
+    </item>
     <item>
       <title>0x05 - Introduction to Windows Kernel Type Confusion Vulnerabilities</title>
       <link>https://wetw0rk.github.io/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>

