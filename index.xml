@@ -6,8 +6,15 @@
     <description>Recent content on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 10 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x06 - Approaching Modern Windows Kernel Type Confusions</title>
+      <link>https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
+      <description>In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).&#xA;Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Exploitation Sources Reverse Engineering Let&amp;rsquo;s take a look at the vulnerable handler and respective structures.</description>
+    </item>
     <item>
       <title>0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades</title>
       <link>https://wetw0rk.github.io/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>

