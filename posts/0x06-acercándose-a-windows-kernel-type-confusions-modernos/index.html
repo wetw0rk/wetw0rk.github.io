@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en-us">
   <head>
-    <title>0x06 - Approaching Modern Windows Kernel Type Confusions // </title>
+    <title>0x06 - Acercándose a Windows Kernel Type Confusions Modernos // </title>
     <link rel="shortcut icon" href="/favicon.ico" />
     <meta charset="utf-8" />
     <meta name="generator" content="Hugo 0.131.0">
@@ -17,20 +17,20 @@
 
     
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="0x06 - Approaching Modern Windows Kernel Type Confusions">
-  <meta name="twitter:description" content="In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).
-Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Testing Theory Exploitation Sources Reverse Engineering Let’s take a look at the vulnerable handler and respective structures.">
+  <meta name="twitter:title" content="0x06 - Acercándose a Windows Kernel Type Confusions Modernos">
+  <meta name="twitter:description" content="En el último tutorial explotamos una “Type Confusion” dentro del kernel de Windows 7 (x86). Habiendo obtenido un base sólido para esta vulnerabilidad, podemos proceder a intentar aprovechalo dentro de Windows 11 (x64).
+Table of Contents Ingeniería Inversa Escribiendo el Exploit Plan de Ataque El Comienzo de Sufrimiento Teoría Operaciones Generales de Memoria Memoria Virtual Sumario de Memoria Paginada Probando la Teoría Explotación Recursos Ingeniería Inversa Veamos el controlador vulnerable y las estructuras respectivas.">
 
-    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/">
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/">
   <meta property="og:site_name" content="wetw0rk">
-  <meta property="og:title" content="0x06 - Approaching Modern Windows Kernel Type Confusions">
-  <meta property="og:description" content="In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).
-Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Testing Theory Exploitation Sources Reverse Engineering Let’s take a look at the vulnerable handler and respective structures.">
+  <meta property="og:title" content="0x06 - Acercándose a Windows Kernel Type Confusions Modernos">
+  <meta property="og:description" content="En el último tutorial explotamos una “Type Confusion” dentro del kernel de Windows 7 (x86). Habiendo obtenido un base sólido para esta vulnerabilidad, podemos proceder a intentar aprovechalo dentro de Windows 11 (x64).
+Table of Contents Ingeniería Inversa Escribiendo el Exploit Plan de Ataque El Comienzo de Sufrimiento Teoría Operaciones Generales de Memoria Memoria Virtual Sumario de Memoria Paginada Probando la Teoría Explotación Recursos Ingeniería Inversa Veamos el controlador vulnerable y las estructuras respectivas.">
   <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2025-01-18T00:00:00+00:00">
-    <meta property="article:modified_time" content="2025-01-18T00:00:00+00:00">
+    <meta property="article:published_time" content="2025-01-19T00:00:00+00:00">
+    <meta property="article:modified_time" content="2025-01-19T00:00:00+00:00">
 
 
   </head>
@@ -55,11 +55,11 @@ Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Sta
       
   <article class="post">
     <header class="post-header">
-      <h1 class ="post-title">0x06 - Approaching Modern Windows Kernel Type Confusions</h1>
+      <h1 class ="post-title">0x06 - Acercándose a Windows Kernel Type Confusions Modernos</h1>
       <div class="post-meta">
         <div>
           <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          Jan 18, 2025
+          Jan 19, 2025
         </div>
         <div>
           <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -68,35 +68,35 @@ Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Sta
       </div>
     </header>
     <div class="post-content">
-      <p>In the <a href="https://wetw0rk.github.io/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/">last tutorial</a> we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).</p>
+      <p>En el <a href="https://wetw0rk.github.io/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/">último tutorial</a> explotamos una &ldquo;Type Confusion&rdquo; dentro del kernel de Windows 7 (x86). Habiendo obtenido un base sólido para esta vulnerabilidad, podemos proceder a intentar aprovechalo dentro de Windows 11 (x64).</p>
 <h1 id="table-of-contents">Table of Contents</h1>
 <ul>
-<li><a href="#reverse-engineering">Reverse Engineering</a></li>
-<li><a href="#writing-the-exploit">Writing the Exploit</a>
+<li><a href="#ingenier%C3%ADa-inversa">Ingeniería Inversa</a></li>
+<li><a href="#escribiendo-el-exploit">Escribiendo el Exploit</a>
 <ul>
-<li><a href="#plan-of-attack">Plan of Attack</a></li>
-<li><a href="#the-start-of-suffering">The Start of Suffering</a></li>
+<li><a href="#plan-de-ataque">Plan de Ataque</a></li>
+<li><a href="#el-comienzo-de-sufrimiento">El Comienzo de Sufrimiento</a></li>
 </ul>
 </li>
-<li><a href="#thoery">Thoery</a>
+<li><a href="#teor%C3%ADa">Teoría</a>
 <ul>
-<li><a href="#general-memory-operations">General Memory Operations</a></li>
-<li><a href="#virtual-memory">Virtual Memory</a></li>
-<li><a href="#paged-memory-summary">Paged Memory Summary</a></li>
+<li><a href="#operaciones-generales-de-memoria">Operaciones Generales de Memoria</a></li>
+<li><a href="#memoria-virtual">Memoria Virtual</a></li>
+<li><a href="#sumario-de-memoria-paginada">Sumario de Memoria Paginada</a></li>
 </ul>
 </li>
-<li><a href="#testing-theory">Testing Theory</a></li>
-<li><a href="#exploitation">Exploitation</a></li>
-<li><a href="#sources">Sources</a></li>
+<li><a href="#probando-la-teor%C3%ADa">Probando la Teoría</a></li>
+<li><a href="#explotaci%C3%B3n">Explotación</a></li>
+<li><a href="#recursos">Recursos</a></li>
 </ul>
-<h1 id="reverse-engineering">Reverse Engineering</h1>
-<p>Let&rsquo;s take a look at the vulnerable handler and respective structures.</p>
+<h1 id="ingeniería-inversa">Ingeniería Inversa</h1>
+<p>Veamos el controlador vulnerable y las estructuras respectivas.</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/decompiled_code.png" alt="alt text"></p>
-<p>We cannot ignore that we have a lot of background information (not to mention symbols). The only real difference we need to account for is the fact that the allocation will be 16 (0x10) bytes. This is because of the size of an unsigned long in an x64 environment.</p>
+<p>No podemos ignorar que tenemos mucha información sobre cómo funciona esta vulnerabilidad. La única diferencia que debemos tener en cuenta es la asignación de memoria, que será de 16 (0x10) bytes. Esto es por el tamaño de un &ldquo;unisigned long&rdquo; en la arquitectura de x64.</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/decompiled_code2.png" alt="alt text"></p>
-<p>That said, we can begin writing the proof of concept.</p>
-<h1 id="writing-the-exploit">Writing the Exploit</h1>
-<p>Below is a PoC we can begin working with:</p>
+<p>Dicho esto podemos empezar a escribir el PoC.</p>
+<h1 id="escribiendo-el-exploit">Escribiendo el Exploit</h1>
+<p>Abajo esta el PoC para empezar a trabajar.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
@@ -248,27 +248,27 @@ Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Sta
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h2 id="plan-of-attack">Plan of Attack</h2>
-<p>Once ran, we can see we will have successfully gotten control over execution flow.</p>
+</span></span></code></pre></div><h2 id="plan-de-ataque">Plan de Ataque</h2>
+<p>Una vez ejecutado, podemos ver que obtuvimos control sobre el flujo de ejecución.</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/crash.png" alt="alt text"></p>
-<p>We can see that the <strong>RBX</strong> register points to our object / structure. My thought here is we can perform a stack pivot into an allocation we control from userland (e.g VirtualAlloc).</p>
-<h2 id="the-start-of-suffering">The Start of Suffering</h2>
-<p>Let&rsquo;s look for gadgets, we&rsquo;ll be using our favorite tool <a href="https://github.com/0vercl0k/rp">rp++</a>, by <a href="https://github.com/0vercl0k">0vercl0k</a>.</p>
+<p>Podemos ver que el registro <strong>RBX</strong> apunta a nuestro objeto / estructura. Mi idea aquí es que podemos realizar un &ldquo;stack pivot&rdquo; en una asignación que controlamos desde el área de usuario (por ejemplo, VirtualAlloc).</p>
+<h2 id="el-comienzo-de-sufrimiento">El Comienzo de Sufrimiento</h2>
+<p>Busquemos gadgets, usaremos nuestra herramienta favorita <a href="https://github.com/0vercl0k/rp">rp++</a>, de <a href="https://github.com/0vercl0k">0vercl0k</a>.</p>
 <pre tabindex="0"><code>C:\&gt;rp-win.exe --rop=20 --va=0 --file C:\Windows\System32\ntoskrnl.exe &gt; rop.txt
-</code></pre><p>Being that this is a large file, let&rsquo;s move it over to Linux. If you plan to parse the output using grep, you&rsquo;re going to need to convert this file to ASCII.</p>
+</code></pre><p>Dado que es un archivo grande, pasemos lo a Linux. Si planeas analizarlo usando grep, necesitarás convertir este archivo a ASCII.</p>
 <pre tabindex="0"><code>$ file rop.txt
 rop.txt: Unicode text, UTF-16, little-endian text, with very long lines (388), with CRLF line terminators
 
 $ iconv -f utf-16 -t us-ascii//TRANSLIT rop.txt &gt; rop_ascii.txt      
-</code></pre><p>At this point I was utterly confused since things were not going as planned. I checked out <a href="https://vuln.dev/windows-kernel-exploitation-hevd-x64-type-confusion/">VulnDevs blog</a> to see what he would have done and he used a fairly intresting gadget.</p>
+</code></pre><p>En este momento estaba completamente confundido porque las cosas no iban como hemos planeado. Revisé el <a href="https://vuln.dev/windows-kernel-exploitation-hevd-x64-type-confusion/">blog de VulnDevs</a> para ver qué habría hecho y usó un &ldquo;gadget&rdquo; interesante.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>QWORD STACK_PIVOT_GADGET <span style="color:#f92672">=</span> ntBase <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x317f70</span>; <span style="color:#75715e">// mov esp, 0x48000000; add esp, 0x28; ret; 
-</span></span></span></code></pre></div><p>I had never seen a gadget like this nor, did I know this was even possible&hellip; there&rsquo;s a few things we have to keep in mind when using a gadget like this.</p>
+</span></span></span></code></pre></div><p>Nunca había visto un gadget como este ni siquiera sabía que esto fuera posible&hellip; hay algunas cosas que debemos tener en cuenta al usar un gadget como este.</p>
 <ol>
-<li>The address needs to be aligned (address % 16 == 0)</li>
-<li>We must give leeway room for the kernel to read/write to this area in memory (target_address - 0x1000)</li>
-<li>We must lock the memory region using VirtualLock</li>
+<li>La dirección debe estar alineada (address % 16 == 0)</li>
+<li>Debemos dar margen de maniobra para que el kernel lea / escriba en esta área de la memoria. (target_address - 0x1000)</li>
+<li>Debemos encerrar la región de memoria usando VirtualLock</li>
 </ol>
-<p>The following code does just that.</p>
+<p>El código abajo hace precisamente eso.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  <span style="color:#75715e">/* We&#39;re going to be allocating memory at 0xF6C875C0-0x1000, we must do this to give
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">     the kernel room to read/write to this memory region */</span>
 </span></span><span style="display:flex;"><span>  lpvAllocTarget <span style="color:#f92672">=</span> (LPVOID)<span style="color:#ae81ff">0xF6C875C0</span>;
@@ -294,68 +294,68 @@ $ iconv -f utf-16 -t us-ascii//TRANSLIT rop.txt &gt; rop_ascii.txt
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>((LPVOID)lpvAllocTarget, <span style="color:#ae81ff">0x4000</span>, <span style="color:#e6db74">&#39;A&#39;</span>);
 </span></span><span style="display:flex;"><span>...
 </span></span><span style="display:flex;"><span>  UserTypeConfusionObject.ObjectType <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)lpvNtKrnl <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x32e4fe</span>; <span style="color:#75715e">// mov esp, 0xF6C875C0 ; ret
-</span></span></span></code></pre></div><p>Once sent, we DON&rsquo;T have a successful pivot&hellip;</p>
+</span></span></span></code></pre></div><p>Una vez enviado, el pivote NO trabajó&hellip;</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/pivot.png" alt="alt text"></p>
-<p>If we analyze this we get a double fault&hellip;</p>
+<p>Si analizamos esto nos encontramos con una doble falta…</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/double_fault.png" alt="alt text"></p>
-<p>At this point a month passed and I was getting nowhere&hellip; I mean nowhere&hellip; until I came across a blog by <a href="https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f">wafzsucks</a> and ultimately it came down to breakpoints breaking the exploit.</p>
-<p>Once I removed my breakpoint everything worked?</p>
-<h1 id="thoery">Thoery</h1>
-<p>Although I had a working exploit at this point I wanted to understand why - so I decide to walk though <strong>wafzsucks</strong> blog :)</p>
-<p>What follows in this section are mostly the notes of <strong>wafzsucks</strong> I wanna make sure I make that clear. However since writing notes is the way I learn I decided to write my understanding as I go.</p>
-<h2 id="general-memory-operations">General Memory Operations</h2>
-<p>Based on information from <a href="https://en.wikipedia.org/wiki/Kernel_(operating_system)">Wikipedia</a> the kernel has full access to the the systems memory. It&rsquo;s responsible for allowing processes to access memory as it&rsquo;s required. This is done via virtual addressing (via paging and/or segmentation).</p>
-<p>According to <a href="https://en.wikipedia.org/wiki/Memory_paging">Wikipedia</a> when using this scheme (paging) the OS gets information in blocks called pages. For example in Windows a page is 4KB (4006 or 0x1000 bytes).</p>
-<p>What virtual addressing is doing is allowing the kernel to make a given physical address appear to be another address, the virtual address.</p>
-<p><strong>wafzsucks</strong> put it perfectly, this is why when a game is loaded, the fans kick off and a bunch of memory is used before the game even starts. This is because the memory is allocated and obtained while the game is loaded into said memory.</p>
-<p>With the use of <em>VirtualAlloc()</em> in Windows and <em>mmap()</em> in Linux, we can actually map a range of virtual memory at a defined address. This is why this solution is a solid approach to stack pivoting.</p>
-<h2 id="virtual-memory">Virtual Memory</h2>
-<p>The image below is taken from <a href="https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f">wafzsucks</a> blog.</p>
+<p>A este punto pasó un mes y no llegaba a ninguna lugar&hellip; hasta que encontré un blog por <a href="https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f">wafzsucks</a> y finalmente todo se redujo a puntos de interrupción que rompían el exploit.</p>
+<p>Una vez que eliminé mi punto de interrupción, todo funcionó?</p>
+<h1 id="teoría">Teoría</h1>
+<p>Aunque tenía un exploit funcional en este punto, quería entender por qué, así que decido recorrer el blog <strong>wafzsucks</strong> :)</p>
+<p>Lo que sigue en esta sección son principalmente notas de <strong>wafzsucks</strong>. Quiero aser esto claro. Sin embargo, escribir notas es la forma en que yo aprendo.</p>
+<h2 id="operaciones-generales-de-memoria">Operaciones Generales de Memoria</h2>
+<p>Según la información de <a href="https://en.wikipedia.org/wiki/Kernel_(operating_system)">Wikipedia</a>, el kernel tiene acceso completo a la memoria del sistema. Es responsable de permitir que los procesos accedan a la memoria según sea necesario. Esto se hace mediante direccionamiento virtual (mediante paginación y/o segmentación).</p>
+<p>Según <a href="https://en.wikipedia.org/wiki/Memory_paging">Wikipedia</a>, al utilizar este esquema (paginación), el sistema operativo obtiene información en bloques llamados páginas. Por ejemplo, en Windows una página tiene 4 KB (4006 o 0x1000 bytes).</p>
+<p>Lo que hace el direccionamiento virtual es permitir que el kernel haga que una dirección física determinada parezca otra dirección, la dirección virtual.</p>
+<p><strong>wafzsucks</strong> lo expresó perfectamente, es por eso que cuando se carga un juego, los fanáticos comienzan y se usa mucha memoria incluso antes de que comience el juego. Esto se debe a que la memoria se asigna y se obtiene mientras el juego se carga en dicha memoria.</p>
+<p>Con el uso de <em>VirtualAlloc()</em> en Windows y <em>mmap()</em> en Linux, podemos mapear un rango de memoria virtual en una dirección definida. Es por eso que esta solución es un enfoque sólido para el pivotamiento de el stack.</p>
+<h2 id="memoria-virtual">Memoria Virtual</h2>
+<p>La imagen de abajo está tomada del blog de <a href="https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f">wafzsucks</a> blog).</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/vm.png" alt="alt text"></p>
-<p>We can see in the image above that a virtaul address is mapped to multiple regions in physical memory. In short the OS manages virtual address spaces and the assignment of real memory. Address translation hardware in the CPU, often referred to as a memory management unit (MMU), automatically translates virtual addresses to physical addresses.</p>
-<p>As stated by <a href="https://en.wikipedia.org/wiki/Virtual_memory">Wikipedia</a>, the benefits of virtual memory include:</p>
+<p>Podemos ver en la imagen de arriba que una dirección virtual está asignada a múltiples regiones en la memoria física. En corto, el sistema operativo gestiona los espacios de direcciones virtuales y la asignación de memoria real. El hardware de traducción de direcciones en la CPU, a menudo denominado unidad de administración de memoria (MMU), traduce automáticamente direcciones virtuales en direcciones físicas.</p>
+<p>Según <a href="https://en.wikipedia.org/wiki/Virtual_memory">Wikipedia</a>, los beneficios de la memoria virtual incluyen:</p>
 <ul>
-<li>Applications don&rsquo;t have to manage shared memory space</li>
-<li>Ability to share memory used by libraries between processes</li>
-<li>Increased security due to memory isolation</li>
+<li>Las aplicaciones no tienen que administrar el espacio de memoria compartida</li>
+<li>Capacidad de compartir la memoria utilizada por las librerias entre procesos.</li>
+<li>Mayor seguridad debido al aislamiento de la memoria.</li>
 </ul>
-<p>And conceptually being able to use more memory than might be physically availible, using the technique of paging or segmentation.</p>
-<h2 id="paged-memory-summary">Paged Memory Summary</h2>
-<p>When we hear the words <code>Paged memory</code> we&rsquo;re refering to a technique where the OS divides a program&rsquo;s or system&rsquo;s memory into fixed blocks called pages (as we know). Below are some key concepts to keep in mind with paged memory:</p>
+<p>Y conceptualmente poder utilizar más memoria de la que podría estar disponible físicamente, utilizando la técnica de paginación o segmentación.</p>
+<h2 id="sumario-de-memoria-paginada">Sumario de Memoria Paginada</h2>
+<p>Cuando escuchamos las palabras <code>memoria paginada</code> (Paged Memory) nos referimos a una técnica en la que el sistema operativo divide la memoria de un programa o sistema en bloques fijos llamados páginas (como sabemos). A continuación se muestran algunos conceptos clave a tener en cuenta con la memoria paginada:</p>
 <ul>
-<li>Page Table
+<li>Tabla de páginas (Page Table)
 <ul>
-<li>Operating systems maintain a data structure known as a page table. This table keeps track of the mapping between virtaul memory addresses used by a program and the physical memory address location where the actaul data is stored.</li>
-</ul>
-</li>
-<li>Virtual Memory
-<ul>
-<li>As prevously mentioned this is how programs interact with physical memory without directly touching it. Basically translating virtual addresses to physical addresses.</li>
+<li>Los sistemas operativos mantienen una estructura de información conocida como tabla de páginas. Esta tabla realiza un seguimiento de la asignación entre las direcciones de memoria virtual utilizadas por un programa y la ubicación de la dirección de memoria física donde se almacenan la información.</li>
 </ul>
 </li>
-<li>Page Faults
+<li>Memoria virtual (Virtual Memory)
 <ul>
-<li>When a program access a virtual memory page that is not currently in physical memory, a page fault occurs. From here control is transferred from the program to the operating system.</li>
+<li>Como se mencionó anteriormente, así es como los programas interactúan con la memoria física sin tocarla directamente. Básicamente traducir direcciones virtuales a direcciones físicas.</li>
 </ul>
 </li>
-<li>Demand Paging
+<li>Fallos de página (Page Faults)
 <ul>
-<li>Most operating systems use demang paging, which is where pages are only loaded into memory when needed. This is to conserve physical memory by loading ONLY pages that are actively being used.</li>
+<li>Cuando un programa accede a una página de memoria virtual que no está actualmente en la memoria física, se produce una falla de página. Desde aquí el control se transfiere del programa al sistema operativo.</li>
 </ul>
 </li>
-<li>Page Replacement
+<li>Paginación por demanda (Demand Paging)
 <ul>
-<li>If physical memory is full, the operating system may need to choose which paged to remove from memory to make space for new pages.</li>
+<li>La mayoría de los sistemas operativos utilizan paginación exigente, que es donde las páginas sólo se cargan en la memoria cuando es necesario. Esto es para conservar la memoria física cargando SOLO páginas que se están utilizando activamente.</li>
 </ul>
 </li>
-<li>Page Size
+<li>Reemplazo de página (Page Replacement)
 <ul>
-<li>The size of each page is a crucial factor in the efficiency of memory management. A smaller page size can lead to more fine-grained memory management but may also result in increased overhead due to a larger page table. A larger page size might reduce the table size, but may result in more data being loaded into memory even if only a small portion is needed.</li>
+<li>Si la memoria física está llena, es posible que el sistema operativo deba elegir qué páginas eliminar de la memoria para dejar espacio para páginas nuevas.</li>
+</ul>
+</li>
+<li>Tamaño de página (Page Size)
+<ul>
+<li>El tamaño de cada página es un factor crucial en la eficiencia de la gestión de la memoria. Un tamaño de página más pequeño puede conducir a una administración de memoria más detallada, pero también puede generar una mayor sobrecarga debido a una tabla de páginas más grande. Un tamaño de página mayor puede reducir el tamaño de la tabla, pero puede provocar que se carguen más datos en la memoria incluso si solo se necesita una pequeña parte.</li>
 </ul>
 </li>
 </ul>
-<h1 id="testing-theory">Testing Theory</h1>
-<p>Let&rsquo;s revisit our code example and run it.</p>
+<h1 id="probando-la-teoría">Probando la Teoría</h1>
+<p>Revisemos nuestro ejemplo de código.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  lpvAllocTarget <span style="color:#f92672">=</span> (LPVOID)<span style="color:#ae81ff">0xF6C875C0</span>;
 </span></span><span style="display:flex;"><span>  lpvAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>((lpvAllocTarget <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x1000</span>),
 </span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x10000</span>,
@@ -379,11 +379,11 @@ $ iconv -f utf-16 -t us-ascii//TRANSLIT rop.txt &gt; rop_ascii.txt
 </span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
 </span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
 </span></span><span style="display:flex;"><span>                  NULL);
-</span></span></code></pre></div><p>If we check the PTE of the new stack address we&rsquo;ll see this is <strong>NOT</strong> a valid page entry.</p>
+</span></span></code></pre></div><p>Si verificamos el PTE de la nueva dirección de stack, veremos que <strong>NO ES</strong> una entrada de página válida.</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/pte.png" alt="alt text"></p>
-<p>Meaning that the control will be given to the kernel and we crash!</p>
+<p>Que significa que el control se le dará al kernel y fallaremos!</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/crash2.png" alt="alt text"></p>
-<p>This is due to the aforemention <strong>Demand Paging</strong>. To make this a valid page, we can try writing to the prevous page to avoid the <strong>Page Fault</strong> since it will then be in use! Let&rsquo;s try it!</p>
+<p>Esto es por la <strong>paginación de demanda</strong> mencionada anteriormente. Para que esta sea una página válida, podemos intentar escribir en la página anterior para evitar el <strong>error de página</strong>, ya que entonces estará en uso. Ate intentarlo!</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>  lpvAllocTarget <span style="color:#f92672">=</span> (LPVOID)<span style="color:#ae81ff">0xF6C875C0</span>;
 </span></span><span style="display:flex;"><span>  lpvAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>((lpvAllocTarget <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x1000</span>),
 </span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x10000</span>,
@@ -398,13 +398,13 @@ $ iconv -f utf-16 -t us-ascii//TRANSLIT rop.txt &gt; rop_ascii.txt
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Writing random buffer to prevous page</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlFillMemory</span>((lpvAllocTarget<span style="color:#f92672">-</span><span style="color:#ae81ff">0x1000</span>), <span style="color:#ae81ff">0x1000</span>, <span style="color:#e6db74">&#39;A&#39;</span>);
-</span></span></code></pre></div><p>This time when we hit the breakpoint we can see that the page is valid :)</p>
+</span></span></code></pre></div><p>Esta vez, cuando llegamos al punto de interrupción, podemos ver que la página es válida :)</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/ptev.png" alt="alt text"></p>
-<p>However we still get a crash? This is where <code>VirtualLock</code> comes into play.</p>
+<p>Sin embargo, todavía tenemos un choque? Aquí es donde entra <code>VirtualLock</code>.</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/toohigh.PNG" alt="alt text"></p>
-<p>However, I still got a crash! Based on the information from Kristal-G&rsquo;s blog it looks like this address it too high. This is also shown by the actual error above - with that I decided to change my stack pivot gadget.</p>
-<h1 id="exploitation">Exploitation</h1>
-<p>After crying for a while I managed to get together a reliable exploit as shown below:</p>
+<p>Sin embargo, todavía tengo un choque! Según la información del blog de Kristal-G, parece que esta dirección es demasiado alta. Esto también se muestra en el error real anterior: con eso decidí cambiar mi gadget de pivote de stack.</p>
+<h1 id="explotación">Explotación</h1>
+<p>Después de llorar un rato logré crear un exploit seguro como se muestra a abajo:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
@@ -640,14 +640,14 @@ $ iconv -f utf-16 -t us-ascii//TRANSLIT rop.txt &gt; rop_ascii.txt
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>If you followed along, we had a valid page? So why did we need VirtualLock?</p>
-<p>Well&hellip; we didn&rsquo;t! The exploit shown above did not use the VirtualLock function at all. When debugging we saw that the page was valid&hellip; in addition VirtualLock never succeeded&hellip; I would keep getting the error code ERROR_NOACCESS (0x3E6) meaning the page never &ldquo;locked&rdquo;.</p>
-<p>If you check the documentation on MSDN you&rsquo;ll see that two calls are needed sometimes, due to the way this function works. Does it need higher privileges? Not sure but I removed it to test if it was doing anything, and to my suprise it wasn&rsquo;t.</p>
-<p>In addition I found exploitation to be really unreliable. In order to make it work 90% of the time (If not 100%), what needed to be done?</p>
-<p>You guessed it! A call to <code>Sleep()</code> :P</p>
-<p>My thoery is that the allocation needed time to &ldquo;register&rdquo;. Regardless exploitation demo shown below!</p>
+</span></span></code></pre></div><p>Si me seguiste, teníamos una página válida? Entonces, por qué necesitábamos VirtualLock?</p>
+<p>Bueno&hellip; no era necesarios! El exploit mostrado arriba no utilizó la función VirtualLock. Durante la depuración vimos que la página era válida&hellip; además VirtualLock nunca tuvo éxito&hellip; Continuaba recibiendo el código de error ERROR_NOACCESS (0x3E6), lo que significa que la página nunca se &ldquo;bloqueó&rdquo;.</p>
+<p>Si consultas la documentación en MSDN verá que a veces se necesitan dos llamadas, debido a la forma en que funciona esta función. ¿Necesita mayores privilegios? No estoy seguro, pero lo eliminé para comprobar si hacía algo y, para mi sorpresa, no sea.</p>
+<p>Además, encontré que la explotación era realmente poco confiable. Para que funcione el 90% del tiempo (si no el 100%), qué se debe hacer?</p>
+<p>Lo has adivinado! Una llamada a <code>Sleep()</code> :P</p>
+<p>Mi teoría es que la asignación necesitaba tiempo para &ldquo;registrarse&rdquo;. Explotación se muestra a abajo!</p>
 <p><img src="/0x06-Approaching-Modern-Windows-Kernel-Type-Confusions/exploit.gif" alt="alt text"></p>
-<h1 id="sources">Sources</h1>
+<h1 id="recursos">Recursos</h1>
 <pre tabindex="0"><code>https://wafzsucks.medium.com/how-a-simple-k-typeconfusion-took-me-3-months-long-to-create-a-exploit-f643c94d445f
 https://kristal-g.github.io/2021/02/20/HEVD_Type_Confusion_Windows_10_RS5_x64.html
 https://kristal-g.github.io/2021/02/07/HEVD_StackOverflowGS_Windows_10_RS5_x64.html

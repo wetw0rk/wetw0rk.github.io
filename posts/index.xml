@@ -6,14 +6,21 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 19 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x06 - Acercándose a Windows Kernel Type Confusions Modernos</title>
+      <link>https://wetw0rk.github.io/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
+      <pubDate>Sun, 19 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</guid>
+      <description>En el último tutorial explotamos una &amp;ldquo;Type Confusion&amp;rdquo; dentro del kernel de Windows 7 (x86). Habiendo obtenido un base sólido para esta vulnerabilidad, podemos proceder a intentar aprovechalo dentro de Windows 11 (x64).&#xA;Table of Contents Ingeniería Inversa Escribiendo el Exploit Plan de Ataque El Comienzo de Sufrimiento Teoría Operaciones Generales de Memoria Memoria Virtual Sumario de Memoria Paginada Probando la Teoría Explotación Recursos Ingeniería Inversa Veamos el controlador vulnerable y las estructuras respectivas.</description>
+    </item>
     <item>
       <title>0x06 - Approaching Modern Windows Kernel Type Confusions</title>
       <link>https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
       <guid>https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
-      <description>In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).&#xA;Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Exploitation Sources Reverse Engineering Let&amp;rsquo;s take a look at the vulnerable handler and respective structures.</description>
+      <description>In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).&#xA;Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Testing Theory Exploitation Sources Reverse Engineering Let&amp;rsquo;s take a look at the vulnerable handler and respective structures.</description>
     </item>
     <item>
       <title>0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades</title>
