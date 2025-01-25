@@ -6,8 +6,15 @@
     <description>Recent content on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 19 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 25 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x07 - Introduction to Windows Kernel Race Conditions</title>
+      <link>https://wetw0rk.github.io/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
+      <pubDate>Sat, 25 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x07-introduction-to-windows-kernel-race-conditions/</guid>
+      <description>In the last tutorial we successfully exploited a Type Confusion vulnerability against Windows 11 (x64). In this tutorial we&amp;rsquo;ll introduce a new vulnerability type - a Race Condition, more specifically a double fetch!&#xA;As with the previous tutorials, the introduction to this vulnerability type will be done within Windows 7 (x86).&#xA;Table of Contents What is a Race Condition (High Level) Using the Source DoubleFetchIoctlHandler TriggerDoubleFetch Theory Crafting a PoC Exploitation Sources What is a Race Condition (High Level) Race Conditions are one of the most complex and powerful vulnerability types an attacker can exploit on any system or application.</description>
+    </item>
     <item>
       <title>0x06 - Acercándose a Windows Kernel Type Confusions Modernos</title>
       <link>https://wetw0rk.github.io/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
