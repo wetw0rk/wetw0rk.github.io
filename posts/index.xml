@@ -6,8 +6,15 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 25 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 26 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x07 - Introducción a Windows Kernel Race Conditions</title>
+      <link>https://wetw0rk.github.io/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>
+      <pubDate>Sun, 26 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</guid>
+      <description>En el último tutorial explotamos una vulnerabilidad de Type Confusion contra Windows 11 (x64). En este tutorial, presentaremos un nuevo tipo de vulnerabilidad: una Condición de carrera o Race Condition, más específicamente, un Double Fetch!&#xA;Al igual que en los tutoriales anteriores, la introducción a este tipo de vulnerabilidad lo vamos a ser dentro de Windows 7 (x86).&#xA;Table of Contents Qué es una Condición de Carrera (Alto Nivel) Usando el Código DoubleFetchIoctlHandler TriggerDoubleFetch Teoría Creando un PoC Explotación Recursos Qué es una Condición de Carrera (Alto Nivel) Condicións de carrera o Race Conditions son una de las vulnerabilidades mas poderosas y complicadas que un atacador puede aprovechar.</description>
+    </item>
     <item>
       <title>0x07 - Introduction to Windows Kernel Race Conditions</title>
       <link>https://wetw0rk.github.io/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
