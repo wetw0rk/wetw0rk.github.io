@@ -6,8 +6,22 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 26 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 01 Feb 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x08 - Modern Windows Kernel Race Conditions</title>
+      <link>https://wetw0rk.github.io/posts/0x08-modern-windows-kernel-race-conditions/</link>
+      <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x08-modern-windows-kernel-race-conditions/</guid>
+      <description>With Windows 7 (x86) conquered we can proceed to attempt exploitation in Windows 11 (x64).&#xA;Let&amp;rsquo;s jump in.&#xA;Table of Contents Reverse Engineering PoC Getting Code Execution Exploitation Reverse Engineering Let&amp;rsquo;s take a look at the vulnerable handler as well as respective structures used by the handler function.&#xA;Next, let&amp;rsquo;s look at TriggerDoubleFetch() where the Double Fetch vulnerability is located.&#xA;We can see that our controlled input is referenced two different times just as before which means we should be able to trigger the race condition in the same manor as before, more specifically the double fetch!</description>
+    </item>
+    <item>
+      <title>0x08 - Race Conditions Moderno Del Windows Kernel</title>
+      <link>https://wetw0rk.github.io/posts/0x08-race-conditions-moderno-del-windows-kernel/</link>
+      <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x08-race-conditions-moderno-del-windows-kernel/</guid>
+      <description>Con Windows 7 (x86) conquistado podemos proceder a intentar aprovechar el Race Condition en Windows 11 (x64).&#xA;Comencemos.&#xA;Table of Contents Ingeniería Inversa PoC Obtener Ejecución del Código Explotación Ingeniería Inversa Echemos una mirada al codigo vulnerable, y las respectivas estructuras utilizadas por la función del controlador.&#xA;Veamos TriggerDoubleFetch() donde se encuentra la vulnerabilidad del Double Fetch Race Condition.&#xA;Podemos ver que se hace referencia a nuestra información controlada en dos momentos diferentes, como antes, lo que significa que deberíamos poder activar la condición de carrera de la misma manera que antes, más específicamente el Double Fetch!</description>
+    </item>
     <item>
       <title>0x07 - Introducción a Windows Kernel Race Conditions</title>
       <link>https://wetw0rk.github.io/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>

