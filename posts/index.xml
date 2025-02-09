@@ -6,8 +6,15 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 08 Feb 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 09 Feb 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x09 - El regreso del Windows Kernel Stack Overflow</title>
+      <link>https://wetw0rk.github.io/posts/0x09-el-regreso-del-stack-overflow/</link>
+      <pubDate>Sun, 09 Feb 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x09-el-regreso-del-stack-overflow/</guid>
+      <description>En el último tutorial explotamos una de las clases de errores más notorias de toda la industria: las Condiciones de Carrera o también conocido como Race Conditions.&#xA;En este tutorial volveremos a una clase de error que hemos explotado antes - The Stack Overflow. Sin embargo, esta vez nos encontraremos con una mitigación de exploits conocida como stack cookies o canaries. Dicho esto, saltaremos Windows 7 (x86) y procederemos directamente a Windows 11 (x64).</description>
+    </item>
     <item>
       <title>0x09 - Return of the Windows Kernel Stack Overflow</title>
       <link>https://wetw0rk.github.io/posts/0x09-return-of-the-stack-overflow/</link>
