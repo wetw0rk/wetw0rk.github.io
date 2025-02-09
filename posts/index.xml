@@ -6,8 +6,15 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 01 Feb 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 08 Feb 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://wetw0rk.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>0x09 - Return of the Windows Kernel Stack Overflow</title>
+      <link>https://wetw0rk.github.io/posts/0x09-return-of-the-stack-overflow/</link>
+      <pubDate>Sat, 08 Feb 2025 00:00:00 +0000</pubDate>
+      <guid>https://wetw0rk.github.io/posts/0x09-return-of-the-stack-overflow/</guid>
+      <description>In the last tutorial we exploited one of the most notorious bug classes in the entire industry - Race Conditions.&#xA;In this tutorial we’re going back to a bug class we have exploited before - The Stack Overflow. However, this time we’ll be encountering an exploit mitigation known as stack cookies or canaries. That said, we’ll be skipping Windows 7 (x86) and jumping directly into Windows 11 (x64).&#xA;It’s important to note that the core issue in relation to the security vulnerability HAS NOT changed we’ll still be exploiting a Stack Overflow.</description>
+    </item>
     <item>
       <title>0x08 - Modern Windows Kernel Race Conditions</title>
       <link>https://wetw0rk.github.io/posts/0x08-modern-windows-kernel-race-conditions/</link>

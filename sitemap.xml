@@ -3,15 +3,18 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://wetw0rk.github.io/</loc>
-    <lastmod>2025-02-01T00:00:00+00:00</lastmod>
+    <lastmod>2025-02-08T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://wetw0rk.github.io/posts/0x09-return-of-the-stack-overflow/</loc>
+    <lastmod>2025-02-08T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://wetw0rk.github.io/posts/</loc>
+    <lastmod>2025-02-08T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://wetw0rk.github.io/posts/0x08-modern-windows-kernel-race-conditions/</loc>
     <lastmod>2025-02-01T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://wetw0rk.github.io/posts/0x08-race-conditions-moderno-del-windows-kernel/</loc>
-    <lastmod>2025-02-01T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://wetw0rk.github.io/posts/</loc>
     <lastmod>2025-02-01T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://wetw0rk.github.io/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</loc>
