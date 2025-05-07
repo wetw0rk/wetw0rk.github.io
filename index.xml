@@ -1,166 +1,166 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title></title>
-    <link>https://wetw0rk.github.io/</link>
-    <description>Recent content on </description>
+    <title>Blowfish</title>
+    <link>//localhost:1313/</link>
+    <description>Recent content on Blowfish</description>
     <generator>Hugo</generator>
-    <language>en-us</language>
+    <language>en</language>
     <lastBuildDate>Sun, 09 Feb 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://wetw0rk.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="//localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>0x09 - El regreso del Windows Kernel Stack Overflow</title>
-      <link>https://wetw0rk.github.io/posts/0x09-el-regreso-del-stack-overflow/</link>
+      <link>//localhost:1313/posts/0x09-el-regreso-del-stack-overflow/</link>
       <pubDate>Sun, 09 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x09-el-regreso-del-stack-overflow/</guid>
-      <description>En el último tutorial explotamos una de las clases de errores más notorias de toda la industria: las Condiciones de Carrera o también conocido como Race Conditions.&#xA;En este tutorial volveremos a una clase de error que hemos explotado antes - The Stack Overflow. Sin embargo, esta vez nos encontraremos con una mitigación de exploits conocida como stack cookies o canaries. Dicho esto, saltaremos Windows 7 (x86) y procederemos directamente a Windows 11 (x64).</description>
+      <guid>//localhost:1313/posts/0x09-el-regreso-del-stack-overflow/</guid>
+      <description>En el último tutorial explotamos una de las clases de errores más notorias de toda la industria: las Condiciones de Carrera o también conocido como Race Conditions.</description>
     </item>
     <item>
       <title>0x09 - Return of the Windows Kernel Stack Overflow</title>
-      <link>https://wetw0rk.github.io/posts/0x09-return-of-the-stack-overflow/</link>
+      <link>//localhost:1313/posts/0x09-return-of-the-stack-overflow/</link>
       <pubDate>Sat, 08 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x09-return-of-the-stack-overflow/</guid>
-      <description>In the last tutorial we exploited one of the most notorious bug classes in the entire industry - Race Conditions.&#xA;In this tutorial we’re going back to a bug class we have exploited before - The Stack Overflow. However, this time we’ll be encountering an exploit mitigation known as stack cookies or canaries. That said, we’ll be skipping Windows 7 (x86) and jumping directly into Windows 11 (x64).&#xA;It’s important to note that the core issue in relation to the security vulnerability HAS NOT changed we’ll still be exploiting a Stack Overflow.</description>
+      <guid>//localhost:1313/posts/0x09-return-of-the-stack-overflow/</guid>
+      <description>In the last tutorial we exploited one of the most notorious bug classes in the entire industry - Race Conditions.</description>
     </item>
     <item>
       <title>0x08 - Modern Windows Kernel Race Conditions</title>
-      <link>https://wetw0rk.github.io/posts/0x08-modern-windows-kernel-race-conditions/</link>
+      <link>//localhost:1313/posts/0x08-modern-windows-kernel-race-conditions/</link>
       <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x08-modern-windows-kernel-race-conditions/</guid>
-      <description>With Windows 7 (x86) conquered we can proceed to attempt exploitation in Windows 11 (x64).&#xA;Let&amp;rsquo;s jump in.&#xA;Table of Contents Reverse Engineering PoC Getting Code Execution Exploitation Reverse Engineering Let&amp;rsquo;s take a look at the vulnerable handler as well as respective structures used by the handler function.&#xA;Next, let&amp;rsquo;s look at TriggerDoubleFetch() where the Double Fetch vulnerability is located.&#xA;We can see that our controlled input is referenced two different times just as before which means we should be able to trigger the race condition in the same manor as before, more specifically the double fetch!</description>
+      <guid>//localhost:1313/posts/0x08-modern-windows-kernel-race-conditions/</guid>
+      <description>With Windows 7 (x86) conquered we can proceed to attempt exploitation in Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x08 - Race Conditions Moderno Del Windows Kernel</title>
-      <link>https://wetw0rk.github.io/posts/0x08-race-conditions-moderno-del-windows-kernel/</link>
+      <link>//localhost:1313/posts/0x08-race-conditions-moderno-del-windows-kernel/</link>
       <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x08-race-conditions-moderno-del-windows-kernel/</guid>
-      <description>Con Windows 7 (x86) conquistado podemos proceder a intentar aprovechar el Race Condition en Windows 11 (x64).&#xA;Comencemos.&#xA;Table of Contents Ingeniería Inversa PoC Obtener Ejecución del Código Explotación Ingeniería Inversa Echemos una mirada al codigo vulnerable, y las respectivas estructuras utilizadas por la función del controlador.&#xA;Veamos TriggerDoubleFetch() donde se encuentra la vulnerabilidad del Double Fetch Race Condition.&#xA;Podemos ver que se hace referencia a nuestra información controlada en dos momentos diferentes, como antes, lo que significa que deberíamos poder activar la condición de carrera de la misma manera que antes, más específicamente el Double Fetch!</description>
+      <guid>//localhost:1313/posts/0x08-race-conditions-moderno-del-windows-kernel/</guid>
+      <description>Con Windows 7 (x86) conquistado podemos proceder a intentar aprovechar el Race Condition en Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x07 - Introducción a Windows Kernel Race Conditions</title>
-      <link>https://wetw0rk.github.io/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>
+      <link>//localhost:1313/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>
       <pubDate>Sun, 26 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</guid>
-      <description>En el último tutorial explotamos una vulnerabilidad de Type Confusion contra Windows 11 (x64). En este tutorial, presentaremos un nuevo tipo de vulnerabilidad: una Condición de carrera o Race Condition, más específicamente, un Double Fetch!&#xA;Al igual que en los tutoriales anteriores, la introducción a este tipo de vulnerabilidad lo vamos a ser dentro de Windows 7 (x86).&#xA;Table of Contents Qué es una Condición de Carrera (Alto Nivel) Usando el Código DoubleFetchIoctlHandler TriggerDoubleFetch Teoría Creando un PoC Explotación Recursos Qué es una Condición de Carrera (Alto Nivel) Condicións de carrera o Race Conditions son una de las vulnerabilidades mas poderosas y complicadas que un atacador puede aprovechar.</description>
+      <guid>//localhost:1313/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</guid>
+      <description>En el último tutorial explotamos una vulnerabilidad de Type Confusion contra Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x07 - Introduction to Windows Kernel Race Conditions</title>
-      <link>https://wetw0rk.github.io/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
+      <link>//localhost:1313/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
       <pubDate>Sat, 25 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x07-introduction-to-windows-kernel-race-conditions/</guid>
-      <description>In the last tutorial we successfully exploited a Type Confusion vulnerability against Windows 11 (x64). In this tutorial we&amp;rsquo;ll introduce a new vulnerability type - a Race Condition, more specifically a double fetch!&#xA;As with the previous tutorials, the introduction to this vulnerability type will be done within Windows 7 (x86).&#xA;Table of Contents What is a Race Condition (High Level) Using the Source DoubleFetchIoctlHandler TriggerDoubleFetch Theory Crafting a PoC Exploitation Sources What is a Race Condition (High Level) Race Conditions are one of the most complex and powerful vulnerability types an attacker can exploit on any system or application.</description>
+      <guid>//localhost:1313/posts/0x07-introduction-to-windows-kernel-race-conditions/</guid>
+      <description>In the last tutorial we successfully exploited a Type Confusion vulnerability against Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x06 - Acercándose a Windows Kernel Type Confusions Modernos</title>
-      <link>https://wetw0rk.github.io/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
+      <link>//localhost:1313/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
       <pubDate>Sun, 19 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</guid>
-      <description>En el último tutorial explotamos una &amp;ldquo;Type Confusion&amp;rdquo; dentro del kernel de Windows 7 (x86). Habiendo obtenido un base sólido para esta vulnerabilidad, podemos proceder a intentar aprovechalo dentro de Windows 11 (x64).&#xA;Table of Contents Ingeniería Inversa Escribiendo el Exploit Plan de Ataque El Comienzo de Sufrimiento Teoría Operaciones Generales de Memoria Memoria Virtual Sumario de Memoria Paginada Probando la Teoría Explotación Recursos Ingeniería Inversa Veamos el controlador vulnerable y las estructuras respectivas.</description>
+      <guid>//localhost:1313/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</guid>
+      <description>En el último tutorial explotamos una &amp;ldquo;Type Confusion&amp;rdquo; dentro del kernel de Windows 7 (x86).</description>
     </item>
     <item>
       <title>0x06 - Approaching Modern Windows Kernel Type Confusions</title>
-      <link>https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
+      <link>//localhost:1313/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
-      <description>In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel. Having obtained a solid foundation on approaching this vulnerability, we can now proceed to attempt exploitation on Windows 11 (x64).&#xA;Table of Contents Reverse Engineering Writing the Exploit Plan of Attack The Start of Suffering Thoery General Memory Operations Virtual Memory Paged Memory Summary Testing Theory Exploitation Sources Reverse Engineering Let&amp;rsquo;s take a look at the vulnerable handler and respective structures.</description>
+      <guid>//localhost:1313/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
+      <description>In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel.</description>
     </item>
     <item>
       <title>0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades</title>
-      <link>https://wetw0rk.github.io/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>
+      <link>//localhost:1313/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>
       <pubDate>Fri, 10 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</guid>
-      <description>En el último tutorial aprovechamos un &amp;ldquo;Write-What-Where&amp;rdquo; o un “Escribir Qué Dónde” dentro de Windows 7 (x86) y Windows 11 (x64).&#xA;Igual que en los últimos tutoriales, introduciremos una nueva falla en Windows 7 (x86) kernel para obtener una base sólida sobre cómo ocurre la vulnerabilidad. Para ser más específicos, aprenderemos cómo aprovechar un Type Confusion!&#xA;Table of Contents Qué es un Type Confusion (Alto Nivel) Usando el Código TypeConfusionIoctlHandler TriggerTypeConfusion TypeConfusionObjectInitializer Pruebas Dinámicas Explotación Qué es un Type Confusion (Alto Nivel) No estás familiarizado con lo que es un Type Confusion?</description>
+      <guid>//localhost:1313/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</guid>
+      <description>En el último tutorial aprovechamos un &amp;ldquo;Write-What-Where&amp;rdquo; o un “Escribir Qué Dónde” dentro de Windows 7 (x86) y Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x05 - Introduction to Windows Kernel Type Confusion Vulnerabilities</title>
-      <link>https://wetw0rk.github.io/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
+      <link>//localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
       <pubDate>Thu, 09 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
-      <description>In the last tutorial we exploited a &amp;ldquo;Write-What-Where&amp;rdquo; vulnerability within Windows 7 (x86) and Windows 11 (x64).&#xA;As with previous tutorials we will begin exploiting a new flaw against the Windows 7 (x86) kernel to get a solid foundation on how the vulnerability occurs. More specifically we will be learning about Type Confusions!&#xA;Table of Contents What is a Type Confusion (High Level) Using the Source TypeConfusionIoctlHandler TriggerTypeConfusion TypeConfusionObjectInitializer Dynamic Testing Exploitation What is a Type Confusion (High Level) Not familiar with what a Type Confusion is?</description>
+      <guid>//localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
+      <description>In the last tutorial we exploited a &amp;ldquo;Write-What-Where&amp;rdquo; vulnerability within Windows 7 (x86) and Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x04 - Introducción a Windows Kernel &#34;Write What Where&#34; Vulnerabilidades</title>
-      <link>https://wetw0rk.github.io/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
+      <link>//localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
       <pubDate>Sun, 05 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
-      <description>Si has seguido los tutoriales desde el principio, sientete orgulloso de superar el &amp;ldquo;Use After Free&amp;rdquo; en el Windows Kernel! Ahora vamos a aprovechar un &amp;ldquo;Write What Where&amp;rdquo; vulnerabilidad en Windows 7 (x86) y luego proceder a adaptar lo que aprendemos a Windows 11 (x64). La traducción de esta vulnerabilidad en español sería &amp;ldquo;Escribir, Qué, Dónde&amp;rdquo;.&#xA;Podría decirse que este es uno de los tipos de vulnerabilidades más poderosos - que personalmente prefiero llamar &amp;ldquo;escritura arbitraria&amp;rdquo;, ya que así es como lo llamaban mis amigos antes de que yo hubiera oído de &amp;ldquo;Write What Where&amp;rdquo;.</description>
+      <guid>//localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
+      <description>Si has seguido los tutoriales desde el principio, sientete orgulloso de superar el &amp;ldquo;Use After Free&amp;rdquo; en el Windows Kernel!</description>
     </item>
     <item>
       <title>0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities</title>
-      <link>https://wetw0rk.github.io/posts/0x04-writing-what-where-in-the-kernel/</link>
+      <link>//localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</link>
       <pubDate>Sat, 04 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x04-writing-what-where-in-the-kernel/</guid>
-      <description>First off, if you&amp;rsquo;re following the series from the start, great job getting past the Use After Free in the Windows Kernel! We&amp;rsquo;ll now be exploiting a Write What Where vulnerability on Windows 7 (x86) then proceed to adapt what we learn to Windows 11 (x64).&#xA;Arguably this is one of the most powerful types of vulnerabilities - which personally, I prefer to call an Arbitrary Write since that&amp;rsquo;s what my buddies called it before I had ever heard of &amp;ldquo;Write What Where&amp;rdquo;.</description>
+      <guid>//localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</guid>
+      <description>First off, if you&amp;rsquo;re following the series from the start, great job getting past the Use After Free in the Windows Kernel!</description>
     </item>
     <item>
       <title>0x03 - Acercándose al Heap Moderno del Windows Kernel</title>
-      <link>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
+      <link>//localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
-      <description>Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).&#xA;Es importante tener en cuenta que, aunque confirmamos que Violet Phosphorus funciona contra Windows 11 24H2, durante el resto de la serie usaré Windows 11 (x64) - 10.0.22000 N/A Build 22000, simplemente porque esta es la versión con la que probé las vulnerabilidades durante el desarrollo inicial.</description>
+      <guid>//localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
+      <description>Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x03 - Approaching the Modern Windows Kernel Heap</title>
-      <link>https://wetw0rk.github.io/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
+      <link>//localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
-      <description>Having exploited the UaF in Windows 7 (x86) we have obtained a solid idea of how this vulnerability works, it&amp;rsquo;s time to attempt exploitation on Windows 11 (x64).&#xA;It&amp;rsquo;s important to note, although we confirmed that Violet Phosphorus works against Windows 11 24H2, for the remainder of the series I will be using Windows 11 (x64) - 10.0.22000 N/A Build 22000, simply due this being the Windows version the rest of the exploits were tested on.</description>
+      <guid>//localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
+      <description>Having exploited the UaF in Windows 7 (x86) we have obtained a solid idea of how this vulnerability works, it&amp;rsquo;s time to attempt exploitation on Windows 11 (x64).</description>
     </item>
     <item>
       <title>0x02 - Introducción a Windows Kernel Use After Frees (UaFs)</title>
-      <link>https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
+      <link>//localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
       <pubDate>Sun, 15 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
-      <description>Si has estado siguiendo la serie de Windows Kernel Exploitation consecutivamente, deberías haber exploited un Stack Overflow básico contra Windows 7 (x86) y Windows 10 (x64). Aunque este es un salto grande, hay muchas más vulnerabilidades que pueden resultar en la ejecución de código. La mejor manera de familiarizarse con ellos es estudiarlos en un sistema con mitigaciones mínimas. Por este motivo volveremos a Windows 7 (x86).&#xA;Además, no utilizaremos Ghidra, esta vez usaremos el código de HEVD.</description>
+      <guid>//localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
+      <description>Si has estado siguiendo la serie de Windows Kernel Exploitation consecutivamente, deberías haber exploited un Stack Overflow básico contra Windows 7 (x86) y Windows 10 (x64).</description>
     </item>
     <item>
       <title>0x02 - Introduction to Windows Kernel Use After Frees (UaFs)</title>
-      <link>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</link>
+      <link>//localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</link>
       <pubDate>Sat, 14 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
-      <description>If you&amp;rsquo;ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64). Although this is a major accomplishment there are more vulnerabilities that can result in code execution. The best way to get familiar with them is to exploit them on a system with minimal mitigations. For this reason, we&amp;rsquo;ll be returning back to Windows 7 (x86).</description>
+      <guid>//localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
+      <description>If you&amp;rsquo;ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64).</description>
     </item>
     <item>
       <title>0x01 - Matándo Windows Kernel Mitigaciones</title>
-      <link>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
+      <link>//localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
       <pubDate>Sun, 08 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
-      <description>Esto fue posible por trabajo duro y determinación. No te sientas frustrado si estas cosas no las entiendes inmediatamente, y recordarte la fuente de la verdad siempre será el código. Y, para nosotros, el código es assembly crudo. Es importante que entiendas estas técnicas porque cuando Microsoft saca nuevas mitigaciones tu fundación te permitirá desarrollar evasiones. Entonces, si algo no está claro, tóma tu tiempo y revísalo con WinDbg.&#xA;En el último artículo deberías haber obtenido un entendimiento sólido de los fundamentos de Windows Kernel Explotación.</description>
+      <guid>//localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
+      <description>Esto fue posible por trabajo duro y determinación.</description>
     </item>
     <item>
       <title>0x01 - Killing Windows Kernel Mitigations</title>
-      <link>https://wetw0rk.github.io/posts/0x01-killing-windows-kernel-mitigations/</link>
+      <link>//localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</link>
       <pubDate>Sat, 07 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x01-killing-windows-kernel-mitigations/</guid>
-      <description>This post was made possible through hard work and determination. Do not feel frustrated if this stuff does not click immediately and remember, the source of truth will always be the source code. For us, our source code is raw assembly. That said it’s important you understand these techniques in detail because when Microsoft releases new mitigations your foundation is what will allow you to develop bypasses. So, if something is not clear take your time and step through it in the debugger.</description>
+      <guid>//localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</guid>
+      <description>This post was made possible through hard work and determination.</description>
     </item>
     <item>
       <title>0x00 - Introducción a Windows Kernel Explotación</title>
-      <link>https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
+      <link>//localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
       <pubDate>Sun, 01 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
-      <description>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, &amp;ldquo;no se nace aprendido&amp;rdquo;. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).&#xA;Para empezar, baja estos programas:&#xA;Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.</description>
+      <guid>//localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
+      <description>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación.</description>
     </item>
     <item>
       <title>0x00 - Introduction to Windows Kernel Exploitation</title>
-      <link>https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
+      <link>//localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
       <pubDate>Fri, 29 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
-      <description>This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation. As with anything in life, you must start somewhere and although we will be focusing on Windows 7 (x86) and Windows 10 (x64) for this post; we will ultimately be working our way up to Windows 11 (x64).&#xA;To get started, for this post you will need:</description>
+      <guid>//localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
+      <description>This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation.</description>
     </item>
     <item>
       <title>La Rueda de Ezequiel (Análisis de la Puerta del Infierno)</title>
-      <link>https://wetw0rk.github.io/posts/tronos/</link>
+      <link>//localhost:1313/posts/tronos/</link>
       <pubDate>Sun, 24 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/tronos/</guid>
-      <description>Lo que sucede es mi análisis de la Puerta del Infierno, un código maligno. Este código maligno contiene técnicas que le da la capacidad de ejecutar llamadas de sistema (syscalls) en el sistema de operación Windows, con el objetivo de evadir detección de EDR (Defensas de las Empresas).&#xA;Una vez completé mi análisis, creé mi propia implementación en C++ que usa llamadas de sistema (syscalls) que pertenecer adrento de ntdll.dll. Además, un método diferente de lo conocido públicamente para crear hashes.</description>
+      <guid>//localhost:1313/posts/tronos/</guid>
+      <description>Lo que sucede es mi análisis de la Puerta del Infierno, un código maligno.</description>
     </item>
     <item>
       <title>Ezekiels Wheel (Hells Gate Analysis)</title>
-      <link>https://wetw0rk.github.io/posts/ezekielswheel/ezekielswheel/</link>
+      <link>//localhost:1313/posts/ezekielswheel/ezekielswheel/</link>
       <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>https://wetw0rk.github.io/posts/ezekielswheel/ezekielswheel/</guid>
-      <description>The following writeup is a my analysis of the Hells Gate malware. This malware strain contains a technique that performs syscalls on the Windows operating system in order to evade EDR detection.&#xA;Upon completion of my analysis, I developed my own implementation in C++ that uses existing syscall instructions within ntdll.dll and a custom hashing technique to evade the modern methods of detection for these types of techniques.&#xA;There are further optimizations that can be added to the technique, however for the sake of time, two PoC&amp;rsquo;s were developed.</description>
+      <guid>//localhost:1313/posts/ezekielswheel/ezekielswheel/</guid>
+      <description>The following writeup is a my analysis of the Hells Gate malware.</description>
     </item>
   </channel>
 </rss>

