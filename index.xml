@@ -2,165 +2,232 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Blowfish</title>
-    <link>//localhost:1313/</link>
+    <link>/</link>
     <description>Recent content on Blowfish</description>
-    <generator>Hugo</generator>
+    <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 09 Feb 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="//localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <copyright>&amp;copy; 2017 Milton Valencia. All Rights Reserved</copyright>
+    <lastBuildDate>Sun, 09 Feb 2025 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
     <item>
       <title>0x09 - El regreso del Windows Kernel Stack Overflow</title>
-      <link>//localhost:1313/posts/0x09-el-regreso-del-stack-overflow/</link>
+      <link>/posts/0x09-el-regreso-del-stack-overflow/</link>
       <pubDate>Sun, 09 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x09-el-regreso-del-stack-overflow/</guid>
+      
+      <guid>/posts/0x09-el-regreso-del-stack-overflow/</guid>
       <description>En el último tutorial explotamos una de las clases de errores más notorias de toda la industria: las Condiciones de Carrera o también conocido como Race Conditions.</description>
+      
     </item>
+    
     <item>
       <title>0x09 - Return of the Windows Kernel Stack Overflow</title>
-      <link>//localhost:1313/posts/0x09-return-of-the-stack-overflow/</link>
+      <link>/posts/0x09-return-of-the-stack-overflow/</link>
       <pubDate>Sat, 08 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x09-return-of-the-stack-overflow/</guid>
+      
+      <guid>/posts/0x09-return-of-the-stack-overflow/</guid>
       <description>In the last tutorial we exploited one of the most notorious bug classes in the entire industry - Race Conditions.</description>
+      
     </item>
+    
     <item>
       <title>0x08 - Modern Windows Kernel Race Conditions</title>
-      <link>//localhost:1313/posts/0x08-modern-windows-kernel-race-conditions/</link>
+      <link>/posts/0x08-modern-windows-kernel-race-conditions/</link>
       <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x08-modern-windows-kernel-race-conditions/</guid>
+      
+      <guid>/posts/0x08-modern-windows-kernel-race-conditions/</guid>
       <description>With Windows 7 (x86) conquered we can proceed to attempt exploitation in Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x08 - Race Conditions Moderno Del Windows Kernel</title>
-      <link>//localhost:1313/posts/0x08-race-conditions-moderno-del-windows-kernel/</link>
+      <link>/posts/0x08-race-conditions-moderno-del-windows-kernel/</link>
       <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x08-race-conditions-moderno-del-windows-kernel/</guid>
+      
+      <guid>/posts/0x08-race-conditions-moderno-del-windows-kernel/</guid>
       <description>Con Windows 7 (x86) conquistado podemos proceder a intentar aprovechar el Race Condition en Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x07 - Introducción a Windows Kernel Race Conditions</title>
-      <link>//localhost:1313/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>
+      <link>/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>
       <pubDate>Sun, 26 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</guid>
+      
+      <guid>/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</guid>
       <description>En el último tutorial explotamos una vulnerabilidad de Type Confusion contra Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x07 - Introduction to Windows Kernel Race Conditions</title>
-      <link>//localhost:1313/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
+      <link>/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
       <pubDate>Sat, 25 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x07-introduction-to-windows-kernel-race-conditions/</guid>
+      
+      <guid>/posts/0x07-introduction-to-windows-kernel-race-conditions/</guid>
       <description>In the last tutorial we successfully exploited a Type Confusion vulnerability against Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x06 - Acercándose a Windows Kernel Type Confusions Modernos</title>
-      <link>//localhost:1313/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
+      <link>/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
       <pubDate>Sun, 19 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</guid>
+      
+      <guid>/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</guid>
       <description>En el último tutorial explotamos una &amp;ldquo;Type Confusion&amp;rdquo; dentro del kernel de Windows 7 (x86).</description>
+      
     </item>
+    
     <item>
       <title>0x06 - Approaching Modern Windows Kernel Type Confusions</title>
-      <link>//localhost:1313/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
+      <link>/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
+      
+      <guid>/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
       <description>In the last tutorial we exploited a Type Confusion within the Windows 7 (x86) Kernel.</description>
+      
     </item>
+    
     <item>
       <title>0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades</title>
-      <link>//localhost:1313/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>
+      <link>/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>
       <pubDate>Fri, 10 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</guid>
+      
+      <guid>/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</guid>
       <description>En el último tutorial aprovechamos un &amp;ldquo;Write-What-Where&amp;rdquo; o un “Escribir Qué Dónde” dentro de Windows 7 (x86) y Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x05 - Introduction to Windows Kernel Type Confusion Vulnerabilities</title>
-      <link>//localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
+      <link>/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
       <pubDate>Thu, 09 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
+      
+      <guid>/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
       <description>In the last tutorial we exploited a &amp;ldquo;Write-What-Where&amp;rdquo; vulnerability within Windows 7 (x86) and Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x04 - Introducción a Windows Kernel &#34;Write What Where&#34; Vulnerabilidades</title>
-      <link>//localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
+      <link>/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
       <pubDate>Sun, 05 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
+      
+      <guid>/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
       <description>Si has seguido los tutoriales desde el principio, sientete orgulloso de superar el &amp;ldquo;Use After Free&amp;rdquo; en el Windows Kernel!</description>
+      
     </item>
+    
     <item>
       <title>0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities</title>
-      <link>//localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</link>
+      <link>/posts/0x04-writing-what-where-in-the-kernel/</link>
       <pubDate>Sat, 04 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</guid>
+      
+      <guid>/posts/0x04-writing-what-where-in-the-kernel/</guid>
       <description>First off, if you&amp;rsquo;re following the series from the start, great job getting past the Use After Free in the Windows Kernel!</description>
+      
     </item>
+    
     <item>
       <title>0x03 - Acercándose al Heap Moderno del Windows Kernel</title>
-      <link>//localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
+      <link>/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
+      
+      <guid>/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
       <description>Habiendo aprovechado el UaF en Windows 7 (x86), hemos obtenido una idea sólida de cómo funciona esta vulnerabilidad, es hora de intentar esto en Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x03 - Approaching the Modern Windows Kernel Heap</title>
-      <link>//localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
+      <link>/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
+      
+      <guid>/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
       <description>Having exploited the UaF in Windows 7 (x86) we have obtained a solid idea of how this vulnerability works, it&amp;rsquo;s time to attempt exploitation on Windows 11 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x02 - Introducción a Windows Kernel Use After Frees (UaFs)</title>
-      <link>//localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
+      <link>/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
       <pubDate>Sun, 15 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
+      
+      <guid>/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
       <description>Si has estado siguiendo la serie de Windows Kernel Exploitation consecutivamente, deberías haber exploited un Stack Overflow básico contra Windows 7 (x86) y Windows 10 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x02 - Introduction to Windows Kernel Use After Frees (UaFs)</title>
-      <link>//localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</link>
+      <link>/posts/0x02-introduction-to-windows-kernel-uafs/</link>
       <pubDate>Sat, 14 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
+      
+      <guid>/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
       <description>If you&amp;rsquo;ve been following the series consecutively, by now you should have exploited a basic Stack Overflow both within Windows 7 (x86) and Windows 10 (x64).</description>
+      
     </item>
+    
     <item>
       <title>0x01 - Matándo Windows Kernel Mitigaciones</title>
-      <link>//localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
+      <link>/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
       <pubDate>Sun, 08 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
+      
+      <guid>/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
       <description>Esto fue posible por trabajo duro y determinación.</description>
+      
     </item>
+    
     <item>
       <title>0x01 - Killing Windows Kernel Mitigations</title>
-      <link>//localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</link>
+      <link>/posts/0x01-killing-windows-kernel-mitigations/</link>
       <pubDate>Sat, 07 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</guid>
+      
+      <guid>/posts/0x01-killing-windows-kernel-mitigations/</guid>
       <description>This post was made possible through hard work and determination.</description>
+      
     </item>
+    
     <item>
       <title>0x00 - Introducción a Windows Kernel Explotación</title>
-      <link>//localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
+      <link>/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
       <pubDate>Sun, 01 Dec 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
+      
+      <guid>/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
       <description>Esta publicación será la primera de un series donde te guiaré al mundo de Windows Kernel Explotación.</description>
+      
     </item>
+    
     <item>
       <title>0x00 - Introduction to Windows Kernel Exploitation</title>
-      <link>//localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
+      <link>/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
       <pubDate>Fri, 29 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
+      
+      <guid>/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
       <description>This post will be the first of many in which I present you with a guide into the world of Windows Kernel Exploitation.</description>
+      
     </item>
+    
     <item>
       <title>La Rueda de Ezequiel (Análisis de la Puerta del Infierno)</title>
-      <link>//localhost:1313/posts/tronos/</link>
+      <link>/posts/tronos/</link>
       <pubDate>Sun, 24 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/tronos/</guid>
+      
+      <guid>/posts/tronos/</guid>
       <description>Lo que sucede es mi análisis de la Puerta del Infierno, un código maligno.</description>
+      
     </item>
+    
     <item>
       <title>Ezekiels Wheel (Hells Gate Analysis)</title>
-      <link>//localhost:1313/posts/ezekielswheel/ezekielswheel/</link>
+      <link>/posts/ezekielswheel/ezekielswheel/</link>
       <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
-      <guid>//localhost:1313/posts/ezekielswheel/ezekielswheel/</guid>
+      
+      <guid>/posts/ezekielswheel/ezekielswheel/</guid>
       <description>The following writeup is a my analysis of the Hells Gate malware.</description>
+      
     </item>
+    
   </channel>
 </rss>
