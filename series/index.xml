@@ -2,12 +2,10 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Series on Blowfish</title>
-    <link>/series/</link>
+    <link>//localhost:1313/series/</link>
     <description>Recent content in Series on Blowfish</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en</language>
-    <copyright>&amp;copy; 2017 Milton Valencia. All Rights Reserved</copyright>
-    <atom:link href="/series/index.xml" rel="self" type="application/rss+xml" />
-    
+    <atom:link href="//localhost:1313/series/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>
