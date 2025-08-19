@@ -1,154 +1,145 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
-
   <url>
-    <loc>/posts/advanced-windows-exploitation-review/</loc>
+    <loc>//localhost:1313/</loc>
     <lastmod>2025-08-18T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/advanced-windows-exploitation-review/</loc>
     <lastmod>2025-08-18T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/</loc>
     <lastmod>2025-08-18T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x09-el-regreso-del-stack-overflow/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x09-el-regreso-del-stack-overflow/</loc>
     <lastmod>2025-02-09T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x09-return-of-the-stack-overflow/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x09-return-of-the-stack-overflow/</loc>
     <lastmod>2025-02-08T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x08-modern-windows-kernel-race-conditions/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x08-modern-windows-kernel-race-conditions/</loc>
     <lastmod>2025-02-01T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x08-race-conditions-moderno-del-windows-kernel/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x08-race-conditions-moderno-del-windows-kernel/</loc>
     <lastmod>2025-02-01T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</loc>
     <lastmod>2025-01-26T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x07-introduction-to-windows-kernel-race-conditions/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x07-introduction-to-windows-kernel-race-conditions/</loc>
     <lastmod>2025-01-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</loc>
     <lastmod>2025-01-19T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x06-approaching-modern-windows-kernel-type-confusions/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x06-approaching-modern-windows-kernel-type-confusions/</loc>
     <lastmod>2025-01-18T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</loc>
     <lastmod>2025-01-10T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</loc>
     <lastmod>2025-01-09T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x04-escribiendo-que-donde-en-el-kernel/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</loc>
     <lastmod>2025-01-05T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x04-writing-what-where-in-the-kernel/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</loc>
     <lastmod>2025-01-04T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</loc>
     <lastmod>2024-12-21T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x03-approaching-the-modern-windows-kernel-heap/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</loc>
     <lastmod>2024-12-21T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</loc>
     <lastmod>2024-12-15T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x02-introduction-to-windows-kernel-uafs/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</loc>
     <lastmod>2024-12-14T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</loc>
     <lastmod>2024-12-08T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x01-killing-windows-kernel-mitigations/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</loc>
     <lastmod>2024-12-07T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</loc>
     <lastmod>2024-12-01T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/0x00-introduction-to-windows-kernel-exploitation/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</loc>
     <lastmod>2024-11-29T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/tronos/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/tronos/</loc>
     <lastmod>2024-11-24T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/ezekielswheel/ezekielswheel/</loc>
+  </url><url>
+    <loc>//localhost:1313/posts/ezekielswheel/ezekielswheel/</loc>
     <lastmod>2024-11-23T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>//localhost:1313/authors/</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>//localhost:1313/categories/</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>//localhost:1313/series/</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>//localhost:1313/tags/</loc>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>

@@ -1,243 +1,173 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Blowfish</title>
-    <link>/</link>
-    <description>Recent content on Blowfish</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <title></title>
+    <link>//localhost:1313/</link>
+    <description>Recent content on </description>
+    <generator>Hugo</generator>
     <language>en</language>
-    <copyright>&amp;copy; 2017 Milton Valencia. All Rights Reserved</copyright>
-    <lastBuildDate>Mon, 18 Aug 2025 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
-    
+    <lastBuildDate>Mon, 18 Aug 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Advanced Windows Exploitation (AWE) Review</title>
-      <link>/posts/advanced-windows-exploitation-review/</link>
+      <link>//localhost:1313/posts/advanced-windows-exploitation-review/</link>
       <pubDate>Mon, 18 Aug 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/advanced-windows-exploitation-review/</guid>
+      <guid>//localhost:1313/posts/advanced-windows-exploitation-review/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x09 - El regreso del Windows Kernel Stack Overflow</title>
-      <link>/posts/0x09-el-regreso-del-stack-overflow/</link>
+      <link>//localhost:1313/posts/0x09-el-regreso-del-stack-overflow/</link>
       <pubDate>Sun, 09 Feb 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x09-el-regreso-del-stack-overflow/</guid>
+      <guid>//localhost:1313/posts/0x09-el-regreso-del-stack-overflow/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x09 - Return of the Windows Kernel Stack Overflow</title>
-      <link>/posts/0x09-return-of-the-stack-overflow/</link>
+      <link>//localhost:1313/posts/0x09-return-of-the-stack-overflow/</link>
       <pubDate>Sat, 08 Feb 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x09-return-of-the-stack-overflow/</guid>
+      <guid>//localhost:1313/posts/0x09-return-of-the-stack-overflow/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x08 - Modern Windows Kernel Race Conditions</title>
-      <link>/posts/0x08-modern-windows-kernel-race-conditions/</link>
+      <link>//localhost:1313/posts/0x08-modern-windows-kernel-race-conditions/</link>
       <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x08-modern-windows-kernel-race-conditions/</guid>
+      <guid>//localhost:1313/posts/0x08-modern-windows-kernel-race-conditions/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x08 - Race Conditions Moderno Del Windows Kernel</title>
-      <link>/posts/0x08-race-conditions-moderno-del-windows-kernel/</link>
+      <link>//localhost:1313/posts/0x08-race-conditions-moderno-del-windows-kernel/</link>
       <pubDate>Sat, 01 Feb 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x08-race-conditions-moderno-del-windows-kernel/</guid>
+      <guid>//localhost:1313/posts/0x08-race-conditions-moderno-del-windows-kernel/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x07 - Introducción a Windows Kernel Race Conditions</title>
-      <link>/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>
+      <link>//localhost:1313/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</link>
       <pubDate>Sun, 26 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</guid>
+      <guid>//localhost:1313/posts/0x07-introducci%C3%B3n-a-windows-kernel-race-conditions/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x07 - Introduction to Windows Kernel Race Conditions</title>
-      <link>/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
+      <link>//localhost:1313/posts/0x07-introduction-to-windows-kernel-race-conditions/</link>
       <pubDate>Sat, 25 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x07-introduction-to-windows-kernel-race-conditions/</guid>
+      <guid>//localhost:1313/posts/0x07-introduction-to-windows-kernel-race-conditions/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x06 - Acercándose a Windows Kernel Type Confusions Modernos</title>
-      <link>/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
+      <link>//localhost:1313/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</link>
       <pubDate>Sun, 19 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</guid>
+      <guid>//localhost:1313/posts/0x06-acerc%C3%A1ndose-a-windows-kernel-type-confusions-modernos/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x06 - Approaching Modern Windows Kernel Type Confusions</title>
-      <link>/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
+      <link>//localhost:1313/posts/0x06-approaching-modern-windows-kernel-type-confusions/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
+      <guid>//localhost:1313/posts/0x06-approaching-modern-windows-kernel-type-confusions/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x05 - Introducción a Windows Kernel Type Confusion Vulnerabilidades</title>
-      <link>/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>
+      <link>//localhost:1313/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</link>
       <pubDate>Fri, 10 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</guid>
+      <guid>//localhost:1313/posts/0x05-introducci%C3%B3n-a-windows-kernel-type-confusion-vulnerabilidades/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x05 - Introduction to Windows Kernel Type Confusion Vulnerabilities</title>
-      <link>/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
+      <link>//localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</link>
       <pubDate>Thu, 09 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
+      <guid>//localhost:1313/posts/0x05-introduction-to-windows-kernel-type-confusion-vulnerabilities/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x04 - Introducción a Windows Kernel &#34;Write What Where&#34; Vulnerabilidades</title>
-      <link>/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
+      <link>//localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</link>
       <pubDate>Sun, 05 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
+      <guid>//localhost:1313/posts/0x04-escribiendo-que-donde-en-el-kernel/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x04 - Introduction to Windows Kernel Write What Where Vulnerabilities</title>
-      <link>/posts/0x04-writing-what-where-in-the-kernel/</link>
+      <link>//localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</link>
       <pubDate>Sat, 04 Jan 2025 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x04-writing-what-where-in-the-kernel/</guid>
+      <guid>//localhost:1313/posts/0x04-writing-what-where-in-the-kernel/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x03 - Acercándose al Heap Moderno del Windows Kernel</title>
-      <link>/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
+      <link>//localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
+      <guid>//localhost:1313/posts/0x03-acerc%C3%A1ndose-al-heap-moderno-del-windows-kernel/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x03 - Approaching the Modern Windows Kernel Heap</title>
-      <link>/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
+      <link>//localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</link>
       <pubDate>Sat, 21 Dec 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
+      <guid>//localhost:1313/posts/0x03-approaching-the-modern-windows-kernel-heap/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x02 - Introducción a Windows Kernel Use After Frees (UaFs)</title>
-      <link>/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
+      <link>//localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</link>
       <pubDate>Sun, 15 Dec 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
+      <guid>//localhost:1313/posts/0x02-introducci%C3%B3n-a-windows-kernel-uafs/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x02 - Introduction to Windows Kernel Use After Frees (UaFs)</title>
-      <link>/posts/0x02-introduction-to-windows-kernel-uafs/</link>
+      <link>//localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</link>
       <pubDate>Sat, 14 Dec 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
+      <guid>//localhost:1313/posts/0x02-introduction-to-windows-kernel-uafs/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x01 - Matándo Windows Kernel Mitigaciones</title>
-      <link>/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
+      <link>//localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</link>
       <pubDate>Sun, 08 Dec 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
+      <guid>//localhost:1313/posts/0x01-mat%C3%A1ndo-windows-kernel-mitigaciones/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x01 - Killing Windows Kernel Mitigations</title>
-      <link>/posts/0x01-killing-windows-kernel-mitigations/</link>
+      <link>//localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</link>
       <pubDate>Sat, 07 Dec 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x01-killing-windows-kernel-mitigations/</guid>
+      <guid>//localhost:1313/posts/0x01-killing-windows-kernel-mitigations/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x00 - Introducción a Windows Kernel Explotación</title>
-      <link>/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
+      <link>//localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</link>
       <pubDate>Sun, 01 Dec 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
+      <guid>//localhost:1313/posts/0x00-introducci%C3%B3n-a-windows-kernel-explotaci%C3%B3n/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>0x00 - Introduction to Windows Kernel Exploitation</title>
-      <link>/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
+      <link>//localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</link>
       <pubDate>Fri, 29 Nov 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
+      <guid>//localhost:1313/posts/0x00-introduction-to-windows-kernel-exploitation/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>La Rueda de Ezequiel (Análisis de la Puerta del Infierno)</title>
-      <link>/posts/tronos/</link>
+      <link>//localhost:1313/posts/tronos/</link>
       <pubDate>Sun, 24 Nov 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/tronos/</guid>
+      <guid>//localhost:1313/posts/tronos/</guid>
       <description></description>
-      
     </item>
-    
     <item>
       <title>Ezekiels Wheel (Hells Gate Analysis)</title>
-      <link>/posts/ezekielswheel/ezekielswheel/</link>
+      <link>//localhost:1313/posts/ezekielswheel/ezekielswheel/</link>
       <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/ezekielswheel/ezekielswheel/</guid>
+      <guid>//localhost:1313/posts/ezekielswheel/ezekielswheel/</guid>
       <description></description>
-      
     </item>
-    
   </channel>
 </rss>
