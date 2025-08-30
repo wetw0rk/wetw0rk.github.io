@@ -131,7 +131,7 @@
     
     
     "mainEntityOfPage": "true",
-    "wordCount": "3670"
+    "wordCount": "3676"
   }]
   </script>
 
@@ -1340,7 +1340,10 @@ font-weight: bold;
   
 </figure>
 </p>
-<p>When flipping the bits of any number, we are in essence changing the value. To see what number we&rsquo;d need to place here be representative of flipping the 20th bit I wrote a simple C program to generate the number for me. The code to do this, can be seen below:</p>
+<p>When flipping the bits of any number, we are in essence changing the value. To see what number we&rsquo;d need to place here be representative of flipping the 20th bit I wrote a simple C program to generate the number for me. The code to do this, can be seen below (shoutout to <a
+  href="https://x.com/Bad_Jubies"
+    target="_blank"
+  >@Bad_Jubies</a> for spotting the bit issue):</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cm">/* wetw0rk */</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
@@ -1377,7 +1380,7 @@ font-weight: bold;
 </span></span></span><span class="line"><span class="cl"><span class="cm"> */</span>
 </span></span><span class="line"><span class="cl"><span class="kt">uint64_t</span> <span class="nf">flip_bit</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">cr4</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">bit_position</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">mask</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">bit_position</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">mask</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">bit_position</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">(</span><span class="n">cr4</span> <span class="o">^</span> <span class="n">mask</span><span class="p">);</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span><span class="line"><span class="cl">
