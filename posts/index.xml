@@ -7,7 +7,17 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>&amp;copy; 2017 Milton Valencia. All Rights Reserved</copyright>
-    <lastBuildDate>Mon, 18 Aug 2025 00:00:00 +0000</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 22 Oct 2025 00:00:00 +0000</lastBuildDate><atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Understanding the Windows _SECURITY_DESCRIPTOR</title>
+      <link>/posts/understanding-the-windows-_security_descriptor/</link>
+      <pubDate>Wed, 22 Oct 2025 00:00:00 +0000</pubDate>
+      
+      <guid>/posts/understanding-the-windows-_security_descriptor/</guid>
+      <description></description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="/posts/understanding-the-windows-_security_descriptor/featured.jpeg" />
+    </item>
     
     <item>
       <title>Advanced Windows Exploitation (AWE) Review</title>
@@ -16,7 +26,17 @@
       
       <guid>/posts/advanced-windows-exploitation-review/</guid>
       <description></description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="/posts/advanced-windows-exploitation-review/featured.png" />
+    </item>
+    
+    <item>
+      <title>Ezekiels Wheel (Hells Gate Analysis)</title>
+      <link>/posts/ezekielswheel/</link>
+      <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
       
+      <guid>/posts/ezekielswheel/</guid>
+      <description></description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="/posts/ezekielswheel/featured.jpg" />
     </item>
     
     <item>
@@ -225,16 +245,6 @@
       <pubDate>Sun, 24 Nov 2024 00:00:00 +0000</pubDate>
       
       <guid>/posts/tronos/</guid>
-      <description></description>
-      
-    </item>
-    
-    <item>
-      <title>Ezekiels Wheel (Hells Gate Analysis)</title>
-      <link>/posts/ezekielswheel/ezekielswheel/</link>
-      <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
-      
-      <guid>/posts/ezekielswheel/ezekielswheel/</guid>
       <description></description>
       
     </item>

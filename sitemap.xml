@@ -3,8 +3,8 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>/</loc>
-    <lastmod>2025-08-18T00:00:00+00:00</lastmod>
+    <loc>/posts/understanding-the-windows-_security_descriptor/</loc>
+    <lastmod>2025-10-22T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
@@ -15,8 +15,20 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>/posts/ezekielswheel/</loc>
+    <lastmod>2024-11-23T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>/</loc>
+    <lastmod>2025-10-22T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>/posts/</loc>
-    <lastmod>2025-08-18T00:00:00+00:00</lastmod>
+    <lastmod>2025-10-22T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
@@ -143,12 +155,6 @@
   <url>
     <loc>/posts/tronos/</loc>
     <lastmod>2024-11-24T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>/posts/ezekielswheel/ezekielswheel/</loc>
-    <lastmod>2024-11-23T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
