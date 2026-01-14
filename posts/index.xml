@@ -6,8 +6,15 @@
     <description>Recent content in Posts on </description>
     <generator>Hugo</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 29 Oct 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 13 Jan 2026 00:00:00 +0000</lastBuildDate>
     <atom:link href="//localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>MHL GuessMe - Introduction to Deeplinks</title>
+      <link>//localhost:1313/posts/mhl-guessme-deeplinks/</link>
+      <pubDate>Tue, 13 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/mhl-guessme-deeplinks/</guid>
+      <description></description>
+    </item>
     <item>
       <title>CVE-2018-8617 Analysis</title>
       <link>//localhost:1313/posts/cve-2018-8617-analysis/</link>
